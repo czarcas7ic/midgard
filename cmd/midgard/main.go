@@ -15,11 +15,8 @@ import (
 	"gitlab.com/thorchain/midgard/internal/timeseries"
 	"gitlab.com/thorchain/midgard/internal/util/jobs"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 	"gitlab.com/thorchain/midgard/internal/websockets"
 )
-
-var writeTimer = timer.NewTimer("block_write_total")
 
 func main() {
 	midlog.LogCommandLine()

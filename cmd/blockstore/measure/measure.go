@@ -14,7 +14,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"os"
 	"time"
@@ -23,7 +22,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/fetch/sync/blockstore"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 const SequentialStartBlock = 990000
@@ -41,29 +39,21 @@ func main() {
 }
 
 func measureSequentialAccess() {
-	summary := timer.NewTimer("sequencial_access")
 	it := blockStore.Iterator(SequentialStartBlock)
 	for i := 0; i < SequentialCount; i++ {
-		t := summary.One()
 		_, err := it.Next()
 		if err != nil {
 			log.Fatal().Err(err).Msgf("Cannot read block")
 		}
-		t()
 	}
-	fmt.Println(summary.String())
 }
 
 func measureRandomAccess() {
-	summary := timer.NewTimer("random_access")
 	for i := 0; i < RandomCount; i++ {
-		t := summary.One()
 		height := rand.Int63n(blockStore.LastFetchedHeight())
 		_, err := blockStore.SingleBlock(height)
 		if err != nil {
 			log.Fatal().Err(err).Msgf("Cannot read block")
 		}
-		t()
 	}
-	fmt.Println(summary.String())
 }

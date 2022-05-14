@@ -65,8 +65,6 @@ func (x *blockWriter) loop() error {
 				}
 			}
 
-			t := writeTimer.One()
-
 			// When using the ImmediateInserter we can commit after every block, since it
 			// flushes at the end of every block.
 			_, immediate := db.Inserter.(*db.ImmediateInserter)
@@ -83,7 +81,6 @@ func (x *blockWriter) loop() error {
 			}
 
 			lastHeightWritten = block.Height
-			t()
 
 			if hardForkHeight != 0 && hardForkHeight <= lastHeightWritten {
 				x.waitAtForkAndExit(lastHeightWritten)

@@ -13,7 +13,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/julienschmidt/httprouter"
-	"github.com/pascaldekloe/metrics"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
 
@@ -21,12 +22,27 @@ import (
 	"gitlab.com/thorchain/midgard/internal/graphql/generated"
 	"gitlab.com/thorchain/midgard/internal/timeseries/stat"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 	"gitlab.com/thorchain/midgard/internal/websockets"
 )
 
-// Handler serves the entire API.
-var Handler http.Handler
+var (
+	// Handler serves the entire API.
+	Handler http.Handler
+
+	requestLatencyHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "midgard",
+			Subsystem: "api",
+			Name:      "request_duration",
+			Help:      "endpoint request latencies",
+		},
+		[]string{"path"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(requestLatencyHistogram)
+}
 
 func addMeasured(router *httprouter.Router, url string, handler httprouter.Handle) {
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
@@ -34,14 +50,13 @@ func addMeasured(router *httprouter.Router, url string, handler httprouter.Handl
 		panic("Bad constant url regex.")
 	}
 	simplifiedURL := reg.ReplaceAllString(url, "_")
-	t := timer.NewTimer("serving" + simplifiedURL)
 
 	router.Handle(
 		http.MethodGet, url,
 		func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			m := t.One()
+			timer := prometheus.NewTimer(requestLatencyHistogram.WithLabelValues(simplifiedURL))
+			defer timer.ObserveDuration()
 			handler(w, r, ps)
-			m()
 		})
 }
 
@@ -58,8 +73,7 @@ func InitHandler(nodeURL string, proxiedWhitelistedEndpoints []string) {
 	router.HandleOPTIONS = true
 	router.HandlerFunc(http.MethodGet, "/", serveRoot)
 
-	router.HandlerFunc(http.MethodGet, "/v2/debug/metrics", metrics.ServeHTTP)
-	router.HandlerFunc(http.MethodGet, "/v2/debug/timers", timer.ServeHTTP)
+	router.Handler(http.MethodGet, "/v2/debug/metrics", promhttp.Handler())
 	router.HandlerFunc(http.MethodGet, "/v2/debug/usd", stat.ServeUSDDebug)
 	router.Handle(http.MethodGet, "/v2/debug/block/:id", debugBlock)
 

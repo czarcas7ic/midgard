@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pascaldekloe/metrics"
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/fetch/notinchain"
@@ -17,7 +16,6 @@ import (
 	"gitlab.com/thorchain/midgard/internal/util/jobs"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	jsonrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
@@ -25,20 +23,12 @@ import (
 
 var logger = midlog.LoggerForModule("sync")
 
-// CursorHeight is the Tendermint chain position [sequence identifier].
-var CursorHeight = metrics.Must1LabelInteger("midgard_chain_cursor_height", "node")
-
-// NodeHeight is the latest Tendermint chain position [sequence identifier]
-// reported by the node.
-var NodeHeight = metrics.Must1LabelRealSample("midgard_chain_height", "node")
-
 type Sync struct {
 	chainClient *chain.Client
 	blockStore  *blockstore.BlockStore
 
-	ctx          context.Context
-	status       *coretypes.ResultStatus
-	cursorHeight *metrics.Integer
+	ctx    context.Context
+	status *coretypes.ResultStatus
 }
 
 var CheckBlockStoreBlocks = false
@@ -113,17 +103,8 @@ func (s *Sync) refreshStatus() (finalBlockHeight int64, err error) {
 	db.LastThorNodeBlock.Set(s.status.SyncInfo.LatestBlockHeight,
 		db.TimeToNano(s.status.SyncInfo.LatestBlockTime))
 
-	statusTime := time.Now()
-	node := string(s.status.NodeInfo.DefaultNodeID)
-	s.cursorHeight = CursorHeight(node)
-	s.cursorHeight.Set(s.status.SyncInfo.EarliestBlockHeight)
-	nodeHeight := NodeHeight(node)
-	nodeHeight.Set(float64(finalBlockHeight), statusTime)
-
 	return finalBlockHeight, nil
 }
-
-var loopTimer = timer.NewTimer("sync_next")
 
 // CatchUp reads the latest block height from Status then it fetches all blocks from offset to
 // that height.
@@ -159,9 +140,7 @@ func (s *Sync) CatchUp(out chan<- chain.Block, startHeight int64) (
 			return startHeight, false, nil
 		}
 
-		t := loopTimer.One()
 		block, err := i.Next()
-		t()
 		if err != nil {
 			return startHeight, false, err
 		}
@@ -180,7 +159,6 @@ func (s *Sync) CatchUp(out chan<- chain.Block, startHeight int64) (
 			return startHeight, false, nil
 		case out <- *block:
 			startHeight = block.Height + 1
-			s.cursorHeight.Set(startHeight)
 			db.LastFetchedBlock.Set(block.Height, db.TimeToNano(block.Time))
 
 			// report every so often in batch mode too.

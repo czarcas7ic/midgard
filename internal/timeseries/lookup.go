@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pascaldekloe/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/graphql/model"
@@ -337,9 +337,16 @@ WHERE block_timestamp <= $1`
 	return
 }
 
-var NetworkNilNode = metrics.MustCounter(
-	"midgard_network_nil_node",
-	"Number of times thornode returned nil node in thorchain/nodes.")
+var networkNilNode = prometheus.NewCounter(prometheus.CounterOpts{
+	Namespace: "midgard",
+	Subsystem: "timeseries",
+	Name:      "midgard_network_nil_node",
+	Help:      "Number of times thornode returned nil node in thorchain/nodes",
+})
+
+func init() {
+	prometheus.MustRegister(networkNilNode)
+}
 
 func GetNetworkData(ctx context.Context) (model.Network, error) {
 	// GET DATA
@@ -408,7 +415,7 @@ func GetNetworkData(ctx context.Context) (model.Network, error) {
 		if node == nil {
 			// TODO(muninn): check if this was the reason of the errors in production
 			midlog.Warn("ThorNode returned nil node in thorchain/nodes")
-			NetworkNilNode.Add(1)
+			networkNilNode.Add(1)
 			continue
 		}
 		switch node.Status {

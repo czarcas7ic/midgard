@@ -13,7 +13,6 @@ import (
 	"gitlab.com/thorchain/midgard/internal/util/jobs"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 // BackgroundCalculationTotalTimeout is the time a Refresh operation of single http result may take.
@@ -37,7 +36,6 @@ type cachedResponse struct {
 type cache struct {
 	f             RefreshFunc
 	name          string
-	timer         timer.Timer
 	responseMutex sync.RWMutex
 	response      cachedResponse
 }
@@ -53,7 +51,6 @@ func CreateAndRegisterCache(f RefreshFunc, name string) *cache {
 	ret := cache{
 		f:        f,
 		name:     name,
-		timer:    timer.NewTimer("background_" + name),
 		response: cachedResponse{err: miderr.InternalErr("Cache not calculated yet")},
 	}
 
@@ -80,9 +77,7 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request, _ httprouter.P
 func (c *cache) Refresh(ctx context.Context) {
 	response := cachedResponse{}
 
-	stop := c.timer.One()
 	response.err = c.f(ctx, &response.buf)
-	stop()
 
 	c.responseMutex.Lock()
 	c.response = response
@@ -105,12 +100,11 @@ func (cs *cacheStore) RefreshAll(ctx context.Context) {
 	for _, cache := range caches {
 		ctx2, cancel := context.WithTimeout(ctx, BackgroundCalculationTotalTimeout)
 		CacheLogger.InfoT(midlog.Str("cache", cache.name), "Refreshing cache")
-		start := timer.MilliCounter()
 		cache.Refresh(ctx2)
 		CacheLogger.InfoT(
 			midlog.Tags(
 				midlog.Str("cache", cache.name),
-				midlog.Float32("duration", start.SecondsElapsed())),
+			),
 			"Refreshed cache.")
 
 		cancel()

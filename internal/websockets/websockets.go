@@ -19,7 +19,6 @@ import (
 	"gitlab.com/thorchain/midgard/internal/timeseries"
 	"gitlab.com/thorchain/midgard/internal/util/jobs"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 // TODO(acsaba): change everyh Warnf call to log maximum once every X min.
@@ -129,22 +128,14 @@ func notifyClients() {
 	}
 }
 
-var (
-	recieveWaitTimer    = timer.NewTimer("websocket_recieve_wait")
-	recieveProcessTimer = timer.NewTimer("websocket_recieve_process")
-)
-
 // Listens for connections subscribing/unsubscribing from pools.
 func readMessagesWaiting(ctx context.Context) {
 	for {
 		if ctx.Err() != nil {
 			return
 		}
-		waitTimer := recieveWaitTimer.One()
 		connections, err := connManager.WaitOnReceive()
-		waitTimer()
 
-		recieveTimer := recieveProcessTimer.One()
 		if err != nil {
 			// To be expected...
 			if err.Error() == "interrupted system call" {
@@ -208,7 +199,6 @@ func readMessagesWaiting(ctx context.Context) {
 				clearConnEntirely(fd, fmt.Sprintf("Message not recognized, %s", i.Message))
 			}
 		}
-		recieveTimer()
 	}
 }
 

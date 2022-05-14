@@ -6,9 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/pascaldekloe/metrics/gostat"
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
 )
@@ -35,9 +33,6 @@ func StopIfCanceled() {
 func InitSignals() context.Context {
 	signals = make(chan os.Signal, 20)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-
-	// include Go runtime metrics
-	gostat.CaptureEvery(5 * time.Second)
 
 	var mainCancel context.CancelFunc
 	mainContext, mainCancel = context.WithCancel(context.Background())

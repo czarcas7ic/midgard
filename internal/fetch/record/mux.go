@@ -6,31 +6,62 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pascaldekloe/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"gitlab.com/thorchain/midgard/internal/fetch/sync/chain"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 // Package Metrics
 var (
-	blockProcTimer = timer.NewTimer("block_write_process")
-	EventProcTime  = metrics.Must1LabelHistogram("midgard_chain_event_process_seconds", "type", 0.001, 0.01, 0.1)
+	blockProcHistogram = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: "midgard",
+		Subsystem: "record",
+		Name:      "block_process_duration",
+		Help:      "block processing duration",
+	})
 
-	EventTotal            = metrics.Must1LabelCounter("midgard_chain_events_total", "group")
-	DeliverTxEventsTotal  = EventTotal("deliver_tx")
-	BeginBlockEventsTotal = EventTotal("begin_block")
-	EndBlockEventsTotal   = EventTotal("end_block")
-	IgnoresTotal          = metrics.MustCounter("midgard_chain_event_ignores_total", "Number of known types not in use seen.")
-	UnknownsTotal         = metrics.MustCounter("midgard_chain_event_unknowns_total", "Number of unknown types discarded.")
+	eventProcHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "midgard",
+			Subsystem: "record",
+			Name:      "event_process_duration",
+			Help:      "event processing duration",
+		},
+		[]string{"group", "type"},
+	)
 
-	AttrPerEvent = metrics.MustHistogram("midgard_chain_event_attrs", "Number of attributes per event.", 0, 1, 7, 21, 144)
+	eventUnknownCount = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "midgard",
+		Subsystem: "record",
+		Name:      "event_unknown_count",
+		Help:      "count of unknown events",
+	})
 
-	PoolRewardsTotal = metrics.MustCounter("midgard_pool_rewards_total", "Number of asset amounts on rewards events seen.")
+	eventAttrCountHistogram = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Namespace: "midgard",
+		Subsystem: "record",
+		Name:      "event_attr_count",
+		Help:      "count of attributes per event",
+	})
+
+	poolRewardsTotal = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "midgard",
+		Subsystem: "record",
+		Name:      "pool_rewards_total",
+		Help:      "number of asset amounts on rewards events seen",
+	})
 )
+
+func init() {
+	prometheus.MustRegister(blockProcHistogram)
+	prometheus.MustRegister(eventProcHistogram)
+	prometheus.MustRegister(eventUnknownCount)
+	prometheus.MustRegister(eventAttrCountHistogram)
+	prometheus.MustRegister(poolRewardsTotal)
+}
 
 // Metadata has metadata for a block (from the chain).
 type Metadata struct {
@@ -82,7 +113,8 @@ var GlobalDemux Demux
 
 // Block invokes Listener for each transaction event in block.
 func (d *Demux) Block(block *chain.Block) {
-	defer blockProcTimer.One()()
+	timer := prometheus.NewTimer(blockProcHistogram)
+	defer timer.ObserveDuration()
 
 	applyBlockCorrections(block)
 
@@ -97,18 +129,16 @@ func (d *Demux) Block(block *chain.Block) {
 	// It allows developers to have logic be executed at the beginning of
 	// each block.”
 	// — https://docs.cosmos.network/master/core/baseapp.html#beginblock
-	BeginBlockEventsTotal.Add(uint64(len(block.Results.BeginBlockEvents)))
 	for eventIndex, event := range block.Results.BeginBlockEvents {
-		if err := d.event(event, &m); err != nil {
+		if err := d.event("begin_block", event, &m); err != nil {
 			miderr.LogEventParseErrorF("block height %d begin event %d type %q skipped: %s",
 				block.Height, eventIndex, event.Type, err)
 		}
 	}
 
 	for txIndex, tx := range block.Results.TxsResults {
-		DeliverTxEventsTotal.Add(uint64(len(tx.Events)))
 		for eventIndex, event := range tx.Events {
-			if err := d.event(event, &m); err != nil {
+			if err := d.event("deliver_tx", event, &m); err != nil {
 				miderr.LogEventParseErrorF("block height %d tx %d event %d type %q skipped: %s",
 					block.Height, txIndex, eventIndex, event.Type, err)
 			}
@@ -120,9 +150,8 @@ func (d *Demux) Block(block *chain.Block) {
 	// It allows developers to have logic be executed at the end of each
 	// block.”
 	// — https://docs.cosmos.network/master/core/baseapp.html#endblock
-	EndBlockEventsTotal.Add(uint64(len(block.Results.EndBlockEvents)))
 	for eventIndex, event := range block.Results.EndBlockEvents {
-		if err := d.event(event, &m); err != nil {
+		if err := d.event("end_block", event, &m); err != nil {
 			miderr.LogEventParseErrorF("block height %d end event %d type %q skipped: %s",
 				block.Height, eventIndex, event.Type, err)
 		}
@@ -135,11 +164,12 @@ var errEventType = errors.New("unknown event type")
 
 // Block notifies Listener for the transaction event.
 // Errors do not include the event type in the message.
-func (d *Demux) event(event abci.Event, meta *Metadata) error {
-	defer EventProcTime(event.Type).AddSince(time.Now())
+func (d *Demux) event(group string, event abci.Event, meta *Metadata) error {
+	timer := prometheus.NewTimer(eventProcHistogram.WithLabelValues(group, event.Type))
+	defer timer.ObserveDuration()
 
 	attrs := event.Attributes
-	AttrPerEvent.Add(float64(len(attrs)))
+	eventAttrCountHistogram.Observe(float64(len(attrs)))
 
 	switch event.Type {
 	case "ActiveVault":
@@ -219,7 +249,7 @@ func (d *Demux) event(event abci.Event, meta *Metadata) error {
 		if err := d.reuse.Rewards.LoadTendermint(attrs); err != nil {
 			return err
 		}
-		PoolRewardsTotal.Add(uint64(len(d.reuse.Rewards.PerPool)))
+		poolRewardsTotal.Add(float64(len(d.reuse.Rewards.PerPool)))
 		Recorder.OnRewards(&d.reuse.Rewards, meta)
 	case "set_ip_address":
 		if err := d.reuse.SetIPAddress.LoadTendermint(attrs); err != nil {
@@ -325,7 +355,7 @@ func (d *Demux) event(event abci.Event, meta *Metadata) error {
 	default:
 		miderr.LogEventParseErrorF("Unkown event type: %s, attributes: %s",
 			event.Type, FormatAttributes(attrs))
-		UnknownsTotal.Add(1)
+		eventUnknownCount.Add(1)
 		return errEventType
 	}
 	return nil

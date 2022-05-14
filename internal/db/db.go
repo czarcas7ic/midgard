@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/pascaldekloe/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/util"
@@ -47,8 +47,16 @@ const (
 	inserterFailVersion = "0001"
 )
 
-var inserterFailVar = metrics.MustCounter("batch_inserter_marked_failed",
-	"1 if using TxInserter because BatchInserter was marked as failed")
+var inserterFailVar = prometheus.NewCounter(prometheus.CounterOpts{
+	Namespace: "midgard",
+	Subsystem: "db",
+	Name:      "batch_inserter_marked_failed",
+	Help:      "1 if using TxInserter because BatchInserter was marked as failed",
+})
+
+func init() {
+	prometheus.MustRegister(inserterFailVar)
+}
 
 type md5Hash [md5.Size]byte
 

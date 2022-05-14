@@ -8,22 +8,15 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pascaldekloe/metrics"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 var logger = midlog.LoggerForModule("chain")
-
-func init() {
-	metrics.MustHelp("midgard_chain_cursor_height", "The Tendermint sequence identifier that is next in line.")
-	metrics.MustHelp("midgard_chain_height", "The latest Tendermint sequence identifier reported by the node.")
-}
 
 // Block is a chain record.
 type Block struct {
@@ -110,12 +103,6 @@ func (c *Client) RefreshStatus() (*coretypes.ResultStatus, error) {
 	return c.client.Status(c.ctx)
 }
 
-var (
-	fetchTimerBatch    = timer.NewTimer("block_fetch_batch")
-	fetchTimerParallel = timer.NewTimer("block_fetch_parallel")
-	fetchTimerSingle   = timer.NewTimer("block_fetch_single")
-)
-
 type Iterator struct {
 	c                *Client
 	nextBatchStart   int64
@@ -166,8 +153,6 @@ func (i *Iterator) nextBatch() (hasMore bool, err error) {
 }
 
 func (c *Client) fetchBlock(block *Block, height int64) error {
-	defer fetchTimerSingle.One()()
-
 	info, err := c.client.BlockchainInfo(c.ctx, height, height)
 	if err != nil {
 		return fmt.Errorf("BlockchainInfo for %d, failed: %w", height, err)
@@ -206,7 +191,6 @@ func (c *Client) fetchBlocks(clientIdx int, batch []Block, height int64) error {
 	n := len(batch)
 	var err error
 	client := c.batchClients[clientIdx]
-	defer fetchTimerBatch.Batch(n)()
 
 	last := height + int64(n) - 1
 	infos := make([]*coretypes.ResultBlockchainInfo, n)
@@ -284,8 +268,6 @@ func (c *Client) fetchBlocksParallel(batch []Block, height int64, parallelism in
 	if k*parallelism != n {
 		return fmt.Errorf("batch size %d not divisible into %d parallel parts", n, parallelism)
 	}
-
-	defer fetchTimerParallel.Batch(n)()
 
 	done := make(chan error, parallelism)
 	for i := 0; i < parallelism; i++ {

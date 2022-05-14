@@ -9,11 +9,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/fetch/sync/chain"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 // OutboundTimeout is an upperboundary for the amount of time for a followup on outbound events.
@@ -23,7 +23,18 @@ const OutboundTimeout = time.Hour * 48
 // TODO(acsaba): migrate users to using BlockState wherever it's possible.
 var lastBlockTrack atomic.Value
 
-var blockFlushTimer = timer.NewTimer("block_write_flush")
+var blockFlushHistogram = prometheus.NewHistogram(
+	prometheus.HistogramOpts{
+		Namespace: "midgard",
+		Subsystem: "timeseries",
+		Name:      "block_flush_duration",
+		Help:      "block flush duration",
+	},
+)
+
+func init() {
+	prometheus.MustRegister(blockFlushHistogram)
+}
 
 // BlockTrack is a write state.
 type blockTrack struct {
@@ -157,7 +168,8 @@ func ProcessBlock(block *chain.Block, commit bool) (err error) {
 	thisIsTheFirstBlock := firstBlockHeight == 0 || block.Height <= firstBlockHeight
 
 	if commit || thisIsTheFirstBlock {
-		defer blockFlushTimer.One()()
+		timer := prometheus.NewTimer(blockFlushHistogram)
+		defer timer.ObserveDuration()
 
 		err = db.Inserter.Flush()
 		if err != nil {

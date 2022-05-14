@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 	"gitlab.com/thorchain/midgard/internal/util/jobs"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 //go:embed aggregates.sql
@@ -436,8 +436,19 @@ func DropAggregates() (err error) {
 	return
 }
 
-var aggregatesRefreshBulkTimer = timer.NewTimer("aggregates_refresh_bulk")
-var aggregatesRefreshSingleTimer = timer.NewTimer("aggregates_refresh_single")
+var aggregatesRefreshHistogram = prometheus.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Namespace: "midgard",
+		Subsystem: "db",
+		Name:      "aggregates_refresh_duration",
+		Help:      "aggregates refresh duration",
+	}, []string{"type"},
+)
+
+func init() {
+	prometheus.MustRegister(aggregatesRefreshHistogram)
+}
+
 var nextAggregateRefreshLog time.Time
 
 // This function assumes that LastBlockTimestamp() will always strictly increase between two
@@ -454,9 +465,11 @@ var nextAggregateRefreshLog time.Time
 // testing slower though.
 func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTests bool) {
 	if bulk {
-		defer aggregatesRefreshBulkTimer.One()()
+		timer := prometheus.NewTimer(aggregatesRefreshHistogram.WithLabelValues("bulk"))
+		defer timer.ObserveDuration()
 	} else {
-		defer aggregatesRefreshSingleTimer.One()()
+		timer := prometheus.NewTimer(aggregatesRefreshHistogram.WithLabelValues("single"))
+		defer timer.ObserveDuration()
 	}
 
 	lastCommitted := LastCommittedBlock.Get()

@@ -9,7 +9,6 @@ import (
 	"github.com/DataDog/zstd"
 	"gitlab.com/thorchain/midgard/internal/fetch/sync/chain"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
-	"gitlab.com/thorchain/midgard/internal/util/timer"
 )
 
 type Iterator struct {
@@ -85,8 +84,6 @@ func (it *Iterator) openNextChunk() error {
 	return nil
 }
 
-var unmarshalTimer = timer.NewTimer("bstore_unmarshal")
-
 func (it *Iterator) unmarshalNextBlock() (*chain.Block, error) {
 	if it.reader == nil {
 		return nil, io.EOF
@@ -103,9 +100,7 @@ func (it *Iterator) unmarshalNextBlock() (*chain.Block, error) {
 		if !gobLineMatchHeight(line, it.nextHeight) {
 			continue
 		}
-		t := unmarshalTimer.One()
 		block, err := GobLineToBlock(line)
-		t()
 		if err != nil {
 			return nil, err
 		}
