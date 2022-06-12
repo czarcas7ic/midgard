@@ -13,6 +13,14 @@ type Err interface {
 	ReportHTTP(w http.ResponseWriter)
 }
 
+func NotFound(s string) errorImpl {
+	return BadRequest(s)
+}
+
+func NotFoundF(format string, a ...interface{}) errorImpl {
+	return BadRequestF(format, a...)
+}
+
 func BadRequest(s string) errorImpl {
 	return errorImpl{"Bad Request: " + s, requestError}
 }

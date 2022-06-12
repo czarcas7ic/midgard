@@ -945,17 +945,47 @@ func jsonActions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func jsonBalance(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	if err := util.CheckUrlEmpty(r.URL.Query()); err != nil {
+	address := ps[0].Value
+
+	urlParams := r.URL.Query()
+	params := timeseries.BalanceParams{
+		Height:    util.ConsumeUrlParam(&urlParams, "height"),
+		Timestamp: util.ConsumeUrlParam(&urlParams, "timestamp"),
+	}
+
+	if err := util.CheckUrlEmpty(urlParams); err != nil {
 		err.ReportHTTP(w)
 		return
 	}
 
-	address := ps[0].Value
-
-	balance, err := timeseries.GetBalance(r.Context(), address)
-	if err != nil {
-		respError(w, err)
+	if params.Height != "" && params.Timestamp != "" {
+		miderr.BadRequest("only one of height or timestamp can be specified, not both").ReportHTTP(w)
 		return
+	}
+
+	if params.Timestamp != "" {
+		if _, err := params.GetNano(); err != nil {
+			miderr.BadRequestF("error parsing timestamp %s", params.Timestamp).ReportHTTP(w)
+			return
+		}
+	}
+
+	if params.Height != "" {
+		if _, err := params.GetHeight(); err != nil {
+			miderr.BadRequestF("error parsing height %s", params.Height).ReportHTTP(w)
+			return
+		}
+	}
+
+	balance, err := timeseries.GetBalances(r.Context(), address, params)
+
+	if err != nil {
+		switch e := err.(type) {
+		case miderr.Err:
+			e.ReportHTTP(w)
+		default:
+			respError(w, err)
+		}
 	}
 
 	result := oapigen.BalanceResponse(*balance)

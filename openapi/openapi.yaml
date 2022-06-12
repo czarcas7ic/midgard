@@ -730,7 +730,8 @@ paths:
       operationId: GetBalance
       summary: Current balance for an address
       description: |
-        Returns all coin amounts for the given address at watermark height.
+        Returns all coin amounts for the given address at given timestamp or height
+        or watermark height if only the address is specified.
         This endpoint is enabled only if the midgard startup config allows it.
       parameters:
         - name: address
@@ -740,6 +741,22 @@ paths:
           schema:
             type: string
           example: 'thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g'
+        - name: timestamp
+          in: query
+          description: Balance at given unix timestamp (if defined, height must not be specified)
+          required: false
+          example: 1606780800
+          schema:
+            type: integer
+            format: int64
+        - name: height
+          in: query
+          description: Balance at given block height (if defined, timestamp must no be specified)
+          required: false
+          example: 2000000
+          schema:
+            type: integer
+            format: int64
       responses:
         "200":
           $ref: '#/components/responses/BalanceResponse'
@@ -2604,9 +2621,17 @@ components:
 
     Balance:
       type: object
-      required:
+      required:    
+        - height
+        - timestamp
         - coins
       properties:
+        height:
+          type: string
+          example: "2000000"
+        timestamp:
+          type: string
+          example: "1608825600"
         coins:
           type: coins
           $ref: '#/components/schemas/Coins'
