@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -28,23 +29,12 @@ const (
 	aggregatesMaxStepNano     = Nano(20 * 24 * 60 * 60 * 1e9)
 )
 
-var WebsocketNotify *chan struct{}
+var newBlock *sync.Cond = sync.NewCond(&sync.Mutex{})
 
-// Create websockets channel, called if enabled by config.
-func CreateWebsocketChannel() {
-	websocketChannel := make(chan struct{}, 2)
-	WebsocketNotify = &websocketChannel
-}
-
-func WebsocketsPing() {
-	// Notify websockets whenever we are fully caught up.
-	if WebsocketNotify != nil {
-		select {
-		case *WebsocketNotify <- struct{}{}:
-		default:
-		}
-	}
-
+func WaitBlock() {
+	newBlock.L.Lock()
+	newBlock.Wait()
+	newBlock.L.Unlock()
 }
 
 type aggregateColumnType int
@@ -576,7 +566,7 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 	LastAggregatedBlock.Set(lastAggregated.Height, lastAggregated.Timestamp)
 
 	if !bulk && caughtUp {
-		WebsocketsPing()
+		newBlock.Broadcast()
 	}
 }
 

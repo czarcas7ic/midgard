@@ -23,7 +23,7 @@ import (
 	"gitlab.com/thorchain/midgard/internal/timeseries/stat"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
 	"gitlab.com/thorchain/midgard/internal/util/timer"
-	"gitlab.com/thorchain/midgard/internal/websockets"
+	"gitlab.com/thorchain/midgard/internal/websocket"
 )
 
 // Handler serves the entire API.
@@ -91,7 +91,7 @@ func InitHandler(nodeURL string, proxiedWhitelistedEndpoints []string) {
 	addMeasured(router, "/v2/thorname/lookup/:name", jsonTHORName)
 	addMeasured(router, "/v2/thorname/rlookup/:address", jsonTHORNameAddress)
 	addMeasured(router, "/v2/thorname/owner/:address", jsonTHORNameOwner)
-	addMeasured(router, "/v2/websocket", websockets.WsHandler)
+	addMeasured(router, "/v2/websocket", websocket.Handler)
 	if config.Global.EventRecorder.OnTransferEnabled {
 		addMeasured(router, "/v2/balance/:address", jsonBalance)
 	}

@@ -17,7 +17,6 @@ import (
 	"gitlab.com/thorchain/midgard/internal/util/jobs"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
 	"gitlab.com/thorchain/midgard/internal/util/timer"
-	"gitlab.com/thorchain/midgard/internal/websockets"
 )
 
 var writeTimer = timer.NewTimer("block_write_total")
@@ -46,9 +45,11 @@ func main() {
 
 	waitingJobs = append(waitingJobs, initHTTPServer(mainContext))
 
-	waitingJobs = append(waitingJobs, initWebsockets(mainContext))
-
 	waitingJobs = append(waitingJobs, api.GlobalCacheStore.InitBackgroundRefresh(mainContext))
+
+	if !config.Global.Websockets.Enable {
+		midlog.Info("Websockets are not enabled")
+	}
 
 	// Up to this point it was ok to fail with log.fatal.
 	// From here on errors are handeled by sending a abort on the global signal channel,
@@ -65,19 +66,6 @@ func main() {
 	jobs.ShutdownWait(runningJobs...)
 
 	jobs.LogSignalAndStop()
-}
-
-func initWebsockets(ctx context.Context) jobs.NamedFunction {
-	if !config.Global.Websockets.Enable {
-		midlog.Info("Websockets are not enabled")
-		return jobs.EmptyJob()
-	}
-	db.CreateWebsocketChannel()
-	websocketsJob, err := websockets.Init(ctx, config.Global.Websockets.ConnectionLimit)
-	if err != nil {
-		midlog.FatalE(err, "Websockets failure")
-	}
-	return websocketsJob
 }
 
 func initHTTPServer(ctx context.Context) jobs.NamedFunction {
