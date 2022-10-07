@@ -33,7 +33,7 @@ test:
 
 smoke:
   stage: integration
-  image: docker/compose:alpine-1.29.2
+  image: docker:stable
   services:
     - docker:20.10.14-dind
   artifacts:
@@ -47,9 +47,10 @@ smoke:
     MIDGARD_REPO: https://gitlab.com/thorchain/midgard.git
     MIDGARD_IMAGE: registry.gitlab.com/thorchain/midgard:develop
     THORNODE_REPO: https://gitlab.com/thorchain/thornode.git
-    THORNODE_IMAGE: registry.gitlab.com/thorchain/thornode:testnet
+    THORNODE_IMAGE: registry.gitlab.com/thorchain/thornode:mocknet
     BLOCK_TIME: 0.8s
     THOR_BLOCK_TIME: 0.8s
+    GAIA_BLOCK_TIME: 0.8s
     BLOCK_SCANNER_BACKOFF: 0.8s
     ETH_BLOCK_TIME: "1"
   before_script:
@@ -64,6 +65,11 @@ smoke:
     - apk -U add make git jq curl protoc
     - IMAGE_NAME=$MIDGARD_IMAGE make build
     - git clone --single-branch -b develop $THORNODE_REPO && docker pull $THORNODE_IMAGE && docker tag $THORNODE_IMAGE registry.gitlab.com/thorchain/thornode:mocknet
+    - |
+      PLUGIN="$HOME/.docker/cli-plugins/docker-compose"
+      mkdir -p $(dirname $PLUGIN)
+      wget https://github.com/docker/compose/releases/download/v2.11.1/docker-compose-linux-x86_64 -O $PLUGIN
+      chmod +x $PLUGIN
   script:
     - cd ./thornode && make smoke-protob-docker smoke-remote-ci
   after_script:
