@@ -273,7 +273,7 @@ func loadMainnetWithdrawIncreasesUnits() {
 			},
 			StakeUnits: missingAdd.AdditionalUnits,
 		}
-		Recorder.OnStake(&deposit, meta)
+		Recorder.OnDeposit(&deposit, meta)
 	}
 	for k := range corrections {
 		AdditionalEvents.Add(k, correct)

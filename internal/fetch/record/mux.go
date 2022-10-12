@@ -249,7 +249,7 @@ func processEvent(event abci.Event, meta *Metadata) error {
 		if err := x.LoadTendermint(attrs); err != nil {
 			return err
 		}
-		Recorder.OnStake(&x, meta)
+		Recorder.OnDeposit(&x, meta)
 	case "swap":
 		var x Swap
 		if err := x.LoadTendermint(attrs); err != nil {

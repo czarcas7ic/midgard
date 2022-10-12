@@ -318,7 +318,7 @@ func (*eventRecorder) OnPendingLiquidity(e *PendingLiquidity, meta *Metadata) {
 	}
 }
 
-func (r *eventRecorder) OnStake(e *Desposit, meta *Metadata) {
+func (r *eventRecorder) OnDeposit(e *Desposit, meta *Metadata) {
 	// TODO(muninn): Separate this side data calculation from the sync process.
 	aE8, rE8, _ := r.CurrentDepths(e.Pool)
 	aE8 += e.AssetE8

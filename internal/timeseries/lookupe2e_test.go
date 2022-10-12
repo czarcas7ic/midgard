@@ -32,9 +32,9 @@ func callPools(t *testing.T, url string) map[string]oapigen.PoolDetail {
 func TestPoolsE2E(t *testing.T) {
 	testdb.InitTest(t)
 
-	testdb.InsertStakeEvent(t, testdb.FakeStake{Pool: "BNB.BNB", BlockTimestamp: "2020-01-01 00:00:00"})
-	testdb.InsertStakeEvent(t, testdb.FakeStake{Pool: "POOL2"})
-	testdb.InsertStakeEvent(t, testdb.FakeStake{Pool: "POOL3"})
+	testdb.InsertDepositEvent(t, testdb.FakeDeposit{Pool: "BNB.BNB", BlockTimestamp: "2020-01-01 00:00:00"})
+	testdb.InsertDepositEvent(t, testdb.FakeDeposit{Pool: "POOL2"})
+	testdb.InsertDepositEvent(t, testdb.FakeDeposit{Pool: "POOL3"})
 
 	testdb.InsertPoolEvents(t, "BNB.BNB", "Available")
 	testdb.InsertPoolEvents(t, "POOL2", "Available")

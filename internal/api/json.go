@@ -846,8 +846,8 @@ func calculateJsonStats(ctx context.Context, w io.Writer) error {
 	now := db.NowSecond()
 	window := db.Window{From: 0, Until: now}
 
-	// TODO(huginn): Rewrite to member table if doable, stakes/unstakes lookup is ~0.8 s
-	stakes, err := stat.StakesLookup(ctx, window)
+	// TODO(huginn): Rewrite to member table if doable, stakes/unstakes (deposits/withdraws) lookup is ~0.8 s
+	deposits, err := stat.DepositsLookup(ctx, window)
 	if err != nil {
 		return err
 	}
@@ -898,10 +898,10 @@ func calculateJsonStats(ctx context.Context, w io.Writer) error {
 		DailyActiveUsers:              "0", // deprecated
 		MonthlyActiveUsers:            "0", // deprecated
 		UniqueSwapperCount:            "0", // deprecated
-		AddLiquidityVolume:            util.IntStr(stakes.TotalVolume),
+		AddLiquidityVolume:            util.IntStr(deposits.TotalVolume),
 		WithdrawVolume:                util.IntStr(withdraws.TotalVolume),
 		ImpermanentLossProtectionPaid: util.IntStr(withdraws.ImpermanentLossProtection),
-		AddLiquidityCount:             util.IntStr(stakes.Count),
+		AddLiquidityCount:             util.IntStr(deposits.Count),
 		WithdrawCount:                 util.IntStr(withdraws.Count),
 	})
 	return nil

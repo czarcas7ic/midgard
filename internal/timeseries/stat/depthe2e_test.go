@@ -25,7 +25,7 @@ func TestDepthHistoryE2E(t *testing.T) {
 	testdb.InsertBlockPoolDepth(t, "BNB.BNB", 20, 30, "2020-01-10 14:00:00")
 	testdb.InsertBlockPoolDepth(t, "BNB.BNB", 2, 5, "2020-01-12 09:00:00")
 	testdb.InsertBlockPoolDepth(t, "BNB.BNB", 6, 18, "2020-01-12 10:00:00")
-	testdb.InsertStakeEvent(t, testdb.FakeStake{
+	testdb.InsertDepositEvent(t, testdb.FakeDeposit{
 		Pool:           "BNB.BNB",
 		StakeUnits:     1,
 		BlockTimestamp: "2020-01-01 23:57:00",
@@ -120,13 +120,13 @@ func TestLiquidityUnitsHistoryE2E(t *testing.T) {
 	testdb.InitTest(t)
 	testdb.DeclarePools("BTC.BTC", "BNB.BNB")
 
-	testdb.InsertStakeEvent(t, testdb.FakeStake{
+	testdb.InsertDepositEvent(t, testdb.FakeDeposit{
 		Pool:           "BTC.BTC",
 		StakeUnits:     10,
 		BlockTimestamp: "2020-01-10 12:00:00",
 	})
 
-	testdb.InsertStakeEvent(t, testdb.FakeStake{
+	testdb.InsertDepositEvent(t, testdb.FakeDeposit{
 		Pool:           "BTC.BTC",
 		StakeUnits:     10, // total 20
 		BlockTimestamp: "2020-01-20 12:00:00",
@@ -139,7 +139,7 @@ func TestLiquidityUnitsHistoryE2E(t *testing.T) {
 	})
 
 	// This will be skipped because it's a different pool
-	testdb.InsertStakeEvent(t, testdb.FakeStake{
+	testdb.InsertDepositEvent(t, testdb.FakeDeposit{
 		Pool:           "BNB.BNB",
 		StakeUnits:     1000,
 		BlockTimestamp: "2020-01-20 12:00:00",

@@ -38,7 +38,7 @@ func loadStagenetCorrections(rootChainID string) {
 				},
 				StakeUnits: 3135000000,
 			}
-			Recorder.OnStake(&deposit, meta)
+			Recorder.OnDeposit(&deposit, meta)
 		})
 		AdditionalEvents.Add(36720, func(meta *Metadata) {
 			pool := Pool{
@@ -86,7 +86,7 @@ func loadStagenetCorrections(rootChainID string) {
 				},
 				StakeUnits: 10423580154,
 			}
-			Recorder.OnStake(&deposit, meta)
+			Recorder.OnDeposit(&deposit, meta)
 
 			// Note that the liquidity providers for the UST pool are inconsistent with the
 			// pool units - this is known and will be rectified on a subsequent stagenet fork.

@@ -147,18 +147,18 @@ func TestPoolsStatsUniqueMemberCount(t *testing.T) {
 	}})
 
 	// 2 members
-	testdb.InsertStakeEvent(t,
-		testdb.FakeStake{Pool: "BNB.BNB", AssetAddress: "bnbaddr1", RuneAddress: "thoraddr1", StakeUnits: 2})
-	testdb.InsertStakeEvent(t,
-		testdb.FakeStake{Pool: "BNB.BNB", AssetAddress: "bnbaddr2", RuneAddress: "thoraddr2", StakeUnits: 5})
+	testdb.InsertDepositEvent(t,
+		testdb.FakeDeposit{Pool: "BNB.BNB", AssetAddress: "bnbaddr1", RuneAddress: "thoraddr1", StakeUnits: 2})
+	testdb.InsertDepositEvent(t,
+		testdb.FakeDeposit{Pool: "BNB.BNB", AssetAddress: "bnbaddr2", RuneAddress: "thoraddr2", StakeUnits: 5})
 
 	// duplication
-	testdb.InsertStakeEvent(t,
-		testdb.FakeStake{Pool: "BNB.BNB", AssetAddress: "bnbaddr2", RuneAddress: "thoraddr2", StakeUnits: 5})
+	testdb.InsertDepositEvent(t,
+		testdb.FakeDeposit{Pool: "BNB.BNB", AssetAddress: "bnbaddr2", RuneAddress: "thoraddr2", StakeUnits: 5})
 
 	// different pool
-	testdb.InsertStakeEvent(t,
-		testdb.FakeStake{Pool: "BTC.BTC", AssetAddress: "bnbaddr3", RuneAddress: "thoraddr3", StakeUnits: 5})
+	testdb.InsertDepositEvent(t,
+		testdb.FakeDeposit{Pool: "BTC.BTC", AssetAddress: "bnbaddr3", RuneAddress: "thoraddr3", StakeUnits: 5})
 
 	db.RefreshAggregatesForTests()
 

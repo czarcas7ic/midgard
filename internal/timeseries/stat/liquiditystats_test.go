@@ -60,7 +60,7 @@ func TestWithdrawAllAssets(t *testing.T) {
 	assert.Equal(t, "0", jsonResult.WithdrawVolume)
 }
 
-func TestStakesLookupE2E(t *testing.T) {
+func TestDepositsLookupE2E(t *testing.T) {
 	blocks := testdb.InitTestBlocks(t)
 
 	// btc price: 100

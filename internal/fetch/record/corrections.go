@@ -127,7 +127,7 @@ func registerArtificialDeposits(unitChanges artificialUnitChanges) {
 					} else {
 						deposit.AssetAddr = []byte(change.Addr)
 					}
-					Recorder.OnStake(&deposit, meta)
+					Recorder.OnDeposit(&deposit, meta)
 				} else {
 					withdraw := Withdraw{
 						Pool:       []byte(change.Pool),

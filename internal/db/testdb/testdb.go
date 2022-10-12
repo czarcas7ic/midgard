@@ -277,7 +277,7 @@ func InsertBondEvent(t *testing.T, fake FakeBond) {
 		fake.E8, timestamp)
 }
 
-type FakeStake struct {
+type FakeDeposit struct {
 	Pool           string
 	BlockTimestamp string
 	AssetE8        int64
@@ -290,7 +290,7 @@ type FakeStake struct {
 	RuneTx         string
 }
 
-func InsertStakeEvent(t *testing.T, fake FakeStake) {
+func InsertDepositEvent(t *testing.T, fake FakeDeposit) {
 	const insertq = `
 		INSERT INTO deposit_events
 			(pool, asset_tx, asset_chain, asset_addr, asset_E8, _asset_in_rune_E8,
