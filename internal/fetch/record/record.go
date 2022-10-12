@@ -332,7 +332,7 @@ func (r *eventRecorder) OnStake(e *Desposit, meta *Metadata) {
 		"asset_addr", "asset_e8", "stake_units", "rune_tx", "rune_addr", "rune_e8",
 		"_asset_in_rune_e8"}
 	err := InsertWithMeta(
-		"stake_events", meta, cols,
+		"deposit_events", meta, cols,
 		e.Pool, e.AssetTx, e.AssetChain,
 		e.AssetAddr, e.AssetE8, e.StakeUnits, e.RuneTx, e.RuneAddr, e.RuneE8,
 		assetInRune)

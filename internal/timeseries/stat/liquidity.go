@@ -97,7 +97,7 @@ func GetLiquidityHistory(ctx context.Context, buckets db.Buckets, pool string) (
 	window := buckets.Window()
 
 	deposits, err := liquidityChangesFromTable(ctx, buckets, pool,
-		"stake_events", "_asset_in_rune_e8", "rune_e8", "")
+		"deposit_events", "_asset_in_rune_e8", "rune_e8", "")
 	if err != nil {
 		return
 	}

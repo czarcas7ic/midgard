@@ -63,7 +63,7 @@ func SetupTestDB(t *testing.T) {
 func DeleteTables(t *testing.T) {
 	MustExec(t, "DELETE FROM block_log")
 	MustExec(t, "DELETE FROM block_pool_depths")
-	MustExec(t, "DELETE FROM stake_events")
+	MustExec(t, "DELETE FROM deposit_events")
 	MustExec(t, "DELETE FROM pending_liquidity_events")
 	MustExec(t, "DELETE FROM withdraw_events")
 	MustExec(t, "DELETE FROM switch_events")
@@ -292,7 +292,7 @@ type FakeStake struct {
 
 func InsertStakeEvent(t *testing.T, fake FakeStake) {
 	const insertq = `
-		INSERT INTO stake_events
+		INSERT INTO deposit_events
 			(pool, asset_tx, asset_chain, asset_addr, asset_E8, _asset_in_rune_E8,
 				rune_tx, rune_addr, rune_E8, stake_units, event_id, block_timestamp)
 			VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, NULLIF($7, ''), $8, $9, $10, 0, $11)`

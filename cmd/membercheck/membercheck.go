@@ -320,7 +320,7 @@ func getMidgardMembers(ctx context.Context, pool string, timestamp db.Nano) Memb
 
 	addQ := `
 		SELECT rune_addr, asset_addr, stake_units
-		FROM stake_events
+		FROM deposit_events
 		WHERE pool = $1 and block_timestamp <= $2
 		ORDER BY block_timestamp
 	`

@@ -423,7 +423,7 @@ CREATE TABLE slash_events (
 CALL setup_hypertable('slash_events');
 
 
-CREATE TABLE stake_events (
+CREATE TABLE deposit_events (
     pool               TEXT NOT NULL,
     asset_tx           TEXT,
     asset_chain        TEXT,
@@ -438,7 +438,7 @@ CREATE TABLE stake_events (
     block_timestamp    BIGINT NOT NULL
 );
 
-CALL setup_hypertable('stake_events');
+CALL setup_hypertable('deposit_events');
 
 
 CREATE TABLE pending_liquidity_events (

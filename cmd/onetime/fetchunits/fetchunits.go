@@ -188,7 +188,7 @@ func checkWithdrawsIsAlone(ctx context.Context, summary UnitsSummary) {
 func readAdds(ctx context.Context, summary *UnitsSummary) {
 	q := `
 		SELECT COALESCE(SUM(stake_units), 0)
-		FROM stake_events
+		FROM deposit_events
 		WHERE pool=$1 AND block_timestamp = $2`
 
 	rows, err := db.Query(ctx, q, summary.Pool, summary.Timestamp)

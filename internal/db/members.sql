@@ -46,7 +46,7 @@ CREATE VIEW midgard_agg.members_log_partial AS (
             rune_tx,
             event_id,
             block_timestamp
-        FROM stake_events
+        FROM deposit_events
         UNION ALL
         SELECT
             from_addr AS member_id,

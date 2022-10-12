@@ -78,7 +78,7 @@ func GetChurnsData(ctx context.Context) (oapigen.Churns, error) {
 
 // PoolsWithDeposit gets all asset identifiers that have at least one deposit
 func PoolsWithDeposit(ctx context.Context) ([]string, error) {
-	const q = "SELECT pool FROM stake_events GROUP BY pool"
+	const q = "SELECT pool FROM deposit_events GROUP BY pool"
 	rows, err := db.Query(ctx, q)
 	if err != nil {
 		return nil, err

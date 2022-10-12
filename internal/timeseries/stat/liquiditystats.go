@@ -44,5 +44,5 @@ func WithdrawsLookup(ctx context.Context, w db.Window) (ret CountAndTotal, err e
 }
 
 func StakesLookup(ctx context.Context, w db.Window) (ret CountAndTotal, err error) {
-	return liquidityChange(ctx, w, "stake_events", "_asset_in_rune_e8", "rune_e8", "")
+	return liquidityChange(ctx, w, "deposit_events", "_asset_in_rune_e8", "rune_e8", "")
 }

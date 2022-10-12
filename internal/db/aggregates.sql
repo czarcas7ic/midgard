@@ -11,7 +11,7 @@ WHERE pending_type = 'add'
     AND NOT EXISTS(
         -- Filter out pending liquidity which was already added
         SELECT *
-        FROM stake_events AS s
+        FROM deposit_events AS s
         WHERE
             p.rune_addr = s.rune_addr
             AND p.pool = s.pool
@@ -291,7 +291,7 @@ CREATE VIEW midgard_agg.addliquidity_actions AS
             'status', 'success',
             'liquidityUnits', stake_units
             ) AS meta
-    FROM stake_events
+    FROM deposit_events
     UNION ALL
     -- Pending `add`s will be removed when not pending anymore
     SELECT
@@ -351,7 +351,7 @@ $BODY$;
 CREATE PROCEDURE midgard_agg.trim_pending_actions(t1 bigint, t2 bigint)
 LANGUAGE SQL AS $BODY$
     DELETE FROM midgard_agg.actions AS a
-    USING stake_events AS s
+    USING deposit_events AS s
     WHERE
         t1 <= s.block_timestamp AND s.block_timestamp < t2
         AND a.event_id <= s.event_id
