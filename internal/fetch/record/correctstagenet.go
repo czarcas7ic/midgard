@@ -24,7 +24,7 @@ func loadStagenetCorrections(rootChainID string) {
 				Status: []byte("Staged"),
 			}
 			Recorder.OnPool(&pool, meta)
-			stake := Stake{
+			deposit := Desposit{
 				AddBase: AddBase{
 					Pool:       []byte("TERRA.UST"),
 					AssetTx:    []byte("5094157A89137CD762EDDC94E08016CB57D3717FF950D8CE227FDBD7A942479E"),
@@ -38,7 +38,7 @@ func loadStagenetCorrections(rootChainID string) {
 				},
 				StakeUnits: 3135000000,
 			}
-			Recorder.OnStake(&stake, meta)
+			Recorder.OnStake(&deposit, meta)
 		})
 		AdditionalEvents.Add(36720, func(meta *Metadata) {
 			pool := Pool{
@@ -72,7 +72,7 @@ func loadStagenetCorrections(rootChainID string) {
 				StakeUnits:  0,
 			}
 			Recorder.OnWithdraw(&withdraw, meta)
-			stake := Stake{
+			deposit := Desposit{
 				AddBase: AddBase{
 					Pool:       []byte("TERRA.LUNA"),
 					AssetTx:    []byte(""),
@@ -86,7 +86,7 @@ func loadStagenetCorrections(rootChainID string) {
 				},
 				StakeUnits: 10423580154,
 			}
-			Recorder.OnStake(&stake, meta)
+			Recorder.OnStake(&deposit, meta)
 
 			// Note that the liquidity providers for the UST pool are inconsistent with the
 			// pool units - this is known and will be rectified on a subsequent stagenet fork.

@@ -245,7 +245,7 @@ func processEvent(event abci.Event, meta *Metadata) error {
 		}
 		Recorder.OnPendingLiquidity(&x, meta)
 	case "add_liquidity":
-		var x Stake
+		var x Desposit
 		if err := x.LoadTendermint(attrs); err != nil {
 			return err
 		}

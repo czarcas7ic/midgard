@@ -90,7 +90,6 @@ func RuneAsset() string {
 //
 //	asset  :≡ chain '.' symbol | symbol
 //	symbol :≡ ticker '-' ID | ticker
-//
 func ParseAsset(asset []byte) (chain, ticker, id []byte) {
 	if len(asset) == 0 {
 		return
@@ -979,13 +978,13 @@ func (e *PendingLiquidity) LoadTendermint(attrs []abci.EventAttribute) error {
 	return nil
 }
 
-// Stake defines the "stake" event type, which records a participation result."
-type Stake struct {
+// Deposit defines the "deposit" event type, which records a participation result."
+type Desposit struct {
 	AddBase
 	StakeUnits int64 // pool's liquidiy tokens—gained quantity
 }
 
-func (e *Stake) LoadTendermint(attrs []abci.EventAttribute) error {
+func (e *Desposit) LoadTendermint(attrs []abci.EventAttribute) error {
 	remainder, err := e.parse(attrs)
 	if err != nil {
 		return err
@@ -1000,7 +999,7 @@ func (e *Stake) LoadTendermint(attrs []abci.EventAttribute) error {
 				return fmt.Errorf("malformed liquidity_provider_units: %w", err)
 			}
 		default:
-			miderr.LogEventParseErrorF("unknown stake event attribute %q=%q", attr.Key, attr.Value)
+			miderr.LogEventParseErrorF("unknown deposit event attribute %q=%q", attr.Key, attr.Value)
 		}
 	}
 

@@ -116,18 +116,18 @@ func registerArtificialDeposits(unitChanges artificialUnitChanges) {
 		if ok {
 			for _, change := range changes {
 				if 0 <= change.Units {
-					stake := Stake{
+					deposit := Desposit{
 						AddBase: AddBase{
 							Pool: []byte(change.Pool),
 						},
 						StakeUnits: change.Units,
 					}
 					if AddressIsRune(change.Addr) {
-						stake.RuneAddr = []byte(change.Addr)
+						deposit.RuneAddr = []byte(change.Addr)
 					} else {
-						stake.AssetAddr = []byte(change.Addr)
+						deposit.AssetAddr = []byte(change.Addr)
 					}
-					Recorder.OnStake(&stake, meta)
+					Recorder.OnStake(&deposit, meta)
 				} else {
 					withdraw := Withdraw{
 						Pool:       []byte(change.Pool),

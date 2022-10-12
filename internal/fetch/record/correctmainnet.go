@@ -265,7 +265,7 @@ func loadMainnetWithdrawIncreasesUnits() {
 
 	correct := func(meta *Metadata) {
 		missingAdd := corrections[meta.BlockHeight]
-		stake := Stake{
+		deposit := Desposit{
 			AddBase: AddBase{
 				Pool:     []byte("ETH.ETH"),
 				RuneAddr: []byte("thor1hyarrh5hslcg3q5pgvl6mp6gmw92c4tpzdsjqg"),
@@ -273,7 +273,7 @@ func loadMainnetWithdrawIncreasesUnits() {
 			},
 			StakeUnits: missingAdd.AdditionalUnits,
 		}
-		Recorder.OnStake(&stake, meta)
+		Recorder.OnStake(&deposit, meta)
 	}
 	for k := range corrections {
 		AdditionalEvents.Add(k, correct)

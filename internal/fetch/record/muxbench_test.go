@@ -31,7 +31,7 @@ type FakeDemux struct {
 		record.SetNodeKeys
 		record.SetVersion
 		record.Slash
-		record.Stake
+		record.Desposit
 		record.Swap
 		record.Transfer
 		record.Withdraw

@@ -15,7 +15,7 @@ import (
 func TestMembersE2E(t *testing.T) {
 	blocks := testdb.InitTestBlocks(t)
 
-	// thoraddr1: stake symetrical then withdraw all using rune address (should not appear)
+	// thoraddr1: deposit symetrical then withdraw all using rune address (should not appear)
 	blocks.NewBlock(t, "2020-09-01 00:10:00",
 		testdb.PoolActivate("BNB.ASSET1"),
 		testdb.PoolActivate("BNB.ASSET2"),
@@ -34,7 +34,7 @@ func TestMembersE2E(t *testing.T) {
 			LiquidityProviderUnits: 2,
 		})
 
-	// thoraddr2: stake two pools then remove all from one (should appear)
+	// thoraddr2: deposit two pools then remove all from one (should appear)
 	blocks.NewBlock(t, "2020-09-01 00:30:00",
 		testdb.AddLiquidity{
 			Pool:                   "BNB.ASSET1",
@@ -55,7 +55,7 @@ func TestMembersE2E(t *testing.T) {
 			LiquidityProviderUnits: 1,
 		})
 
-	// bnbaddr3: stake asym with asset address (should appear)
+	// bnbaddr3: deposit asym with asset address (should appear)
 	blocks.NewBlock(t, "2020-09-01 00:50:00",
 		testdb.AddLiquidity{
 			Pool:                   "BNB.ASSET1",

@@ -76,7 +76,7 @@ func GetChurnsData(ctx context.Context) (oapigen.Churns, error) {
 	return churnMet, err
 }
 
-// PoolsWithDeposit gets all asset identifiers that have at least one stake
+// PoolsWithDeposit gets all asset identifiers that have at least one deposit
 func PoolsWithDeposit(ctx context.Context) ([]string, error) {
 	const q = "SELECT pool FROM stake_events GROUP BY pool"
 	rows, err := db.Query(ctx, q)
@@ -169,7 +169,7 @@ func TotalLiquidityFeesRune(ctx context.Context, from time.Time, to time.Time) (
 	return liquidityFees, nil
 }
 
-//  Get value from Mimir overrides or from the Thorchain constants.
+// Get value from Mimir overrides or from the Thorchain constants.
 func GetLastConstantValue(ctx context.Context, key string) (int64, error) {
 	// TODO(elfedy): This looks at the last time the mimir value was set. This may not be
 	// the latest value (i.e: Does Thorchain send an event with the value in constants if mimir

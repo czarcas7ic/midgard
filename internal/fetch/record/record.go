@@ -318,7 +318,7 @@ func (*eventRecorder) OnPendingLiquidity(e *PendingLiquidity, meta *Metadata) {
 	}
 }
 
-func (r *eventRecorder) OnStake(e *Stake, meta *Metadata) {
+func (r *eventRecorder) OnStake(e *Desposit, meta *Metadata) {
 	// TODO(muninn): Separate this side data calculation from the sync process.
 	aE8, rE8, _ := r.CurrentDepths(e.Pool)
 	aE8 += e.AssetE8
@@ -337,7 +337,7 @@ func (r *eventRecorder) OnStake(e *Stake, meta *Metadata) {
 		e.AssetAddr, e.AssetE8, e.StakeUnits, e.RuneTx, e.RuneAddr, e.RuneE8,
 		assetInRune)
 	if err != nil {
-		miderr.LogEventParseErrorF("stake event from height %d lost on %s", meta.BlockHeight, err)
+		miderr.LogEventParseErrorF("deposit event from height %d lost on %s", meta.BlockHeight, err)
 		return
 	}
 
