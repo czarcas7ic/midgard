@@ -44,6 +44,8 @@ func main() {
 	if err != nil {
 		midlog.FatalE(err, "Can't Marshal pools to decimals json.")
 	}
+
+	midlog.Info("decimals.json is created successfully.")
 }
 
 type PoolsResponse struct {

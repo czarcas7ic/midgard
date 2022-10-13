@@ -144,7 +144,7 @@ func TestDecimalPool(t *testing.T) {
 	require.Equal(t, len(sortedResp), 3)
 	// Test known asset pools from decimal.json
 	require.Equal(t, sortedResp["BTC.BTC"].NativeDecimal, "8")
-	require.Equal(t, sortedResp["ETH.ETH"].NativeDecimal, "16")
+	require.Equal(t, sortedResp["ETH.ETH"].NativeDecimal, "18")
 	// Test missing asset pool from decimal.json should return -1
 	require.Equal(t, sortedResp["BTC.USDT"].NativeDecimal, "-1")
 

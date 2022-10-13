@@ -27,12 +27,9 @@
  "AVAX.USDT-0X9702230A8EA53601F5CD2DC00FDBC13D4DF4A8C7": {
   "decimals": 6,
   "asset_seen": [
-   "thornode-mainnet",
-   "midgard-mainnet",
    "constants"
   ],
   "decimal_source": [
-   "thornode-mainnet",
    "constants"
   ]
  },
@@ -213,7 +210,7 @@
   ]
  },
  "ETH.ETH": {
-  "decimals": 16,
+  "decimals": 18,
   "asset_seen": [
    "thornode-mainnet",
    "thornode-stagenet",
