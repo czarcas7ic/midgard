@@ -41,6 +41,7 @@ Fields in nested structs are accessed using underscores. Examples:
 * `MIDGARD_LISTEN_PORT` env variable will override `Config.ListenPort` value
 * `MIDGARD_TIMESCALE_PORT` will override `Config.TimeScale.Port` value
 * `MIDGARD_USD_POOLS="A,B,C"` will override the UsdPools
+* `MIDGARD_POOLS_DECIMAL="A.A:8,B.B:18"` will override the pools decimals
 
 
 ### Start native Midgard

@@ -9,6 +9,7 @@ import (
 	"gitlab.com/thorchain/midgard/internal/api"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/db/dbinit"
+	"gitlab.com/thorchain/midgard/internal/decimal"
 	"gitlab.com/thorchain/midgard/internal/fetch/notinchain"
 	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/fetch/sync"
@@ -25,6 +26,9 @@ var writeTimer = timer.NewTimer("block_write_total")
 func main() {
 	midlog.LogCommandLine()
 	config.ReadGlobal()
+
+	// Read pools decimal overwrite from the config
+	decimal.AddConfigDecimals()
 
 	mainContext := jobs.InitSignals()
 
