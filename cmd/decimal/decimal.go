@@ -13,6 +13,7 @@ import (
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/decimal"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
+	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
 	"gopkg.in/yaml.v3"
 )
 
@@ -96,9 +97,9 @@ func readFromMidgardPools() ResultMap {
 
 	pools := ResultMap{}
 	for _, ue := range urls {
-		var res PoolsResponse
-		queryEndpoint(ue.url, "/v2/pools", &res.Pools)
-		pools.mergeFrom(res.toResultMap(ue.network))
+		var res oapigen.KnownPools
+		queryEndpoint(ue.url, "/v2/knownpools", &res.AdditionalProperties)
+		pools.mergeFrom(knownPoolsToResultMap(res, ue.network))
 	}
 
 	return pools
@@ -118,6 +119,18 @@ func (pr PoolsResponse) toResultMap(network string) ResultMap {
 			NativeDecimals: decimals,
 			AssetSeen:      []string{network},
 			DecimalSource:  decimalSource,
+		}
+	}
+	return mapPools
+}
+
+func knownPoolsToResultMap(knownPools oapigen.KnownPools, network string) ResultMap {
+	mapPools := ResultMap{}
+	for p := range knownPools.AdditionalProperties {
+		mapPools[p] = decimal.SingleResult{
+			NativeDecimals: -1,
+			AssetSeen:      []string{network},
+			DecimalSource:  []string{},
 		}
 	}
 	return mapPools
@@ -221,6 +234,11 @@ func getERC20decimal(pools ResultMap) ResultMap {
 	for k := range pools {
 		if strings.HasPrefix(k, "ETH") && k != "ETH.ETH" {
 			r := strings.Split(k, "-")
+			// There is rare case that pool `ETH/ETH` (suspended) in stagnet `knownpools` endpoint,
+			// is malformatted and can't be parsed
+			if len(r) < 2 {
+				continue
+			}
 			nativeDecimal := queryEthplorerAsset(r[1])
 			if nativeDecimal != 0 && nativeDecimal != -1 {
 				ercMap[k] = decimal.SingleResult{
