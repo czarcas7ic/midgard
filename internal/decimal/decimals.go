@@ -3,6 +3,7 @@ package decimal
 import (
 	_ "embed"
 	"encoding/json"
+	"net/http"
 
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
@@ -25,7 +26,7 @@ func init() {
 	}
 }
 
-//This function will overwrite nativeDecimals in the decimals.json file by reading from config.
+// This function will overwrite nativeDecimals in the decimals.json file by reading from config.
 func AddConfigDecimals() {
 	envDecimals := config.Global.PoolsDecimal
 
@@ -43,4 +44,13 @@ func AddConfigDecimals() {
 
 func PoolsDecimal() map[string]SingleResult {
 	return poolsDecimal
+}
+
+func ServeDecimalsDebug(resp http.ResponseWriter, req *http.Request) {
+	resp.Header().Set("Content-Type", "application/json")
+	e := json.NewEncoder(resp)
+	e.SetIndent("", "\t")
+
+	// Error is discarded
+	_ = e.Encode(poolsDecimal)
 }

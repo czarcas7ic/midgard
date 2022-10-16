@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"gitlab.com/thorchain/midgard/config"
+	"gitlab.com/thorchain/midgard/internal/decimal"
 	"gitlab.com/thorchain/midgard/internal/timeseries/stat"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
 	"gitlab.com/thorchain/midgard/internal/util/timer"
@@ -58,6 +59,7 @@ func InitHandler(nodeURL string, proxiedWhitelistedEndpoints []string) {
 	router.HandlerFunc(http.MethodGet, "/v2/debug/metrics", metrics.ServeHTTP)
 	router.HandlerFunc(http.MethodGet, "/v2/debug/timers", timer.ServeHTTP)
 	router.HandlerFunc(http.MethodGet, "/v2/debug/usd", stat.ServeUSDDebug)
+	router.HandlerFunc(http.MethodGet, "/v2/debug/decimals", decimal.ServeDecimalsDebug)
 	router.Handle(http.MethodGet, "/v2/debug/block/:id", debugBlock)
 
 	for _, endpoint := range proxiedWhitelistedEndpoints {
