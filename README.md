@@ -43,7 +43,6 @@ Fields in nested structs are accessed using underscores. Examples:
 * `MIDGARD_USD_POOLS="A,B,C"` will override the UsdPools
 * `MIDGARD_POOLS_DECIMAL="A.A:8,B.B:18"` will override the pools decimals
 
-
 ### Start native Midgard
 
 ```sh
@@ -255,7 +254,7 @@ Then from now you can regenerate files with:
 make generated
 ```
 
-## Generating blockstore hashes
+## Generate blockstore hashes
 
 Midgard can read blockstore to speed up fetching from ThorNode. Blockstore consists of compressed
 files containing the raw Bloks in batches of 10K.
@@ -277,6 +276,18 @@ Save the hashes in the git repository:
 ```
 (cd $blockstore_folder; sha256sum *) > resources/hashes/$chain_id
 ```
+
+## Refresh native decimals
+
+Midgard is a source of truth for the native decimal values of different coins. To regenerate the
+constant table run:
+
+```
+go run ./cmd/decimal
+```
+
+Then commit the new generated file
+(`internal/decimal/decimals.json`).
 
 ## Format, Lint
 
@@ -327,6 +338,43 @@ Package `internal/api` defines the HTTP interface.
 Blocks are “committed” with an entry in the `block_log` table, including a `block_timestamp`.
 Queries give consistent [cachable] results when executed with a (time) `db.Window` within
 `timeseries.Latest`.
+
+## Cutting a release
+
+
+- You'll need to do an MR with 1-3 commits, make sure you refresh develop first
+- Optional commit: [Generate blockstore hashes](#generate-blockstore-hashes)
+- Optional commit: [Refresh native decimals](#refresh-native-decimals)
+- Check the commits since the last release and write the release notes with the list of changes.
+  * It doesn't have to be very detailed, it should list the important changes for clients.
+  * Also note the commits which might be quickly testable as a last check
+    (e.g. new endpoint, changes in a specific field of an endpoint, etc.)
+  * Do note if there were DDL changes which will cause DB resync
+- Start up Midgard with mainnet and do a quick check that everything looks sane
+- If there were changes to endpoints/fields do eyeball that results seems sane,
+  no 404, no 0 values, etc.
+- Bump the version in a commit:
+  * Edit openapi.yaml, bump the version by semantic versioning rules:
+    + increase the patch number (last number) if there were no relevant changes for the clients, only bugfixes, speed upgrades, ...
+    + increase the minor version (middle number) if there is a API change (e.g. new field)
+  * On shell do: `make` which will regenerate oapigen go/html
+  * If you have problems with openapi generation check [Generated files](#generated-files)
+  * The commit message should be "Bump version to 2.x.x"
+- Create an MR. If people are expecting that you'll do a release then merge right away,
+  you don't need to wait for additional approval.
+  [Example MR](https://gitlab.com/thorchain/midgard/-/merge_requests/451)
+- You don't necesarrily need to wait until smoke test is passing, but the image will not build
+  until it passes, you might need to sync with other teams to get it passing.
+- Once merged create the release (example https://gitlab.com/thorchain/midgard/-/releases/2.9.6 ):
+  * In gitlab click: `Deployments > Releases > New release` .
+  * Tagname: type in the version number (`2.x.x`)  and click create tag
+  * Create from: develop
+  * Release title: append a `v` to the version number (`v2.x.x`)
+  * Milestone: leave empty
+  * Release date: leave default
+  * Release notes: copy the release notes you gathered when looking through the commits
+- Announce on Midgard Discord channel the release, tag ursa, copy the release notes there too.
+  [Example](https://discord.com/channels/838986635756044328/839002340354424842/1033018380728406026)
 
 ## Bookmarks
 
