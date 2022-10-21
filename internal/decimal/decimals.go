@@ -38,7 +38,7 @@ func AddConfigDecimals() {
 			AssetSeen:      append(poolDecimal.AssetSeen, "enviroment"),
 			DecimalSource:  append(poolDecimal.DecimalSource, "enviroment"),
 		}
-		midlog.InfoF("%s pool decimals has been overwritten by config.", pool)
+		midlog.InfoF("%s pool decimals has been overwritten by config to %d", pool, decimal)
 	}
 }
 
