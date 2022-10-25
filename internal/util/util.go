@@ -8,6 +8,19 @@ import (
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 )
 
+// Chains work with integers which represent fixed point decimals.
+// E.g. on BTC 1 is 1e-8 bitcoin, but on ETH 1 is 1e-18 ethereum.
+// This information is not important for Midgard, all the values are converted to E8 by ThorNode
+// before they are sent to Midgard.
+// This information is gathered only for clients.
+type NativeDecimalMap map[string]NativeDecimalSingle
+
+type NativeDecimalSingle struct {
+	NativeDecimals int64    `json:"decimals"` // -1 means that only the asset name was observed without the decimal count.
+	AssetSeen      []string `json:"asset_seen"`
+	DecimalSource  []string `json:"decimal_source"`
+}
+
 func IntStr(v int64) string {
 	return strconv.FormatInt(v, 10)
 }
