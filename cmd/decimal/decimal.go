@@ -20,7 +20,7 @@ import (
 // If you want to update decimal of the pools, run this script in the command line: `go run ./cmd/decimal`
 // If the script succeeds it will create the result in the `internal/decimal/decimals.json`
 
-type ResultMap map[string]decimal.SingleResult
+type ResultMap decimal.NativeDecimalMap
 
 func main() {
 	midlog.LogCommandLine()
@@ -115,7 +115,7 @@ func (pr PoolsResponse) toResultMap(network string) ResultMap {
 		} else if 0 < decimals {
 			decimalSource = append(decimalSource, network)
 		}
-		mapPools[p.Asset] = decimal.SingleResult{
+		mapPools[p.Asset] = decimal.NativeDecimalSingle{
 			NativeDecimals: decimals,
 			AssetSeen:      []string{network},
 			DecimalSource:  decimalSource,
@@ -127,7 +127,7 @@ func (pr PoolsResponse) toResultMap(network string) ResultMap {
 func knownPoolsToResultMap(knownPools oapigen.KnownPools, network string) ResultMap {
 	mapPools := ResultMap{}
 	for p := range knownPools.AdditionalProperties {
-		mapPools[p] = decimal.SingleResult{
+		mapPools[p] = decimal.NativeDecimalSingle{
 			NativeDecimals: -1,
 			AssetSeen:      []string{network},
 			DecimalSource:  []string{},
@@ -229,7 +229,7 @@ type EthResponse struct {
 }
 
 func getERC20decimal(pools ResultMap) ResultMap {
-	ercMap := make(map[string]decimal.SingleResult)
+	ercMap := decimal.NativeDecimalMap{}
 	cnt := 0
 	for k := range pools {
 		if strings.HasPrefix(k, "ETH") && k != "ETH.ETH" {
@@ -241,7 +241,7 @@ func getERC20decimal(pools ResultMap) ResultMap {
 			}
 			nativeDecimal := queryEthplorerAsset(r[1])
 			if nativeDecimal != 0 && nativeDecimal != -1 {
-				ercMap[k] = decimal.SingleResult{
+				ercMap[k] = decimal.NativeDecimalSingle{
 					NativeDecimals: nativeDecimal,
 					AssetSeen:      []string{},
 					DecimalSource:  []string{"ERC20"},
@@ -280,7 +280,7 @@ func readManualJson() ResultMap {
 	}
 
 	for p, v := range rawPools {
-		manualResult[p] = decimal.SingleResult{
+		manualResult[p] = decimal.NativeDecimalSingle{
 			NativeDecimals: v,
 			AssetSeen:      []string{"constants"},
 			DecimalSource:  []string{"constants"},

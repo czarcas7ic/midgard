@@ -11,9 +11,16 @@ import (
 
 //go:embed decimals.json
 var decimalString string
-var poolsDecimal map[string]SingleResult
+var poolsDecimal NativeDecimalMap
 
-type SingleResult struct {
+// Chains work with integers which represent fixed point decimals.
+// E.g. on BTC 1 is 1e-8 bitcoin, but on ETH 1 is 1e-18 ethereum.
+// This information is not important for Midgard, all the values are converted to E8 by ThorNode
+// before they are sent to Midgard.
+// This information is gathered only for clients.
+type NativeDecimalMap map[string]NativeDecimalSingle
+
+type NativeDecimalSingle struct {
 	NativeDecimals int64    `json:"decimals"` // -1 means that only the asset name was observed without the decimal count.
 	AssetSeen      []string `json:"asset_seen"`
 	DecimalSource  []string `json:"decimal_source"`
@@ -33,7 +40,7 @@ func AddConfigDecimals() {
 	for pool, decimal := range envDecimals {
 		// default constructed poolDecimal just works too
 		poolDecimal := poolsDecimal[pool]
-		poolsDecimal[pool] = SingleResult{
+		poolsDecimal[pool] = NativeDecimalSingle{
 			NativeDecimals: decimal,
 			AssetSeen:      append(poolDecimal.AssetSeen, "enviroment"),
 			DecimalSource:  append(poolDecimal.DecimalSource, "enviroment"),
@@ -42,7 +49,7 @@ func AddConfigDecimals() {
 	}
 }
 
-func PoolsDecimal() map[string]SingleResult {
+func PoolsDecimal() NativeDecimalMap {
 	return poolsDecimal
 }
 
