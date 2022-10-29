@@ -116,6 +116,25 @@ CREATE INDEX ON midgard_agg.actions USING gin (assets);
 CREATE INDEX ON midgard_agg.actions USING gin ((meta -> 'affiliateAddress'));
 
 --
+-- Functions for actions aggregates
+--
+
+CREATE FUNCTION midgard_agg.check_synth(ta text[]) RETURNS boolean
+LANGUAGE plpgsql AS $BODY$
+DECLARE
+    t text;
+BEGIN
+    FOREACH t IN ARRAY ta
+    LOOP
+        IF t ~ '/'  THEN
+            RETURN TRUE; 
+        END IF;
+    END LOOP;
+    RETURN FALSE;
+END
+$BODY$;
+
+--
 -- Basic VIEWs that build actions
 --
 
@@ -220,7 +239,10 @@ CREATE VIEW midgard_agg.swap_actions AS
         tx :: text AS main_ref,
         ARRAY[from_addr, to_addr] :: text[] AS addresses,
         ARRAY[tx] :: text[] AS transactions,
-        ARRAY[from_asset, to_asset] :: text[] AS assets,
+        CASE WHEN 
+            midgard_agg.check_synth(ARRAY[from_asset, to_asset]) 
+            THEN ARRAY[from_asset, to_asset, 'synth'] 
+            ELSE ARRAY[from_asset, to_asset, 'nosynth'] END :: text[] AS assets,
         ARRAY[pool] :: text[] AS pools,
         jsonb_build_array(mktransaction(tx, from_addr, (from_asset, from_e8))) AS ins,
         jsonb_build_array() AS outs,
@@ -251,7 +273,10 @@ CREATE VIEW midgard_agg.swap_actions AS
         swap_in.tx :: text AS main_ref,
         ARRAY[swap_in.from_addr, swap_in.to_addr] :: text[] AS addresses,
         ARRAY[swap_in.tx] :: text[] AS transactions,
-        ARRAY[swap_in.from_asset, swap_out.to_asset] :: text[] AS assets,
+        CASE WHEN 
+            midgard_agg.check_synth(ARRAY[swap_in.from_asset, swap_out.to_asset]) 
+            THEN ARRAY[swap_in.from_asset, swap_out.to_asset, 'synth'] 
+            ELSE ARRAY[swap_in.from_asset, swap_out.to_asset, 'nosynth'] END :: text[] AS assets,
         CASE WHEN swap_in.pool <> swap_out.pool THEN ARRAY[swap_in.pool, swap_out.pool]
             ELSE ARRAY[swap_in.pool] END :: text[] AS pools,
         jsonb_build_array(mktransaction(swap_in.tx, swap_in.from_addr,
