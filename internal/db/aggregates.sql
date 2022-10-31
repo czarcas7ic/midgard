@@ -213,7 +213,10 @@ CREATE VIEW midgard_agg.withdraw_actions AS
         tx :: text AS main_ref,
         ARRAY[from_addr, to_addr] :: text[] AS addresses,
         ARRAY[tx] :: text[] AS transactions,
-        ARRAY[pool] :: text[] AS assets,
+        CASE WHEN
+            midgard_agg.check_synth(ARRAY[pool]) 
+            THEN ARRAY[pool, 'synth'] 
+            ELSE ARRAY[pool, 'nosynth'] END :: text[] AS assets,
         ARRAY[pool] :: text[] AS pools,
         jsonb_build_array(mktransaction(tx, from_addr, (asset, asset_e8))) AS ins,
         jsonb_build_array() AS outs,
@@ -310,7 +313,10 @@ CREATE VIEW midgard_agg.addliquidity_actions AS
         NULL :: text AS main_ref,
         non_null_array(rune_addr, asset_addr) AS addresses,
         non_null_array(rune_tx, asset_tx) AS transactions,
-        ARRAY[pool, 'THOR.RUNE'] :: text[] AS assets,
+        CASE WHEN
+            midgard_agg.check_synth(ARRAY[pool]) 
+            THEN ARRAY[pool, 'synth'] 
+            ELSE ARRAY[pool, 'THOR.RUNE', 'nosynth'] END :: text[] AS assets,
         ARRAY[pool] :: text[] AS pools,
         transaction_list(
             mktransaction(rune_tx, rune_addr, ('THOR.RUNE', rune_e8)),
