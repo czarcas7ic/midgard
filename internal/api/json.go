@@ -15,6 +15,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/decimal"
+	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/util"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 
@@ -513,11 +514,17 @@ func GetSinglePoolAPR(ctx context.Context,
 	return aprs[pool], nil
 }
 
+type SaverData struct {
+	SaversUnits int64
+	SaversDepth int64
+}
+
 type poolAggregates struct {
 	depths               timeseries.DepthMap
 	dailyVolumes         map[string]int64
 	liquidityUnits       map[string]int64
 	annualPercentageRate map[string]float64
+	saverDataMap         map[string]SaverData
 }
 
 func getPoolAggregates(ctx context.Context, pools []string, apyBucket db.Buckets) (
@@ -532,10 +539,21 @@ func getPoolAggregates(ctx context.Context, pools []string, apyBucket db.Buckets
 		return nil, err
 	}
 
+	// this adds pool synth for pool endpoint
+	if len(pools) == 1 {
+		synthPool := strings.Replace(pools[0], ".", "/", 1)
+		_, ok := latestState.Pools[synthPool]
+		if ok {
+			pools = append(pools, synthPool)
+		}
+	}
+
 	liquidityUnitsNow, err := stat.PoolsLiquidityUnitsBefore(ctx, pools, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	saverData := getSaversData(latestState.Pools, liquidityUnitsNow)
 
 	aprs, err := GetPoolAPRs(ctx, latestState.Pools, liquidityUnitsNow, pools,
 		apyBucket.Start().ToNano(), apyBucket.End().ToNano())
@@ -548,9 +566,24 @@ func getPoolAggregates(ctx context.Context, pools []string, apyBucket db.Buckets
 		dailyVolumes:         dailyVolumes,
 		liquidityUnits:       liquidityUnitsNow,
 		annualPercentageRate: aprs,
+		saverDataMap:         saverData,
 	}
 
 	return &aggregates, nil
+}
+
+func getSaversData(depths timeseries.DepthMap, liquidityUnits map[string]int64) map[string]SaverData {
+	ret := map[string]SaverData{}
+	for p := range depths {
+		actualPoolName := strings.Replace(p, "/", ".", 1)
+		if record.GetCoinType([]byte(p)) == record.AssetSynth {
+			ret[actualPoolName] = SaverData{
+				SaversDepth: depths[p].AssetDepth,
+				SaversUnits: liquidityUnits[p],
+			}
+		}
+	}
+	return ret
 }
 
 func poolStatusFromMap(pool string, statusMap map[string]string) string {
@@ -573,6 +606,8 @@ func buildPoolDetail(
 	apr := aggregates.annualPercentageRate[pool]
 	price := timeseries.AssetPrice(assetDepth, runeDepth)
 	priceUSD := price * runePriceUsd
+	saversUnit := aggregates.saverDataMap[pool].SaversUnits
+	saversDepth := aggregates.saverDataMap[pool].SaversDepth
 
 	return oapigen.PoolDetail{
 		Asset:                pool,
@@ -589,6 +624,8 @@ func buildPoolDetail(
 		SynthSupply:          util.IntStr(synthSupply),
 		Volume24h:            util.IntStr(dailyVolume),
 		NativeDecimal:        util.IntStr(decimal),
+		SaverUnits:           util.IntStr(saversUnit),
+		SaverDepth:           util.IntStr(saversDepth),
 	}
 }
 
