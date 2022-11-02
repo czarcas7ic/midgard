@@ -1015,6 +1015,8 @@ components:
         - synthSupply
         - units
         - nativeDecimal
+        - saversUnits
+        - saversDepth
       properties:
         asset:
           type: string
@@ -1065,6 +1067,12 @@ components:
         nativeDecimal:
           type: string
           description: Int64, The native decimal number of the pool asset. (If the value is "-1", it means midgard doesn't know the pool native decimal)
+        saversUnits:
+            type: string
+            description: Int64, Units tracking savers vault ownership.
+        saversDepth:
+            type: string
+            description: Int64, Total synth locked in saver vault.
 
     PoolStatsDetail:
       type: object

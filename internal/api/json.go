@@ -624,8 +624,8 @@ func buildPoolDetail(
 		SynthSupply:          util.IntStr(synthSupply),
 		Volume24h:            util.IntStr(dailyVolume),
 		NativeDecimal:        util.IntStr(decimal),
-		SaverUnits:           util.IntStr(saversUnit),
-		SaverDepth:           util.IntStr(saversDepth),
+		SaversUnits:          util.IntStr(saversUnit),
+		SaversDepth:          util.IntStr(saversDepth),
 	}
 }
 
