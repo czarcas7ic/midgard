@@ -100,7 +100,7 @@ func bucketedUnitChanges(ctx context.Context, buckets db.Buckets, pool string, t
 // Not including the until timestamp
 func PoolsLiquidityUnitsBefore(ctx context.Context, pools []string, until *db.Nano) (
 	map[string]int64, error) {
-	ret, err := totalUnitChanges(ctx, pools, "stake_events", until)
+	stakes, err := totalUnitChanges(ctx, pools, "stake_events", until)
 	if err != nil {
 		return nil, err
 	}
@@ -109,9 +109,9 @@ func PoolsLiquidityUnitsBefore(ctx context.Context, pools []string, until *db.Na
 		return nil, err
 	}
 	for k, v := range withdraws {
-		ret[k] -= v
+		stakes[k] -= v
 	}
-	return ret, nil
+	return stakes, nil
 }
 
 // PoolUnits gets net liquidity units in pools
