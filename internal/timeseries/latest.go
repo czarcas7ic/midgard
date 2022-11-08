@@ -10,7 +10,6 @@ type PoolDepths struct {
 	AssetDepth int64
 	RuneDepth  int64
 	SynthDepth int64
-	SaverDepth int64
 }
 
 func AssetPrice(assetDepth, runeDepth int64) float64 {
