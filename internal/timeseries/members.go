@@ -77,6 +77,18 @@ func (memberPool MemberPool) toOapigen() oapigen.MemberPool {
 	}
 }
 
+func (memberPool MemberPool) toSavers() oapigen.SaverPool {
+	return oapigen.SaverPool{
+		Pool:           util.ConvertSynthPoolToNative(memberPool.Pool),
+		AssetAddress:   memberPool.AssetAddress,
+		AssetAdded:     util.IntStr(memberPool.AssetAdded),
+		SaverUnits:     util.IntStr(memberPool.LiquidityUnits),
+		AssetWithdrawn: util.IntStr(memberPool.AssetWithdrawn),
+		DateFirstAdded: util.IntStr(memberPool.DateFirstAdded),
+		DateLastAdded:  util.IntStr(memberPool.DateLastAdded),
+	}
+}
+
 // Pools data associated with a single member
 type MemberPools []MemberPool
 
@@ -84,6 +96,15 @@ func (memberPools MemberPools) ToOapigen() []oapigen.MemberPool {
 	ret := make([]oapigen.MemberPool, len(memberPools))
 	for i, memberPool := range memberPools {
 		ret[i] = memberPool.toOapigen()
+	}
+
+	return ret
+}
+
+func (memberPools MemberPools) ToSavers() []oapigen.SaverPool {
+	ret := make([]oapigen.SaverPool, len(memberPools))
+	for i, memberPool := range memberPools {
+		ret[i] = memberPool.toSavers()
 	}
 
 	return ret

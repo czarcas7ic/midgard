@@ -663,6 +663,26 @@ paths:
         "200":
           $ref: '#/components/responses/MemberDetailsResponse'
 
+  "/v2/saver/{address}":
+    get:
+      operationId: GetSaverDetail
+      summary: Saver Details
+      description: |
+        Returns an array of statistics for all the savers associated with a given
+        member address.
+      parameters:
+        - name: address
+          in: path
+          description: |
+            Address to match the saver. an asset address should be given.
+          required: true
+          schema:
+            type: string
+          example: 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m'
+      responses:
+        "200":
+          $ref: '#/components/responses/SaverDetailsResponse'
+
   "/v2/thorname/lookup/{name}":
     get:
       operationId: GetTHORNameDetail
@@ -883,6 +903,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/MemberDetails'
+    SaverDetailsResponse:
+      description: object containing saver data for a specific member
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SaverDetails'
     THORNameDetailsResponse:
       description: object containing THORName data for a specific name
       content:
@@ -2183,6 +2209,54 @@ components:
         dateLastAdded:
           type: string
           description: Int64, Unix timestamp for the last time member deposited into the pool
+    Savers:
+      type: array
+      items:
+        type: string
+        description: Member address
+        example: bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m
+    SaverDetails:
+      type: object
+      required:
+        - pools
+      properties:
+        pools:
+          type: array
+          items:
+              $ref: '#/components/schemas/SaverPool'
+          description: List details of all the savers identified with the given address
+    SaverPool:
+      type: object
+      required:
+        - pool
+        - assetAddress
+        - saverUnits
+        - assetAdded
+        - assetWithdrawn
+        - dateFirstAdded
+        - dateLastAdded
+      properties:
+        pool:
+          type: string
+          description: The Pool rest of the data are refering to (only those pools can show up which have a corresponding saver pool)
+        assetAddress:
+          type: string
+          description: saver address used by the member
+        saverUnits:
+          type: string
+          description: Int64, saver liquidity units that belong the the member
+        assetAdded:
+          type: string
+          description: Int64(e8), total asset added to the saver pool by member
+        assetWithdrawn:
+          type: string
+          description: Int64(e8), total asset withdrawn from the saver pool by member
+        dateFirstAdded:
+          type: string
+          description: Int64, Unix timestamp for the first time member deposited into the saver pool
+        dateLastAdded:
+          type: string
+          description: Int64, Unix timestamp for the last time member deposited into the saver pool 
 
     StatsData:
       type: object

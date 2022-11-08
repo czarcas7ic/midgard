@@ -796,6 +796,38 @@ func jsonMemberDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	})
 }
 
+func jsonSaverDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	urlParams := r.URL.Query()
+
+	if merr := util.CheckUrlEmpty(urlParams); merr != nil {
+		merr.ReportHTTP(w)
+		return
+	}
+
+	addr := ps[0].Value
+
+	var pools timeseries.MemberPools
+	var err error
+	for _, addr := range withLowered(addr) {
+		pools, err = timeseries.GetMemberPools(r.Context(), addr, timeseries.SaverPools)
+		if err != nil {
+			respError(w, err)
+			return
+		}
+		if len(pools) > 0 {
+			break
+		}
+	}
+	if len(pools) == 0 {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	respJSON(w, oapigen.SaverDetailsResponse{
+		Pools: pools.ToSavers(),
+	})
+}
+
 func jsonTHORName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	merr := util.CheckUrlEmpty(r.URL.Query())
 	if merr != nil {

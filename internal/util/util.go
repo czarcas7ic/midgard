@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 )
@@ -23,6 +24,10 @@ type NativeDecimalSingle struct {
 
 func IntStr(v int64) string {
 	return strconv.FormatInt(v, 10)
+}
+
+func ConvertSynthPoolToNative(poolName string) string {
+	return strings.Replace(poolName, "/", ".", 1)
 }
 
 func ConsumeUrlParam(urlParams *url.Values, key string) (value string) {
