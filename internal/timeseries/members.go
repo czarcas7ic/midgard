@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gitlab.com/thorchain/midgard/internal/db"
+	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/util"
 	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
 )
@@ -88,7 +89,29 @@ func (memberPools MemberPools) ToOapigen() []oapigen.MemberPool {
 	return ret
 }
 
-func GetMemberPools(ctx context.Context, address string) (MemberPools, error) {
+type MemberPoolType int
+
+const (
+	RegularAndSaverPools MemberPoolType = iota // regular and synth pools too
+	RegularPools                               // regular (non-synth) pools e.g. 'BTC.BTC'
+	SaverPools                                 // LPs of synth pools e.g. 'BTC/BTC'
+)
+
+func PoolBasedOfType(poolName string, poolType MemberPoolType) bool {
+	if poolType == RegularAndSaverPools {
+		return true
+	}
+	poolCoinType := record.GetCoinType([]byte(poolName))
+	if poolCoinType == record.AssetSynth && poolType == SaverPools {
+		return true
+	}
+	if poolCoinType == record.AssetNative && poolType == RegularPools {
+		return true
+	}
+	return false
+}
+
+func GetMemberPools(ctx context.Context, address string, poolType MemberPoolType) (MemberPools, error) {
 	q := `
 		SELECT
 			pool,
@@ -134,7 +157,9 @@ func GetMemberPools(ctx context.Context, address string) (MemberPools, error) {
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, entry)
+		if PoolBasedOfType(entry.Pool, poolType) {
+			results = append(results, entry)
+		}
 	}
 	return results, nil
 }

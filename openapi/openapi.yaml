@@ -650,6 +650,15 @@ paths:
           schema:
             type: string
           example: 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m'
+        - name: showSavers
+          in: query
+          description: |
+            A flag to show saver vault membership details, the default is false.
+          required: false
+          example: true
+          schema:
+            type: boolean
+            default: false
       responses:
         "200":
           $ref: '#/components/responses/MemberDetailsResponse'

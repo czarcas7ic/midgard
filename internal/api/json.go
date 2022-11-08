@@ -760,8 +760,14 @@ func jsonMembers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func jsonMemberDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	merr := util.CheckUrlEmpty(r.URL.Query())
-	if merr != nil {
+	urlParams := r.URL.Query()
+
+	showPoolsType := timeseries.RegularPools
+	if util.ConsumeUrlParam(&urlParams, "showSavers") == "true" {
+		showPoolsType = timeseries.RegularAndSaverPools
+	}
+
+	if merr := util.CheckUrlEmpty(urlParams); merr != nil {
 		merr.ReportHTTP(w)
 		return
 	}
@@ -771,7 +777,7 @@ func jsonMemberDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	var pools timeseries.MemberPools
 	var err error
 	for _, addr := range withLowered(addr) {
-		pools, err = timeseries.GetMemberPools(r.Context(), addr)
+		pools, err = timeseries.GetMemberPools(r.Context(), addr, showPoolsType)
 		if err != nil {
 			respError(w, err)
 			return
