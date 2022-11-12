@@ -3,6 +3,7 @@ package timeseries
 import (
 	"context"
 
+	"github.com/lib/pq"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/util"
@@ -132,7 +133,7 @@ func PoolBasedOfType(poolName string, poolType MemberPoolType) bool {
 	return false
 }
 
-func GetMemberPools(ctx context.Context, address string, poolType MemberPoolType) (MemberPools, error) {
+func GetMemberPools(ctx context.Context, address []string, poolType MemberPoolType) (MemberPools, error) {
 	q := `
 		SELECT
 			pool,
@@ -148,11 +149,11 @@ func GetMemberPools(ctx context.Context, address string, poolType MemberPoolType
 			COALESCE(first_added_timestamp / 1000000000, 0),
 			COALESCE(last_added_timestamp / 1000000000, 0)
 		FROM midgard_agg.members
-		WHERE member_id = $1 OR asset_addr = $1
+		WHERE member_id = ANY($1) OR asset_addr = ANY($1)
 		ORDER BY pool
 	`
 
-	rows, err := db.Query(ctx, q, address)
+	rows, err := db.Query(ctx, q, pq.Array(address))
 	if err != nil {
 		return nil, err
 	}

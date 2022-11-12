@@ -772,20 +772,15 @@ func jsonMemberDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		return
 	}
 
-	addr := ps[0].Value
+	addr := strings.Join(withLowered(ps[0].Value), ",")
 
-	var pools timeseries.MemberPools
-	var err error
-	for _, addr := range withLowered(addr) {
-		pools, err = timeseries.GetMemberPools(r.Context(), addr, showPoolsType)
-		if err != nil {
-			respError(w, err)
-			return
-		}
-		if len(pools) > 0 {
-			break
-		}
+	addrs := strings.Split(addr, ",")
+	pools, err := timeseries.GetMemberPools(r.Context(), addrs, showPoolsType)
+	if err != nil {
+		respError(w, err)
+		return
 	}
+
 	if len(pools) == 0 {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
@@ -804,20 +799,15 @@ func jsonSaverDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	addr := ps[0].Value
+	addr := strings.Join(withLowered(ps[0].Value), ",")
 
-	var pools timeseries.MemberPools
-	var err error
-	for _, addr := range withLowered(addr) {
-		pools, err = timeseries.GetMemberPools(r.Context(), addr, timeseries.SaverPools)
-		if err != nil {
-			respError(w, err)
-			return
-		}
-		if len(pools) > 0 {
-			break
-		}
+	addrs := strings.Split(addr, ",")
+	pools, err := timeseries.GetMemberPools(r.Context(), addrs, timeseries.SaverPools)
+	if err != nil {
+		respError(w, err)
+		return
 	}
+
 	if len(pools) == 0 {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return

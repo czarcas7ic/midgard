@@ -646,10 +646,11 @@ paths:
           in: path
           description: |
             Address to match liquidity providers. Either a rune or an asset address may be given.
+            Query can also be multiple addresses should be seperated by comma (',')
           required: true
           schema:
             type: string
-          example: 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m'
+          example: 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m,bc1qcxssye4j6730h7ehgega3gyykkuwgdgmmpu62n'
         - name: showSavers
           in: query
           description: |
@@ -670,6 +671,7 @@ paths:
       description: |
         Returns an array of statistics for all the savers associated with a given
         member address.
+        Query can also be multiple addresses should be seperated by comma (',')
       parameters:
         - name: address
           in: path
@@ -678,7 +680,7 @@ paths:
           required: true
           schema:
             type: string
-          example: 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m'
+          example: 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m,bc1qcxssye4j6730h7ehgega3gyykkuwgdgmmpu62n'
       responses:
         "200":
           $ref: '#/components/responses/SaverDetailsResponse'
