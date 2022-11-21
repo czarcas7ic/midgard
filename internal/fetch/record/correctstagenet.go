@@ -104,5 +104,25 @@ func loadStagenetCorrections(rootChainID string) {
 			}
 			Recorder.OnWithdraw(&withdraw, meta)
 		})
+	case "thorchain-stagenet-v1":
+		// Faulty withdraw event emitted with null values on ETH saver
+		// instead of withdraw event with right values
+		// Also a wrong suspended pool cycle event
+		// Fixed by https://gitlab.com/thorchain/thornode/-/merge_requests/2594, and 2597
+		AdditionalEvents.Add(3685680, func(meta *Metadata) {
+			withdraw := Withdraw{
+				FromAddr:    []byte("sthor19phfqh3ce3nnjhh0cssn433nydq9shx76s8qgg"),
+				Chain:       []byte("ETH"),
+				Pool:        []byte("ETH/ETH"),
+				Asset:       []byte("ETH.ETH"),
+				ToAddr:      []byte(""),
+				Memo:        []byte("-:ETH/ETH:10000"),
+				Tx:          []byte(""),
+				EmitAssetE8: 0,
+				EmitRuneE8:  0,
+				StakeUnits:  107010,
+			}
+			Recorder.OnWithdraw(&withdraw, meta)
+		})
 	}
 }
