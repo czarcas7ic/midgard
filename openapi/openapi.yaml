@@ -648,11 +648,19 @@ paths:
           example: 2F624637DE179665BA3322B864DB9F30001FD37B4E0D22A0B6ECE6A5B078DAB4
         - name: asset
           in: query
-          description: Any asset that is part of the action (CHAIN.SYMBOL)
+          description: |
+            Comma separated list. Any asset that is part of the action (CHAIN.SYMBOL)
+            Additionally, synth, nosynth, and norune filters can be used for swap, add/withdraw actions.
           required: false
           schema:
             type: string
-          example: BNB.TOMOB-1E1
+          examples: 
+            regularAsset: 
+              value: BTC.BTC,THOR.RUNE
+              summary: Regular multiple asset query. (having at least either one of them)
+            filterAsset:
+              value: nosynth,norune
+              summary: Query action that are neither synth nor rune asset
         - name: type
           in: query
           description: |
