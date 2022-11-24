@@ -2,7 +2,7 @@ package record
 
 func loadStagenetCorrections(rootChainID string) {
 	switch rootChainID {
-	case "thorchain-stagenet":
+	case "thorchain-stagenet-v1":
 		// There was a case where the first stagenet churn resulted in a node getting churned
 		// in that didn't have the minimum bond, so it had a status of "Active" with a
 		// preflight status "Standby" and the `UpdateNodeAccountStatus` event was never sent.
@@ -104,7 +104,7 @@ func loadStagenetCorrections(rootChainID string) {
 			}
 			Recorder.OnWithdraw(&withdraw, meta)
 		})
-	case "thorchain-stagenet-v1":
+
 		// Faulty withdraw event emitted with null values on ETH saver
 		// instead of withdraw event with right values
 		// Also a wrong suspended pool cycle event
