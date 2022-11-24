@@ -17,6 +17,7 @@ import (
 	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
 )
 
+const MaxAssets = 4
 const MaxAddresses = 50
 const MaxLimit = 50
 const DefaultLimit = 50
@@ -171,7 +172,7 @@ type parsedActionsParams struct {
 	types            []string
 	addresses        []string
 	txid             string
-	asset            string
+	assets           []string
 	affiliateAddress string
 }
 
@@ -223,13 +224,23 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 		}
 	}
 
+	var assets []string
+	if p.Asset != "" {
+		assets = strings.Split(p.Asset, ",")
+		if MaxAssets < len(assets) {
+			return parsedActionsParams{}, miderr.BadRequestF(
+				"too many assets: %d provided, maximum is %d",
+				len(assets), MaxAssets)
+		}
+	}
+
 	return parsedActionsParams{
 		limit:            limit,
 		offset:           offset,
 		types:            types,
 		addresses:        addresses,
 		txid:             p.TXId,
-		asset:            p.Asset,
+		assets:           assets,
 		affiliateAddress: p.Affiliate,
 	}, nil
 }
@@ -510,10 +521,10 @@ func actionsPreparedStatements(moment time.Time,
 			AND addresses && #ADDRESSES#`
 	}
 
-	if params.asset != "" {
-		baseValues = append(baseValues, namedSqlValue{"#ASSET#", params.asset})
+	if len(params.assets) != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#ASSET#", pq.Array(params.assets)})
 		whereQuery += `
-			AND assets @> ARRAY[#ASSET#]`
+			AND assets @> #ASSET#`
 	}
 
 	if params.affiliateAddress != "" {
