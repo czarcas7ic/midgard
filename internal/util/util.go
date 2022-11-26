@@ -26,6 +26,10 @@ func IntStr(v int64) string {
 	return strconv.FormatInt(v, 10)
 }
 
+func ConvertNativePoolToSynth(poolName string) string {
+	return strings.Replace(poolName, ".", "/", 1)
+}
+
 func ConvertSynthPoolToNative(poolName string) string {
 	return strings.Replace(poolName, "/", ".", 1)
 }

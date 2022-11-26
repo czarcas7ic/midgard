@@ -491,10 +491,22 @@ func GetPoolAPRs(ctx context.Context,
 
 	ret := map[string]float64{}
 	for _, pool := range pools {
-		luviNow := luviFromLPUnits(depthsNow[pool], lpUnitsNow[pool])
-		luviBefore := luviFromLPUnits(depthsBefore[pool], liquidityUnitsBefore[pool])
-		luviIncrease := luviNow / luviBefore
-		ret[pool] = (luviIncrease - 1) * periodsPerYear
+		if record.GetCoinType([]byte(pool)) == record.AssetNative {
+			luviNow := luviFromLPUnits(depthsNow[pool], lpUnitsNow[pool])
+			luviBefore := luviFromLPUnits(depthsBefore[pool], liquidityUnitsBefore[pool])
+			luviIncrease := luviNow / luviBefore
+			ret[pool] = (luviIncrease - 1) * periodsPerYear
+		} else {
+			_, unitNowOk := lpUnitsNow[pool]
+			_, unitBeforeOk := liquidityUnitsBefore[pool]
+			if !unitBeforeOk || !unitNowOk {
+				ret[pool] = 0.00
+				continue
+			}
+			swapGrowthIndexBefore := float64(depthsBefore[pool].AssetDepth) / float64(liquidityUnitsBefore[pool])
+			swapGrowthIndexNow := float64(depthsNow[pool].AssetDepth) / float64(lpUnitsNow[pool])
+			ret[pool] = (swapGrowthIndexNow - swapGrowthIndexBefore) * periodsPerYear
+		}
 	}
 	return ret, nil
 }
@@ -609,6 +621,11 @@ func buildPoolDetail(
 	saversUnit := aggregates.saverDataMap[pool].SaversUnits
 	saversDepth := aggregates.saverDataMap[pool].SaversDepth
 
+	saversAPR := 0.00
+	if _, ok := aggregates.depths[util.ConvertNativePoolToSynth(pool)]; ok {
+		saversAPR = aggregates.annualPercentageRate[util.ConvertNativePoolToSynth(pool)]
+	}
+
 	return oapigen.PoolDetail{
 		Asset:                pool,
 		AssetDepth:           util.IntStr(assetDepth),
@@ -626,6 +643,7 @@ func buildPoolDetail(
 		NativeDecimal:        util.IntStr(decimal),
 		SaversUnits:          util.IntStr(saversUnit),
 		SaversDepth:          util.IntStr(saversDepth),
+		SaversAPR:            floatStr(saversAPR),
 	}
 }
 

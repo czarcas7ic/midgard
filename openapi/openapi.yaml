@@ -1054,6 +1054,7 @@ components:
         - nativeDecimal
         - saversUnits
         - saversDepth
+        - saversAPR
       properties:
         asset:
           type: string
@@ -1086,6 +1087,13 @@ components:
           type: string
           description: |
             Float, MAX(AnnualPercentageRate, 0)
+        saversAPR:
+          type: string
+          description: |
+            Float, Annual Return estimated linearly (not compounded) for savers from
+            a period of typically the last 30 or 100 days (configurable by the period parameter,
+            default is 30). E.g. 0.1 means 10% yearly return.
+            If the savers period has not yet been reached, It will show zero instead.
         status:
           type: string
           description: The state of the pool, e.g. Available, Staged.
