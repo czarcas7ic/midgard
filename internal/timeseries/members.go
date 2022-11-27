@@ -82,7 +82,7 @@ func (memberPool MemberPool) toSavers() oapigen.SaverPool {
 	return oapigen.SaverPool{
 		Pool:           util.ConvertSynthPoolToNative(memberPool.Pool),
 		AssetAddress:   memberPool.AssetAddress,
-		AssetAdded:     util.IntStr(memberPool.AssetAdded),
+		AssetBalance:   util.IntStr(memberPool.AssetAdded),
 		SaverUnits:     util.IntStr(memberPool.LiquidityUnits),
 		AssetWithdrawn: util.IntStr(memberPool.AssetWithdrawn),
 		DateFirstAdded: util.IntStr(memberPool.DateFirstAdded),

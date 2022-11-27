@@ -2241,7 +2241,7 @@ components:
         - pool
         - assetAddress
         - saverUnits
-        - assetAdded
+        - assetBalance
         - assetWithdrawn
         - dateFirstAdded
         - dateLastAdded
@@ -2255,9 +2255,9 @@ components:
         saverUnits:
           type: string
           description: Int64, saver liquidity units that belong the the member
-        assetAdded:
+        assetBalance:
           type: string
-          description: Int64(e8), total asset added to the saver pool by member
+          description: Int64(e8), total asset balance in the saver pool by member which is redeemable
         assetWithdrawn:
           type: string
           description: Int64(e8), total asset withdrawn from the saver pool by member
