@@ -505,7 +505,7 @@ func GetPoolAPRs(ctx context.Context,
 			}
 			swapGrowthIndexBefore := float64(depthsBefore[pool].AssetDepth) / float64(liquidityUnitsBefore[pool])
 			swapGrowthIndexNow := float64(depthsNow[pool].AssetDepth) / float64(lpUnitsNow[pool])
-			ret[pool] = (swapGrowthIndexNow - swapGrowthIndexBefore) * periodsPerYear
+			ret[pool] = ((swapGrowthIndexNow - swapGrowthIndexBefore) / swapGrowthIndexBefore) * periodsPerYear
 		}
 	}
 	return ret, nil
