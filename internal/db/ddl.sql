@@ -1,4 +1,4 @@
--- version 27
+-- version 28
 
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
