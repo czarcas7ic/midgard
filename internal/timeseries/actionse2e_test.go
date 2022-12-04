@@ -1066,7 +1066,7 @@ func TestRefundFields(t *testing.T) {
 			FromAddress: "userassteaddr",
 			ToAddress:   "officialaddr",
 			Reason:      "emit asset 100 less than price limit 200",
-			Memo:        "memo",
+			Memo:        "=:THOR.RUNE:thor1:200:ouraffiliateaddress:100",
 		},
 		testdb.Fee{
 			TxID:       "12345",
@@ -1097,9 +1097,11 @@ func TestRefundFields(t *testing.T) {
 		}},
 		Metadata: oapigen.Metadata{
 			Refund: &oapigen.RefundMetadata{
-				NetworkFees: []oapigen.Coin{{Amount: "10", Asset: "BTC.BTC"}},
-				Reason:      "emit asset 100 less than price limit 200",
-				Memo:        "memo",
+				NetworkFees:      []oapigen.Coin{{Amount: "10", Asset: "BTC.BTC"}},
+				Reason:           "emit asset 100 less than price limit 200",
+				Memo:             "=:THOR.RUNE:thor1:200:ouraffiliateaddress:100",
+				AffiliateAddress: "ouraffiliateaddress",
+				AffiliateFee:     "100",
 			},
 		},
 		Out: []oapigen.Transaction{{
