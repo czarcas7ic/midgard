@@ -589,7 +589,7 @@ paths:
         - name: affiliate
           in: query
           description: |
-            Affiliate address of the action (swap)
+            Affiliate address of the action (swap, refund)
           required: false
           schema:
             type: string
@@ -2096,6 +2096,8 @@ components:
         - networkFees
         - reason
         - memo
+        - affiliateFee
+        - affiliateAddress
       properties:
         networkFees:
           $ref: '#/components/schemas/NetworkFees'
@@ -2105,6 +2107,12 @@ components:
         memo:
           type: string
           description: Transaction memo of the refund action
+        affiliateFee:
+          type: string
+          description:  Int64 (Basis points, 0-1000, where 1000=10%)
+        affiliateAddress:
+          type: string
+          description: Affiliate fee address of the swap, empty if fee swap
     NetworkFees:
       type: array
       description: |

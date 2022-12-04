@@ -150,7 +150,15 @@ CREATE VIEW midgard_agg.refund_actions AS
         jsonb_build_array() AS fees,
         jsonb_build_object(
             'reason', reason,
-            'memo', memo
+            'memo', memo,
+            'affiliateFee', CASE
+                WHEN SUBSTRING(memo FROM ':.*:.*:.*:(.*):.*') = to_addr THEN NULL
+                ELSE SUBSTRING(memo FROM ':.*:.*:.*:.*:(\d{1,5})(:|$)')::int
+            END,
+            'affiliateAddress', CASE
+                WHEN SUBSTRING(memo FROM ':.*:.*:.*:(.*):.*') = to_addr THEN NULL
+                ELSE SUBSTRING(memo FROM ':.*:.*:.*:(.+):.*')
+            END
             ) AS meta
     FROM refund_events;
 

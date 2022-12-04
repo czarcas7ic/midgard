@@ -399,9 +399,11 @@ func (a *action) completeFromDBRead(meta *actionMeta, fees coinList) {
 		}
 	case "refund":
 		a.metadata.Refund = &oapigen.RefundMetadata{
-			NetworkFees: fees.toOapigen(),
-			Reason:      meta.Reason,
-			Memo:        meta.Memo,
+			NetworkFees:      fees.toOapigen(),
+			Reason:           meta.Reason,
+			Memo:             meta.Memo,
+			AffiliateFee:     util.IntStr(meta.AffiliateFee),
+			AffiliateAddress: meta.AffiliateAddress,
 		}
 	}
 }
