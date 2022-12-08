@@ -74,7 +74,7 @@ type State struct {
 type Node struct {
 	Status      string `json:"status"`
 	Address     string `json:"node_address"`
-	Bond        string `json:"bond"`
+	TotalBond   string `json:"total_bond"`
 	BondAddress string `json:"bond_address"`
 }
 
@@ -238,7 +238,7 @@ func getThornodeNodesInfo(ctx context.Context, thorNodeUrl string, height int64)
 		if strings.ToLower(node.Status) == "active" {
 			nodeCount++
 		}
-		bond, err := strconv.ParseInt(node.Bond, 10, 64)
+		bond, err := strconv.ParseInt(node.TotalBond, 10, 64)
 		if err != nil {
 			midlog.FatalE(err, "Error getting ThorNode info")
 		}

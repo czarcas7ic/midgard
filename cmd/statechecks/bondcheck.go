@@ -14,7 +14,7 @@ func getThorNodeBonds(thorNodeUrl string, height int64) map[string]int64 {
 	var nodes []Node
 	queryThorNode(thorNodeUrl, "/nodes", height, &nodes)
 	for _, node := range nodes {
-		bond, err := strconv.ParseInt(node.Bond, 10, 64)
+		bond, err := strconv.ParseInt(node.TotalBond, 10, 64)
 		if err != nil {
 			log.Fatal().Err(err).Msg("Failed parsing node bond")
 		}

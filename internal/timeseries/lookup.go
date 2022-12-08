@@ -51,8 +51,8 @@ func LastChurnHeight(ctx context.Context) (int64, error) {
 }
 
 func GetChurnsData(ctx context.Context) (oapigen.Churns, error) {
-	const q = `SELECT DISTINCT ON (bl.height) height, bl.timestamp 
-	FROM active_vault_events as ac 
+	const q = `SELECT DISTINCT ON (bl.height) height, bl.timestamp
+	FROM active_vault_events as ac
 	INNER JOIN block_log as bl ON ac.block_timestamp = bl.timestamp
 	ORDER BY height DESC;
 	`
@@ -393,10 +393,10 @@ func GetNetworkData(ctx context.Context) (oapigen.Network, error) {
 		switch node.Status {
 		case "Active":
 			activeNodes[node.NodeAddr] = struct{}{}
-			activeBonds = append(activeBonds, node.Bond)
+			activeBonds = append(activeBonds, node.TotalBond)
 		case "Standby":
 			standbyNodes[node.NodeAddr] = struct{}{}
-			standbyBonds = append(standbyBonds, node.Bond)
+			standbyBonds = append(standbyBonds, node.TotalBond)
 		}
 	}
 	sort.Sort(activeBonds)

@@ -16,8 +16,8 @@ func TestNetworkAPY(t *testing.T) {
 
 	// Active bond amount = 1500 rune
 	testdb.RegisterThornodeNodes([]notinchain.NodeAccount{
-		{Status: "Active", Bond: 1500},
-		{Status: "Standby", Bond: 123}})
+		{Status: "Active", TotalBond: 1500},
+		{Status: "Standby", TotalBond: 123}})
 
 	// reserve=5200
 	// blocks per year = 520 (10 weekly)

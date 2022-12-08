@@ -78,7 +78,7 @@ type PublicKeys struct {
 type NodeAccount struct {
 	NodeAddr         string     `json:"node_address"`
 	Status           string     `json:"status"`
-	Bond             int64      `json:"bond,string"`
+	TotalBond        int64      `json:"total_bond,string"`
 	PublicKeys       PublicKeys `json:"pub_key_set"`
 	RequestedToLeave bool       `json:"requested_to_leave"`
 	ForcedToLeave    bool       `json:"forced_to_leave"`
