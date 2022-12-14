@@ -152,12 +152,18 @@ CREATE VIEW midgard_agg.refund_actions AS
             'reason', reason,
             'memo', memo,
             'affiliateFee', CASE
-                WHEN SUBSTRING(memo FROM ':.*:.*:.*:(.*):.*') = to_addr THEN NULL
-                ELSE SUBSTRING(memo FROM ':.*:.*:.*:.*:(\d{1,5})(:|$)')::int
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
+                    SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){3}(\d{1,5}?)(?::|$)')::int
+                ELSE NULL
             END,
             'affiliateAddress', CASE
-                WHEN SUBSTRING(memo FROM ':.*:.*:.*:(.*):.*') = to_addr THEN NULL
-                ELSE SUBSTRING(memo FROM ':.*:.*:.*:(.+):.*')
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN 
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)') 
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
+                    SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
+                ELSE NULL
             END
             ) AS meta
     FROM refund_events;
@@ -225,14 +231,10 @@ CREATE VIEW midgard_agg.swap_actions AS
             'swapTarget', to_e8_min,
             'swapSlip', swap_slip_bp,
             'memo', memo,
-            'affiliateFee', CASE
-                WHEN SUBSTRING(memo FROM ':.*:.*:.*:(.*):.*') = to_addr THEN NULL
-                ELSE SUBSTRING(memo FROM ':.*:.*:.*:.*:(\d{1,5})(:|$)')::int
-            END,
-            'affiliateAddress', CASE
-                WHEN SUBSTRING(memo FROM ':.*:.*:.*:(.*):.*') = to_addr THEN NULL
-                ELSE SUBSTRING(memo FROM ':.*:.*:.*:(.+):.*')
-            END
+            'affiliateFee',
+                SUBSTRING(memo FROM '^[^:]+:(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int,
+            'affiliateAddress',
+                SUBSTRING(memo FROM '^[^:]+:(?:[^:]*:){3}([^:]+)')
             ) AS meta
     FROM swap_events AS single_swaps
     WHERE NOT EXISTS (
@@ -263,14 +265,10 @@ CREATE VIEW midgard_agg.swap_actions AS
             'swapSlip', swap_in.swap_slip_BP + swap_out.swap_slip_BP
                 - swap_in.swap_slip_BP*swap_out.swap_slip_BP/10000,
             'memo', swap_in.memo,
-            'affiliateFee', CASE
-                WHEN SUBSTRING(swap_in.memo FROM ':.*:.*:.*:(.*):.*') = swap_in.to_addr THEN NULL
-                ELSE SUBSTRING(swap_in.memo FROM ':.*:.*:.*:.*:(\d{1,5})(:|$)')::int
-            END,
-            'affiliateAddress', CASE
-                WHEN SUBSTRING(swap_in.memo FROM ':.*:.*:.*:(.*):.*') = swap_in.to_addr THEN NULL
-                ELSE SUBSTRING(swap_in.memo FROM ':.*:.*:.*:(.+):.*')
-            END
+            'affiliateFee',
+                SUBSTRING(swap_in.memo FROM '^[^:]+:(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int,
+            'affiliateAddress',
+                SUBSTRING(swap_in.memo FROM '^[^:]+:(?:[^:]*:){3}([^:]+)')
             ) AS meta
     FROM swap_events AS swap_in
     INNER JOIN swap_events AS swap_out
