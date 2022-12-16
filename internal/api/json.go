@@ -111,6 +111,24 @@ func jsonLiquidityHistory(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	respJSON(w, res)
 }
 
+func getPoolHistories(pool string, buckets db.Buckets, ctx context.Context) (
+	beforeDepth timeseries.PoolDepths, depths []stat.PoolDepthBucket,
+	beforeLPUnits int64, units []stat.UnitsBucket, err error) {
+	beforeDepth, depths, err = stat.PoolDepthHistory(ctx, buckets, pool)
+	if err != nil {
+		return
+	}
+	beforeLPUnits, units, err = stat.PoolLiquidityUnitsHistory(ctx, buckets, pool)
+	if err != nil {
+		return
+	}
+	if len(depths) != len(units) || depths[0].Window != units[0].Window {
+		return
+	}
+
+	return
+}
+
 func jsonDepths(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	pool := ps[0].Value
 
@@ -132,20 +150,11 @@ func jsonDepths(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	beforeDepth, depths, err := stat.PoolDepthHistory(r.Context(), buckets, pool)
+	beforeDepth, depths, beforeLPUnits, units, err := getPoolHistories(pool, buckets, r.Context())
 	if err != nil {
-		miderr.InternalErrE(err).ReportHTTP(w)
-		return
+		respError(w, err)
 	}
-	beforeLPUnits, units, err := stat.PoolLiquidityUnitsHistory(r.Context(), buckets, pool)
-	if err != nil {
-		miderr.InternalErrE(err).ReportHTTP(w)
-		return
-	}
-	if len(depths) != len(units) || depths[0].Window != units[0].Window {
-		miderr.InternalErr("Buckets misaligned").ReportHTTP(w)
-		return
-	}
+
 	var result oapigen.DepthHistoryResponse = toOapiDepthResponse(
 		r.Context(), beforeDepth, depths, beforeLPUnits, units)
 	respJSON(w, result)
