@@ -235,6 +235,82 @@ paths:
         "200":
           $ref: '#/components/responses/DepthHistoryResponse'
 
+  "/v2/history/savers/{pool}":
+    get:
+      operationId: GetSaversHistory
+      summary: Savers Units and Depth History
+      description: |
+        Returns savers depths and units.
+        The values report the state at the end of each interval.
+
+        History endpoint has two modes:
+        * With Interval parameter it returns a series of time buckets. From and To dates will
+          be rounded to the Interval boundaries.
+        * Without Interval parameter a single From..To search is performed with exact timestamps.
+
+
+        * Interval: possible values: 5min, hour, day, week, month, quarter, year.
+        * count: [1..400]. Defines number of intervals. Don't provide if Interval is missing.
+        * from/to: optional int, unix second.
+
+        Possible usages with interval.
+        * last 10 days: `?interval=day&count=10`
+        * last 10 days before to: `?interval=day&count=10&to=1608825600`
+        * next 10 days after from: `?interval=day&count=10&from=1606780800`
+        * Days between from and to. From defaults to start of chain, to defaults to now.
+          Only the first 400 intervals are returned:
+          `interval=day&from=1606780800&to=1608825600`
+
+        Pagination is possible with from&count and then using the returned meta.endTime as the
+        From parameter of the next query.
+
+        Possible configurations without interval:
+        * exact search for one time frame: `?from=1606780899&to=1608825600`
+        * one time frame until now: `?from=1606780899`
+        * from chain start until now: no query parameters 
+      parameters:
+        - name: pool
+          in: path
+          description: Return stats for this single pool.
+          required: true
+          schema:
+            type: string
+        - name: interval
+          in: query
+          description: Interval of calculations
+          required: false
+          example: "day"
+          schema:
+            type: string
+            enum: ["5min", "hour", "day", "week", "month", "quarter", "year"]
+        - name: count
+          in: query
+          description: Number of intervals to return. Should be between [1..400].
+          required: false
+          example: 30
+          schema:
+            type: integer
+        - name: to
+          in: query
+          description: |
+            End time of the query as unix timestamp. If only count is given, defaults to now.
+          required: false
+          example: 1608825600
+          schema:
+            type: integer
+            format: int64
+        - name: from
+          in: query
+          description: Start time of the query as unix timestamp
+          required: false
+          example: 1606780800
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          $ref: '#/components/responses/SaversHistoryResponse'
+
   "/v2/history/earnings":
     get:
       operationId: GetEarningsHistory
@@ -838,6 +914,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/DepthHistory'
+    SaversHistoryResponse:
+      description: Depth and Units history of savers
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SaversHistory'
     EarningsHistoryResponse:
       description: earnings history
       content:
@@ -1400,6 +1482,74 @@ components:
           type: string
           description: |
             Float, The liquidity unit value index. Sqrt(assetDepth * runeDepth)/liquidity units
+    SaversHistory:
+      type: object
+      required:
+        - meta
+        - intervals
+      properties:
+        meta:
+          $ref: '#/components/schemas/SaversHistoryMeta'
+        intervals:
+          $ref: '#/components/schemas/SaversHistoryIntervals'
+    SaversHistoryMeta:
+      type: object
+      required:
+        - startTime
+        - endTime
+        - startSaversDepth
+        - startUnits
+        - endSaversDepth
+        - endUnits
+      properties:
+        startTime:
+          type: string
+          description: Int64, The beginning time of bucket in unix timestamp
+        endTime:
+          type: string
+          description: Int64, The end time of bucket in unix timestamp
+        startSaversDepth:
+          type: string
+          description: |
+            Int64(e8), The depth in savers vault at the start of the interval at time
+            startTime
+        startUnits:
+          type: string
+          description: |
+            Int64, Savers Units in the savers vault at the start of the interval at time startTime
+        endSaversDepth:
+          type: string
+          description: |
+            Int64(e8), The depth in the savers vault at the end of the interval at time 
+            endTime
+        endUnits:
+          type: string
+          description: Int64, Savers Units in the savers vault at the end of the interval at time endTime
+    SaversHistoryIntervals:
+      type: array
+      items:
+        $ref: '#/components/schemas/SaversHistoryItem'
+    SaversHistoryItem:
+      type: object
+      required:
+        - startTime
+        - endTime
+        - saversDepth
+        - saversUnits
+      properties:
+        startTime:
+          type: string
+          description: Int64, The beginning time of bucket in unix timestamp
+        endTime:
+          type: string
+          description: Int64, The end time of bucket in unix timestamp
+        saversDepth:
+          type: string
+          description: Int64(e8), The depth in the savers vault at the end of the interval
+        saversUnits:
+          type: string
+          description: |
+            Int64, Savers Units in the saver vault at the end of the interval
     EarningsHistory:
       type: object
       required:

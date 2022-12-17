@@ -213,6 +213,68 @@ func toOapiDepthResponse(
 	return
 }
 
+func jsonSaversDepths(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pool := ps[0].Value
+	saverVaultName := util.ConvertNativePoolToSynth(pool)
+
+	if !timeseries.PoolExists(saverVaultName) {
+		miderr.BadRequestF("Unknown saver pool: %s", saverVaultName).ReportHTTP(w)
+		return
+	}
+
+	urlParams := r.URL.Query()
+	buckets, merr := db.BucketsFromQuery(r.Context(), &urlParams)
+	if merr != nil {
+		merr.ReportHTTP(w)
+		return
+	}
+
+	merr = util.CheckUrlEmpty(urlParams)
+	if merr != nil {
+		merr.ReportHTTP(w)
+		return
+	}
+
+	beforeDepth, depths, beforeUnits, units, err := getPoolHistories(saverVaultName, buckets, r.Context())
+	if err != nil {
+		respError(w, err)
+	}
+
+	var result oapigen.SaversHistoryResponse = toOapiSaversHistoryResponse(
+		r.Context(), beforeDepth, depths, beforeUnits, units)
+	respJSON(w, result)
+}
+
+func toOapiSaversHistoryResponse(
+	ctx context.Context,
+	beforeDepth timeseries.PoolDepths,
+	depths []stat.PoolDepthBucket,
+	beforeUnits int64,
+	units []stat.UnitsBucket) (
+	result oapigen.SaversHistoryResponse) {
+	result.Intervals = make(oapigen.SaversHistoryIntervals, 0, len(depths))
+	for i, bucket := range depths {
+		liquidityUnits := units[i].Units
+		assetDepth := bucket.Depths.AssetDepth
+		result.Intervals = append(result.Intervals, oapigen.SaversHistoryItem{
+			StartTime:   util.IntStr(bucket.Window.From.ToI()),
+			EndTime:     util.IntStr(bucket.Window.Until.ToI()),
+			SaversDepth: util.IntStr(assetDepth),
+			SaversUnits: util.IntStr(liquidityUnits),
+		})
+	}
+	endDepth := depths[len(depths)-1].Depths
+	endUnits := units[len(units)-1].Units
+
+	result.Meta.StartTime = util.IntStr(depths[0].Window.From.ToI())
+	result.Meta.EndTime = util.IntStr(depths[len(depths)-1].Window.Until.ToI())
+	result.Meta.StartSaversDepth = util.IntStr(beforeDepth.AssetDepth)
+	result.Meta.StartUnits = util.IntStr(beforeUnits)
+	result.Meta.EndSaversDepth = util.IntStr(endDepth.AssetDepth)
+	result.Meta.EndUnits = util.IntStr(endUnits)
+	return
+}
+
 func luvi(assetE8 int64, runeE8 int64, poolUnits int64) float64 {
 	if poolUnits <= 0 {
 		return math.NaN()
