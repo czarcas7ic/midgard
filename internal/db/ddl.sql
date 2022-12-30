@@ -58,7 +58,8 @@ $$;
 CREATE PROCEDURE setup_hypertable(t regclass)
 LANGUAGE SQL
 AS $$
-    SELECT create_hypertable(t, 'block_timestamp', chunk_time_interval => 86400000000000);
+    SELECT create_hypertable(t, 'block_timestamp',
+        chunk_time_interval => (40 * 24 * 60 * 60 * 1000000000 :: BIGINT));
     SELECT set_integer_now_func(t, 'current_nano');
 $$;
 
