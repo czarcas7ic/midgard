@@ -42,7 +42,7 @@ func ConsumeUrlParam(urlParams *url.Values, key string) (value string) {
 
 func CheckUrlEmpty(urlParams url.Values) miderr.Err {
 	for k := range urlParams {
-		return miderr.BadRequestF("Unkown key: %s", k)
+		return miderr.BadRequestF("Unknown key: %s", k)
 	}
 	return nil
 }

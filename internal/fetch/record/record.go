@@ -181,6 +181,7 @@ func (r *eventRecorder) OnPool(e *Pool, meta *Metadata) {
 		pool := string(e.Asset)
 		r.SetAssetDepth(pool, 0)
 		r.SetRuneDepth(pool, 0)
+		r.SetSynthDepth(pool, 0)
 	}
 }
 
