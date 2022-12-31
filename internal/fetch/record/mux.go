@@ -259,6 +259,11 @@ func processEvent(event abci.Event, meta *Metadata) error {
 	case "transfer":
 		var x Transfer
 		if err := x.LoadTendermint(attrs); err != nil {
+			if err.Error() == "empty amount" {
+				// Ignore transfers with null amount.
+				// TODO(huginn): investigate why this happens.
+				return nil
+			}
 			return err
 		}
 		Recorder.OnTransfer(&x, meta)

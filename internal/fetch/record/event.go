@@ -90,7 +90,6 @@ func RuneAsset() string {
 //
 //	asset  :≡ chain '.' symbol | symbol
 //	symbol :≡ ticker '-' ID | ticker
-//
 func ParseAsset(asset []byte) (chain, ticker, id []byte) {
 	if len(asset) == 0 {
 		return
@@ -1489,6 +1488,10 @@ var amountRegex = regexp.MustCompile(`^[0-9]+`)
 // Parses the cosmos amount format. E.g. "123btc/btc"
 // Returns uppercased. e.g. "BTC/BTC" 123
 func parseCosmosCoin(b []byte) (asset []byte, amountE8 int64, err error) {
+	if len(b) == 0 {
+		err = fmt.Errorf("empty amount")
+		return
+	}
 	s := string(b)
 	matchIndexes := amountRegex.FindStringIndex(s)
 	if matchIndexes == nil {
