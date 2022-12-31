@@ -317,6 +317,7 @@ func processEvent(event abci.Event, meta *Metadata) error {
 	case "coin_spent", "coin_received":
 	case "coinbase":
 	case "burn":
+	case "mint_burn":
 	case "tss_keygen", "tss_keysign":
 	case "create_client", "update_client":
 	case "connection_open_init":
