@@ -2004,6 +2004,7 @@ components:
         - medianActiveBond
         - minimumActiveBond
         - maximumActiveBond
+        - bondHardCap
         - totalStandbyBond
         - averageStandbyBond
         - medianStandbyBond
@@ -2042,6 +2043,9 @@ components:
         maximumStandbyBond:
           type: string
           description: Int64(e8), Maximum bond of standby nodes
+        bondHardCap:
+          type: string
+          description: Int64(e8), Highest effective bond for nodes
     BlockRewards:
       type: object
       required:

@@ -169,7 +169,7 @@ func TotalLiquidityFeesRune(ctx context.Context, from time.Time, to time.Time) (
 	return liquidityFees, nil
 }
 
-//  Get value from Mimir overrides or from the Thorchain constants.
+// Get value from Mimir overrides or from the Thorchain constants.
 func GetLastConstantValue(ctx context.Context, key string) (int64, error) {
 	// TODO(elfedy): This looks at the last time the mimir value was set. This may not be
 	// the latest value (i.e: Does Thorchain send an event with the value in constants if mimir
@@ -466,6 +466,7 @@ func GetNetworkData(ctx context.Context) (oapigen.Network, error) {
 			MedianStandbyBond:  util.IntStr(bondMetrics.MedianStandbyBond),
 			MinimumStandbyBond: util.IntStr(bondMetrics.MinimumStandbyBond),
 			MaximumStandbyBond: util.IntStr(bondMetrics.MaximumStandbyBond),
+			BondHardCap:        util.IntStr(bondMetrics.BondHardCap),
 		},
 		BondingAPY:              floatStr(bondingAPY),
 		LiquidityAPY:            floatStr(liquidityAPY),
@@ -501,6 +502,7 @@ type bondMetricsInts struct {
 	MaximumActiveBond int64
 	AverageActiveBond int64
 	MedianActiveBond  int64
+	BondHardCap       int64
 
 	TotalStandbyBond   int64
 	MinimumStandbyBond int64
@@ -521,6 +523,11 @@ func ActiveAndStandbyBondMetrics(active, standby sortedBonds, minimumEligibleBon
 		metrics.MaximumActiveBond = active[len(active)-1]
 		metrics.AverageActiveBond = total / int64(len(active))
 		metrics.MedianActiveBond = active[len(active)/2]
+		minNodeIndex := len(active) * 2 / 3
+		if len(active)%3 == 0 {
+			minNodeIndex -= 1
+		}
+		metrics.BondHardCap = active[minNodeIndex]
 	}
 	if len(standby) != 0 {
 		var total int64
