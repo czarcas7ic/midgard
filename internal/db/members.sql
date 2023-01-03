@@ -114,6 +114,15 @@ WITH (fillfactor = 90);
 
 CREATE INDEX ON midgard_agg.members (asset_addr);
 
+CREATE TABLE midgard_agg.members_count (
+    pool text NOT NULL,
+    count bigint NOT NULL,
+    event_id bigint NOT NULL,
+    block_timestamp bigint NOT NULL
+);
+
+CREATE INDEX ON midgard_agg.members_count (block_timestamp);
+
 CREATE FUNCTION midgard_agg.add_members_log() RETURNS trigger
 LANGUAGE plpgsql AS $BODY$
 DECLARE
@@ -146,6 +155,18 @@ BEGIN
         member.added_rune_e8_total = 0;
         member.withdrawn_rune_e8_total = 0;
         member.pending_rune_e8_total = 0;
+
+        -- Add to members count table
+        INSERT INTO midgard_agg.members_count VALUES
+        (
+            member.pool,
+            (SELECT COALESCE((
+                SELECT count + 1 FROM midgard_agg.members_count
+                WHERE pool=member.pool ORDER BY block_timestamp DESC LIMIT 1
+            ), 1)),
+            NEW.event_id,
+            NEW.block_timestamp 
+        );
     END IF;
 
     -- Currently (2022-05-18) there is no way for a member to change/add/remove their rune or asset
@@ -201,6 +222,19 @@ BEGIN
             AND member.pending_rune_e8_total = 0 THEN
         DELETE FROM midgard_agg.members
         WHERE member_id = member.member_id AND pool = member.pool;
+
+        -- Remove member from members count table
+        INSERT INTO midgard_agg.members_count VALUES
+        (
+            member.pool,
+            (
+                SELECT count - 1 FROM midgard_agg.members_count
+                WHERE pool=member.pool ORDER BY block_timestamp 
+                DESC LIMIT 1
+            ),
+            NEW.event_id,
+            NEW.block_timestamp 
+        );
     ELSE
         INSERT INTO midgard_agg.members VALUES (member.*)
         ON CONFLICT (member_id, pool) DO UPDATE SET
