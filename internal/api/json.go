@@ -114,7 +114,7 @@ func jsonLiquidityHistory(w http.ResponseWriter, r *http.Request, _ httprouter.P
 
 func getPoolHistories(pool string, buckets db.Buckets, ctx context.Context) (
 	beforeDepth timeseries.PoolDepths, depths []stat.PoolDepthBucket,
-	beforeLPUnits int64, units []stat.UnitsBucket, err error) {
+	beforeLPUnits int64, units []stat.UnitsBucket, beforeCount int64, counts []stat.CountBucket, err error) {
 	beforeDepth, depths, err = stat.PoolDepthHistory(ctx, buckets, pool)
 	if err != nil {
 		return
@@ -123,7 +123,11 @@ func getPoolHistories(pool string, buckets db.Buckets, ctx context.Context) (
 	if err != nil {
 		return
 	}
-	if len(depths) != len(units) || depths[0].Window != units[0].Window {
+	beforeCount, counts, err = stat.GetMembersCountBucket(ctx, buckets, pool)
+	if err != nil {
+		return
+	}
+	if len(depths) != len(units) || depths[0].Window != units[0].Window || len(counts) != len(units) || counts[0].Window != units[0].Window {
 		return
 	}
 
@@ -151,13 +155,13 @@ func jsonDepths(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	beforeDepth, depths, beforeLPUnits, units, err := getPoolHistories(pool, buckets, r.Context())
+	beforeDepth, depths, beforeLPUnits, units, beforeCount, counts, err := getPoolHistories(pool, buckets, r.Context())
 	if err != nil {
 		respError(w, err)
 	}
 
 	var result oapigen.DepthHistoryResponse = toOapiDepthResponse(
-		r.Context(), beforeDepth, depths, beforeLPUnits, units)
+		r.Context(), beforeDepth, depths, beforeLPUnits, units, beforeCount, counts)
 	respJSON(w, result)
 }
 
@@ -166,11 +170,14 @@ func toOapiDepthResponse(
 	beforeDepth timeseries.PoolDepths,
 	depths []stat.PoolDepthBucket,
 	beforeLPUnits int64,
-	units []stat.UnitsBucket) (
+	units []stat.UnitsBucket,
+	beforeCount int64,
+	counts []stat.CountBucket) (
 	result oapigen.DepthHistoryResponse) {
 	result.Intervals = make(oapigen.DepthHistoryIntervals, 0, len(depths))
 	for i, bucket := range depths {
 		liquidityUnits := units[i].Units
+		membersCount := counts[i].Count
 		synthUnits := timeseries.CalculateSynthUnits(
 			bucket.Depths.AssetDepth, bucket.Depths.SynthDepth, liquidityUnits)
 		poolUnits := liquidityUnits + synthUnits
@@ -188,11 +195,13 @@ func toOapiDepthResponse(
 			SynthUnits:     util.IntStr(synthUnits),
 			SynthSupply:    util.IntStr(bucket.Depths.SynthDepth),
 			Units:          util.IntStr(poolUnits),
+			MembersCount:   util.IntStr(membersCount),
 			Luvi:           floatStr(liqUnitValIndex),
 		})
 	}
 	endDepth := depths[len(depths)-1].Depths
 	endLPUnits := units[len(units)-1].Units
+	endMemberCounts := counts[len(counts)-1].Count
 	beforeSynthUnits := timeseries.CalculateSynthUnits(
 		beforeDepth.AssetDepth, beforeDepth.SynthDepth, beforeLPUnits)
 	endSynthUnits := timeseries.CalculateSynthUnits(
@@ -206,10 +215,12 @@ func toOapiDepthResponse(
 	result.Meta.StartAssetDepth = util.IntStr(beforeDepth.AssetDepth)
 	result.Meta.StartRuneDepth = util.IntStr(beforeDepth.RuneDepth)
 	result.Meta.StartLPUnits = util.IntStr(beforeLPUnits)
+	result.Meta.StartMemberCount = util.IntStr(beforeCount)
 	result.Meta.StartSynthUnits = util.IntStr(beforeSynthUnits)
 	result.Meta.EndAssetDepth = util.IntStr(endDepth.AssetDepth)
 	result.Meta.EndRuneDepth = util.IntStr(endDepth.RuneDepth)
 	result.Meta.EndLPUnits = util.IntStr(endLPUnits)
+	result.Meta.EndMemberCount = util.IntStr(endMemberCounts)
 	result.Meta.EndSynthUnits = util.IntStr(endSynthUnits)
 	return
 }
@@ -236,13 +247,13 @@ func jsonSaversDepths(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
-	beforeDepth, depths, beforeUnits, units, err := getPoolHistories(saverVaultName, buckets, r.Context())
+	beforeDepth, depths, beforeUnits, units, beforeCounts, counts, err := getPoolHistories(saverVaultName, buckets, r.Context())
 	if err != nil {
 		respError(w, err)
 	}
 
 	var result oapigen.SaversHistoryResponse = toOapiSaversHistoryResponse(
-		r.Context(), beforeDepth, depths, beforeUnits, units)
+		r.Context(), beforeDepth, depths, beforeUnits, units, beforeCounts, counts)
 	respJSON(w, result)
 }
 
@@ -251,28 +262,35 @@ func toOapiSaversHistoryResponse(
 	beforeDepth timeseries.PoolDepths,
 	depths []stat.PoolDepthBucket,
 	beforeUnits int64,
-	units []stat.UnitsBucket) (
+	units []stat.UnitsBucket,
+	beforeCounts int64,
+	counts []stat.CountBucket) (
 	result oapigen.SaversHistoryResponse) {
 	result.Intervals = make(oapigen.SaversHistoryIntervals, 0, len(depths))
 	for i, bucket := range depths {
 		liquidityUnits := units[i].Units
+		membersCount := counts[i].Count
 		assetDepth := bucket.Depths.AssetDepth
 		result.Intervals = append(result.Intervals, oapigen.SaversHistoryItem{
 			StartTime:   util.IntStr(bucket.Window.From.ToI()),
 			EndTime:     util.IntStr(bucket.Window.Until.ToI()),
 			SaversDepth: util.IntStr(assetDepth),
 			SaversUnits: util.IntStr(liquidityUnits),
+			SaversCount: util.IntStr(membersCount),
 		})
 	}
 	endDepth := depths[len(depths)-1].Depths
 	endUnits := units[len(units)-1].Units
+	endCount := counts[len(counts)-1].Count
 
 	result.Meta.StartTime = util.IntStr(depths[0].Window.From.ToI())
 	result.Meta.EndTime = util.IntStr(depths[len(depths)-1].Window.Until.ToI())
 	result.Meta.StartSaversDepth = util.IntStr(beforeDepth.AssetDepth)
 	result.Meta.StartUnits = util.IntStr(beforeUnits)
+	result.Meta.StartSaversCount = util.IntStr(beforeCounts)
 	result.Meta.EndSaversDepth = util.IntStr(endDepth.AssetDepth)
 	result.Meta.EndUnits = util.IntStr(endUnits)
+	result.Meta.EndSaversCount = util.IntStr(endCount)
 	return
 }
 

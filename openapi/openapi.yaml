@@ -1371,10 +1371,12 @@ components:
         - startAssetDepth
         - startRuneDepth
         - startLPUnits
+        - startMemberCount
         - startSynthUnits
         - endAssetDepth
         - endRuneDepth
         - endLPUnits
+        - endMemberCount
         - endSynthUnits
       properties:
         startTime:
@@ -1403,6 +1405,10 @@ components:
           type: string
           description: |
             Int64, Liquidity Units in the pool at the start of the interval at time startTime
+        startMemberCount:
+          type: string
+          description: |
+            Int64, Number of liquidity member in the pool at the start of the interval at time startTime
         startSynthUnits:
           type: string
           description: |
@@ -1418,6 +1424,9 @@ components:
         endLPUnits:
           type: string
           description: Int64, Liquidity Units in the pool at the end of the interval at time endTime
+        endMemberCount:
+          type: string
+          description: Int64, Number of liquidity members in the pool at the end of the interval at time endTime
         endSynthUnits:
           type: string
           description: Int64, Synth Units in the pool at the end of the interval at time endTime
@@ -1435,6 +1444,7 @@ components:
         - assetPrice
         - assetPriceUSD
         - liquidityUnits
+        - membersCount
         - synthUnits
         - synthSupply
         - units
@@ -1461,6 +1471,9 @@ components:
         liquidityUnits:
           type: string
           description: Int64, Liquidity Units in the pool at the end of the interval
+        membersCount:
+          type: string
+          description: Int64, Number of liquidity members in the pool at the end of the interval
         synthUnits:
           type: string
           description: Int64, Synth Units in the pool at the end of the interval
@@ -1492,8 +1505,10 @@ components:
         - endTime
         - startSaversDepth
         - startUnits
+        - startSaversCount
         - endSaversDepth
         - endUnits
+        - endSaversCount
       properties:
         startTime:
           type: string
@@ -1510,6 +1525,10 @@ components:
           type: string
           description: |
             Int64, Savers Units in the savers vault at the start of the interval at time startTime
+        startSaversCount:
+          type: string
+          description: |
+            Int64, Number of savers member in the savers vault at the start of the interval at time startTime
         endSaversDepth:
           type: string
           description: |
@@ -1518,6 +1537,9 @@ components:
         endUnits:
           type: string
           description: Int64, Savers Units in the savers vault at the end of the interval at time endTime
+        endSaversCount:
+          type: string
+          description: Int64, Number of savers member in the savers vault at the end of the interval at time endTime
     SaversHistoryIntervals:
       type: array
       items:
@@ -1528,6 +1550,7 @@ components:
         - startTime
         - endTime
         - saversDepth
+        - saversCount
         - saversUnits
       properties:
         startTime:
@@ -1539,6 +1562,9 @@ components:
         saversDepth:
           type: string
           description: Int64(e8), The depth in the savers vault at the end of the interval
+        saversCount:
+          type: string
+          description: Int64, Number of saver members in the pool at the end of the interval
         saversUnits:
           type: string
           description: |
