@@ -29,6 +29,7 @@ func TestDepthHistoryE2E(t *testing.T) {
 		Pool:           "BNB.BNB",
 		StakeUnits:     1,
 		BlockTimestamp: "2020-01-01 23:57:00",
+		AssetAddress:   "bnbxxx",
 	})
 	db.RefreshAggregatesForTests()
 
@@ -42,18 +43,20 @@ func TestDepthHistoryE2E(t *testing.T) {
 	testdb.MustUnmarshal(t, body, &jsonResult)
 
 	require.Equal(t, oapigen.DepthHistoryMeta{
-		StartTime:       epochStr("2020-01-09 00:00:00"),
-		EndTime:         epochStr("2020-01-13 00:00:00"),
-		PriceShiftLoss:  "0.35336939193881683",
-		LuviIncrease:    "1.0954451150103321",
-		StartAssetDepth: "30",
-		StartLPUnits:    "1",
-		StartSynthUnits: "0",
-		StartRuneDepth:  "3",
-		EndAssetDepth:   "6",
-		EndLPUnits:      "1",
-		EndSynthUnits:   "0",
-		EndRuneDepth:    "18",
+		StartTime:        epochStr("2020-01-09 00:00:00"),
+		EndTime:          epochStr("2020-01-13 00:00:00"),
+		PriceShiftLoss:   "0.35336939193881683",
+		LuviIncrease:     "1.0954451150103321",
+		StartAssetDepth:  "30",
+		StartLPUnits:     "1",
+		StartSynthUnits:  "0",
+		StartMemberCount: "1",
+		StartRuneDepth:   "3",
+		EndAssetDepth:    "6",
+		EndLPUnits:       "1",
+		EndSynthUnits:    "0",
+		EndRuneDepth:     "18",
+		EndMemberCount:   "1",
 	}, jsonResult.Meta)
 	require.Equal(t, 4, len(jsonResult.Intervals))
 	require.Equal(t, epochStr("2020-01-09 00:00:00"), jsonResult.Intervals[0].StartTime)
@@ -163,6 +166,76 @@ func TestLiquidityUnitsHistoryE2E(t *testing.T) {
 
 	require.Equal(t, epochStr("2020-01-22 00:00:00"), jsonResult.Intervals[2].EndTime)
 	require.Equal(t, "15", jsonResult.Intervals[2].LiquidityUnits)
+}
+
+func TestMembersHistoryE2E(t *testing.T) {
+	testdb.InitTest(t)
+	testdb.DeclarePools("BTC.BTC", "BNB.BNB")
+
+	testdb.InsertStakeEvent(t, testdb.FakeStake{
+		Pool:           "BTC.BTC",
+		StakeUnits:     10,
+		BlockTimestamp: "2020-01-10 12:00:00",
+		AssetAddress:   "btc1",
+	})
+
+	testdb.InsertStakeEvent(t, testdb.FakeStake{
+		Pool:           "BTC.BTC",
+		StakeUnits:     10,
+		BlockTimestamp: "2020-01-20 12:00:00",
+		AssetAddress:   "btc2",
+		RuneAddress:    "thor1",
+	})
+
+	testdb.InsertStakeEvent(t, testdb.FakeStake{
+		Pool:           "BTC.BTC",
+		StakeUnits:     10, // Total of 20
+		BlockTimestamp: "2020-01-20 12:00:00",
+		AssetAddress:   "btc1",
+	})
+
+	testdb.InsertWithdrawEvent(t, testdb.FakeWithdraw{
+		Pool:           "BTC.BTC",
+		StakeUnits:     20, // total 0
+		BlockTimestamp: "2020-01-21 12:00:00",
+		FromAddr:       "btc1",
+	})
+
+	testdb.InsertWithdrawEvent(t, testdb.FakeWithdraw{
+		Pool:           "BTC.BTC",
+		StakeUnits:     5, // total 5
+		BlockTimestamp: "2020-01-21 12:00:00",
+		FromAddr:       "thor1",
+	})
+
+	// This will be skipped because it's a different pool
+	testdb.InsertStakeEvent(t, testdb.FakeStake{
+		Pool:           "BNB.BNB",
+		StakeUnits:     1000,
+		BlockTimestamp: "2020-01-20 12:00:00",
+		RuneAddress:    "thor1",
+	})
+
+	db.RefreshAggregatesForTests()
+
+	from := db.StrToSec("2020-01-19 00:00:00")
+	to := db.StrToSec("2020-01-22 00:00:00")
+
+	body := testdb.CallJSON(t, fmt.Sprintf(
+		"http://localhost:8080/v2/history/depths/BTC.BTC?interval=day&from=%d&to=%d", from, to))
+
+	var jsonResult oapigen.DepthHistoryResponse
+	testdb.MustUnmarshal(t, body, &jsonResult)
+
+	require.Equal(t, 3, len(jsonResult.Intervals))
+	require.Equal(t, epochStr("2020-01-20 00:00:00"), jsonResult.Intervals[0].EndTime)
+	require.Equal(t, "1", jsonResult.Intervals[0].MembersCount)
+
+	require.Equal(t, epochStr("2020-01-21 00:00:00"), jsonResult.Intervals[1].EndTime)
+	require.Equal(t, "2", jsonResult.Intervals[1].MembersCount)
+
+	require.Equal(t, epochStr("2020-01-22 00:00:00"), jsonResult.Intervals[2].EndTime)
+	require.Equal(t, "1", jsonResult.Intervals[2].MembersCount)
 }
 
 func TestDepthAggregateE2E(t *testing.T) {
