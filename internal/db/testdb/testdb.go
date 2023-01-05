@@ -95,6 +95,7 @@ func clearAggregates(t *testing.T) {
 	MustExec(t, "DELETE FROM midgard_agg.balances")
 	MustExec(t, "DELETE FROM midgard_agg.members_log")
 	MustExec(t, "DELETE FROM midgard_agg.members")
+	MustExec(t, "DELETE FROM midgard_agg.members_count")
 }
 
 func InitTest(t *testing.T) {
@@ -295,7 +296,7 @@ func InsertStakeEvent(t *testing.T, fake FakeStake) {
 		INSERT INTO stake_events
 			(pool, asset_tx, asset_chain, asset_addr, asset_E8, _asset_in_rune_E8,
 				rune_tx, rune_addr, rune_E8, stake_units, event_id, block_timestamp)
-			VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, NULLIF($7, ''), $8, $9, $10, 0, $11)`
+			VALUES ($1, $2, $3, NULLIF($4, ''), $5, $6, NULLIF($7, ''), NULLIF($8, ''), $9, $10, 0, $11)`
 
 	timestamp := nanoWithDefault(fake.BlockTimestamp)
 
