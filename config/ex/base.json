@@ -6,14 +6,7 @@
     "last_chain_backoff": "7s",
     "fetch_batch_size": 100,
     "parallelism": 4,
-    "read_timeout": "60s",
-    "proxied_whitelisted_endpoints": [
-      "inbound_addresses",
-      "constants",
-      "lastblock",
-      "queue",
-      "nodes"
-    ]
+    "read_timeout": "60s"
   },
   "timescale": {
     "user_name": "midgard",

@@ -61,11 +61,10 @@ type EventRecorder struct {
 }
 
 type ThorChain struct {
-	TendermintURL               string   `yaml:"tendermint_url" split_words:"true"`
-	ThorNodeURL                 string   `yaml:"thornode_url" split_words:"true"`
-	ProxiedWhitelistedEndpoints []string `yaml:"proxied_whitelisted_endpoints" split_words:"true"`
-	FetchBatchSize              int      `yaml:"fetch_batch_size" split_words:"true"`
-	Parallelism                 int      `yaml:"parallelism" split_words:"true"`
+	TendermintURL  string `yaml:"tendermint_url" split_words:"true"`
+	ThorNodeURL    string `yaml:"thornode_url" split_words:"true"`
+	FetchBatchSize int    `yaml:"fetch_batch_size" split_words:"true"`
+	Parallelism    int    `yaml:"parallelism" split_words:"true"`
 
 	// Timeout for fetch requests to ThorNode
 	ReadTimeout Duration `yaml:"read_timeout" split_words:"true"`

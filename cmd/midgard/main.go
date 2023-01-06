@@ -87,7 +87,7 @@ func initWebsockets(ctx context.Context) jobs.NamedFunction {
 func initHTTPServer(ctx context.Context) jobs.NamedFunction {
 	c := &config.Global
 	midlog.InfoF("HTTP server listen port: %d", c.ListenPort)
-	api.InitHandler(c.ThorChain.ThorNodeURL, c.ThorChain.ProxiedWhitelistedEndpoints)
+	api.InitHandler(c.ThorChain.ThorNodeURL)
 	srv := &http.Server{
 		Handler:      api.Handler,
 		Addr:         fmt.Sprintf(":%d", c.ListenPort),

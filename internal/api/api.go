@@ -4,8 +4,6 @@ package api
 import (
 	"io"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -46,7 +44,7 @@ func addMeasured(router *httprouter.Router, url string, handler httprouter.Handl
 const proxiedPrefix = "/v2/thorchain/"
 
 // InitHandler inits API main handler
-func InitHandler(nodeURL string, proxiedWhitelistedEndpoints []string) {
+func InitHandler(nodeURL string) {
 	router := httprouter.New()
 
 	Handler = loggerHandler(corsHandler(router))
@@ -61,11 +59,6 @@ func InitHandler(nodeURL string, proxiedWhitelistedEndpoints []string) {
 	router.HandlerFunc(http.MethodGet, "/v2/debug/usd", stat.ServeUSDDebug)
 	router.HandlerFunc(http.MethodGet, "/v2/debug/decimals", decimal.ServeDecimalsDebug)
 	router.Handle(http.MethodGet, "/v2/debug/block/:id", debugBlock)
-
-	for _, endpoint := range proxiedWhitelistedEndpoints {
-		midgardPath := proxiedPrefix + endpoint
-		addMeasured(router, midgardPath, proxyHandler(nodeURL))
-	}
 
 	router.HandlerFunc(http.MethodGet, "/v2/doc", serveDoc)
 
@@ -118,27 +111,6 @@ func serveRoot(w http.ResponseWriter, r *http.Request) {
 
 Welcome to the HTTP interface.
 `)
-}
-
-func proxyHandler(nodeURL string) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		targetPath := strings.TrimPrefix(r.URL.Path, proxiedPrefix)
-		url, err := url.Parse(nodeURL + "/" + targetPath)
-		if err != nil {
-			http.NotFound(w, r)
-		}
-
-		proxy := httputil.NewSingleHostReverseProxy(url)
-		proxy.Director = func(req *http.Request) {
-			req.Header.Add("X-Forwarded-Host", req.Host)
-			req.Header.Add("X-Origin-Host", url.Host)
-			req.Host = url.Host
-			req.URL.Scheme = url.Scheme
-			req.URL.Host = url.Host
-			req.URL.Path = url.Path
-		}
-		proxy.ServeHTTP(w, r)
-	}
 }
 
 func corsHandler(h http.Handler) http.Handler {

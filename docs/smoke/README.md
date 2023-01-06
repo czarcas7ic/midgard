@@ -46,12 +46,7 @@ It's in `midgard/config/config.json`
   "thorchain": {
     "url": "http://localhost:26657/websocket",
     "node_url": "http://localhost:1317/thorchain",
-    "last_chain_backoff": "7s",
-    "proxied_whitelisted_endpoints": [
-      "pool_addresses",
-      "constants",
-      "lastblock"
-    ]
+    "last_chain_backoff": "7s"
   },
   "timescale": {
     "host": "localhost",

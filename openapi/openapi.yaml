@@ -267,7 +267,7 @@ paths:
         Possible configurations without interval:
         * exact search for one time frame: `?from=1606780899&to=1608825600`
         * one time frame until now: `?from=1606780899`
-        * from chain start until now: no query parameters 
+        * from chain start until now: no query parameters
       parameters:
         - name: pool
           in: path
@@ -822,21 +822,6 @@ paths:
       responses:
         "200":
           $ref: '#/components/responses/StatsResponse'
-
-  "/v2/thorchain":
-    get:
-      operationId: GetThornodeProxiedEndpoints
-      summary: "[Deprecated] Thornode Proxied Endpoints"
-      description: |
-        Historically Midgard acted as a caching proxy for a subset of the Thornode API endpoints.
-        This functionality has been deprecated since the default configuration for fullnodes has
-        been extended to support caching on these endpoints at the gateway NGINX directly.
-        These endpoints will remain available in Midgard for the time being to facilitate a smooth
-        transition for clients, but please take steps to migrate any client code to reference these
-        directly from the Thornode API https://thornode.ninerealms.com/thorchain/doc/#/.
-      responses:
-        "200":
-          description: See Thornode endpoint docs.
 
   "/v2/balance/{address}":
     get:
@@ -1520,7 +1505,7 @@ components:
         endSaversDepth:
           type: string
           description: |
-            Int64(e8), The depth in the savers vault at the end of the interval at time 
+            Int64(e8), The depth in the savers vault at the end of the interval at time
             endTime
         endUnits:
           type: string
@@ -2424,7 +2409,7 @@ components:
           description: Int64, Unix timestamp for the first time member deposited into the saver pool
         dateLastAdded:
           type: string
-          description: Int64, Unix timestamp for the last time member deposited into the saver pool 
+          description: Int64, Unix timestamp for the last time member deposited into the saver pool
 
     StatsData:
       type: object
