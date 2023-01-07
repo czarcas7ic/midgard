@@ -2381,6 +2381,8 @@ components:
         - runeAddress
         - assetAddress
         - liquidityUnits
+        - runeDeposit
+        - assetDeposit
         - runeAdded
         - assetAdded
         - runePending
@@ -2402,6 +2404,12 @@ components:
         liquidityUnits:
           type: string
           description: Int64, pool liquidity units that belong the the member
+        runeDeposit:
+          type: string
+          description: Int64(e8), total Rune that is currently deposited to the pool by member
+        assetDeposit:
+          type: string
+          description: Int64(e8), total asset that is currently deposited to the pool by member
         runeAdded:
           type: string
           description: Int64(e8), total Rune added to the pool by member
@@ -2452,6 +2460,7 @@ components:
         - saverUnits
         - assetAdded
         - assetRedeem
+        - assetDeposit
         - assetWithdrawn
         - dateFirstAdded
         - dateLastAdded
@@ -2471,6 +2480,9 @@ components:
         assetRedeem:
           type: string
           description: Int64(e8), total asset can be redeemed from the saver pool by member
+        assetDeposit:
+          type: string
+          description: Int64(e8), total asset that is currently deposited by the member
         assetWithdrawn:
           type: string
           description: Int64(e8), total asset withdrawn from the saver pool by member
