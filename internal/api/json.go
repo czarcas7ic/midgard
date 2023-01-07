@@ -880,6 +880,21 @@ func jsonMemberDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	})
 }
 
+func getSaversRedeemValue(pools timeseries.MemberPools, poolsDepthMap timeseries.DepthMap,
+	poolsUnitsMap map[string]int64) map[string]int64 {
+	poolRedeemValueMap := map[string]int64{}
+	for _, pool := range pools {
+		poolUnits := float64(poolsUnitsMap[pool.Pool])
+		if poolUnits == 0.0 {
+			continue
+		}
+		saversDepth := float64(poolsDepthMap[pool.Pool].AssetDepth)
+		poolRedeemValueMap[pool.Pool] = int64((saversDepth * float64(pool.LiquidityUnits)) / poolUnits)
+	}
+
+	return poolRedeemValueMap
+}
+
 func jsonSaverDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	urlParams := r.URL.Query()
 
@@ -902,8 +917,23 @@ func jsonSaverDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		return
 	}
 
+	poolDepthMap := timeseries.Latest.GetState().Pools
+	memberPools := make([]string, 0)
+	for _, memberPool := range pools {
+		if timeseries.PoolExists(memberPool.Pool) {
+			memberPools = append(memberPools, memberPool.Pool)
+		}
+	}
+	poolUnitsMap, err := stat.CurrentPoolsLiquidityUnits(r.Context(), memberPools)
+	if err != nil {
+		respError(w, err)
+		return
+	}
+
+	poolRedeemValue := getSaversRedeemValue(pools, poolDepthMap, poolUnitsMap)
+
 	respJSON(w, oapigen.SaverDetailsResponse{
-		Pools: pools.ToSavers(),
+		Pools: pools.ToSavers(poolRedeemValue),
 	})
 }
 

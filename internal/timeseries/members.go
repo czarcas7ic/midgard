@@ -82,7 +82,7 @@ func (memberPool MemberPool) toSavers() oapigen.SaverPool {
 	return oapigen.SaverPool{
 		Pool:           util.ConvertSynthPoolToNative(memberPool.Pool),
 		AssetAddress:   memberPool.AssetAddress,
-		AssetBalance:   util.IntStr(memberPool.AssetAdded),
+		AssetAdded:     util.IntStr(memberPool.AssetAdded),
 		SaverUnits:     util.IntStr(memberPool.LiquidityUnits),
 		AssetWithdrawn: util.IntStr(memberPool.AssetWithdrawn),
 		DateFirstAdded: util.IntStr(memberPool.DateFirstAdded),
@@ -102,10 +102,11 @@ func (memberPools MemberPools) ToOapigen() []oapigen.MemberPool {
 	return ret
 }
 
-func (memberPools MemberPools) ToSavers() []oapigen.SaverPool {
+func (memberPools MemberPools) ToSavers(poolRedeemValueMap map[string]int64) []oapigen.SaverPool {
 	ret := make([]oapigen.SaverPool, len(memberPools))
 	for i, memberPool := range memberPools {
 		ret[i] = memberPool.toSavers()
+		ret[i].AssetRedeem = util.IntStr(poolRedeemValueMap[memberPool.Pool])
 	}
 
 	return ret
