@@ -174,6 +174,7 @@ type parsedActionsParams struct {
 	txid             string
 	assets           []string
 	affiliateAddress string
+	disableCount     bool
 }
 
 func (p ActionsParams) parse() (parsedActionsParams, error) {
@@ -225,12 +226,19 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 	}
 
 	var assets []string
+	disableCount := false
+	disableCountAssetType := map[string]bool{"norune": true, "nosynth": true}
 	if p.Asset != "" {
 		assets = strings.Split(p.Asset, ",")
 		if MaxAssets < len(assets) {
 			return parsedActionsParams{}, miderr.BadRequestF(
 				"too many assets: %d provided, maximum is %d",
 				len(assets), MaxAssets)
+		}
+		for _, assetName := range assets {
+			if disableCountAssetType[assetName] {
+				disableCount = true
+			}
 		}
 	}
 
@@ -242,6 +250,7 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 		txid:             p.TXId,
 		assets:           assets,
 		affiliateAddress: p.Affiliate,
+		disableCount:     disableCount,
 	}, nil
 }
 
@@ -442,17 +451,23 @@ func GetActions(ctx context.Context, moment time.Time, params ActionsParams) (
 		return oapigen.ActionsResponse{}, err
 	}
 
-	// Get count
-	countRows, err := db.Query(ctx, countPS.Query, countPS.Values...)
-	if err != nil {
-		return oapigen.ActionsResponse{}, fmt.Errorf("actions count query: %w", err)
-	}
-	defer countRows.Close()
-	var totalCount uint
-	countRows.Next()
-	err = countRows.Scan(&totalCount)
-	if err != nil {
-		return oapigen.ActionsResponse{}, fmt.Errorf("actions count read: %w", err)
+	var totalCount string
+	if !parsedParams.disableCount {
+		// Get count
+		countRows, err := db.Query(ctx, countPS.Query, countPS.Values...)
+		if err != nil {
+			return oapigen.ActionsResponse{}, fmt.Errorf("actions count query: %w", err)
+		}
+		defer countRows.Close()
+		var totalCountNumber uint
+		countRows.Next()
+		err = countRows.Scan(&totalCountNumber)
+		if err != nil {
+			return oapigen.ActionsResponse{}, fmt.Errorf("actions count read: %w", err)
+		}
+		totalCount = util.IntStr(int64(totalCountNumber))
+	} else {
+		totalCount = "The total count is disabled for this type of asset due to slow query"
 	}
 
 	// Get results
@@ -465,7 +480,7 @@ func GetActions(ctx context.Context, moment time.Time, params ActionsParams) (
 	for i, action := range actions {
 		oapigenActions[i] = action.toOapigen()
 	}
-	return oapigen.ActionsResponse{Count: util.IntStr(int64(totalCount)), Actions: oapigenActions}, nil
+	return oapigen.ActionsResponse{Count: totalCount, Actions: oapigenActions}, nil
 }
 
 // Helper structs to build needed queries
