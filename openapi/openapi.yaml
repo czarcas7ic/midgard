@@ -10,7 +10,7 @@ info:
     The API parses transaction event data from THORChain and stores them
     in a time-series database to make time-dependent queries easy.
     Midgard does not hold critical information.
-    To interact with BEPSwap and Asgardex, users should query THORChain directly.
+    To interact with THORChain protocol, users should query THORNode directly.
 
 paths:
   # TODO(acsaba): remove remaining mentions of stake from documentation.
@@ -999,7 +999,7 @@ components:
           schema:
             $ref: '#/components/schemas/ReverseTHORNames'
     StatsResponse:
-      description: object containing global BEPSwap data
+      description: object containing global THORChain data
       content:
         application/json:
           schema:
@@ -2455,7 +2455,7 @@ components:
           description: Int64(e8), current total Rune in the pools.
         switchedRune:
           type: string
-          description: Int64(e8), amount of native rune switched from erc20 or BEPSwap rune.
+          description: Int64(e8), amount of native rune switched from erc20 or bep2 rune.
         runePriceUSD:
           type: string
           description: Float, the price of Rune based on the deepest USD pool.
