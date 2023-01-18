@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/decimal"
 	"gitlab.com/thorchain/midgard/internal/fetch/record"
@@ -1116,8 +1117,19 @@ func jsonActions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	var actions oapigen.ActionsResponse
 	var err error
+	filteredAddresses := config.Global.FilteredAddresses
 	for _, addr := range withLowered(params.Address) {
 		params.Address = addr
+		if name, ok := filteredAddresses[addr]; ok {
+			errMsg := "The requested address is filtered, It might be one of module addresses."
+			if len(name) > 0 {
+				errMsg += "\n\nLabel: %s"
+				respError(w, miderr.BadRequestF(errMsg, name))
+			} else {
+				respError(w, miderr.BadRequestF(errMsg))
+			}
+			return
+		}
 		actions, err = timeseries.GetActions(r.Context(), time.Time{}, params)
 		if err != nil {
 			respError(w, err)

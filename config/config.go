@@ -39,6 +39,10 @@ type Config struct {
 	// you can specify on the command line with: MIDGARD_POOLS_DECIMAL="A.A:8,B.B:18"
 	PoolsDecimal map[string]int64 `yaml:"pools_decimal" split_words:"true"`
 
+	// These are filtered addresses that will be ignored by the action endpoint
+	// Address: Label of the address,also it can be empty string
+	FilteredAddresses map[string]string `yaml:"filtered_addresses" split_words:"true"`
+
 	EventRecorder EventRecorder `yaml:"event_recorder" split_words:"true"`
 
 	CaseInsensitiveChains map[string]bool `yaml:"case_insensitive_chains" split_words:"true"`
