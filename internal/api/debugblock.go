@@ -15,6 +15,14 @@ import (
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 )
 
+type DebugBlockResponse struct {
+	Timestamp db.Nano `json:"timestamp"`
+	Height    int64   `json:"blockHeight"`
+	// As long as we use `debug` endpoint for debugging only
+	// types for block results are not needed to be defined in detail and can be "generic"
+	Results interface{} `json:"blockResults"`
+}
+
 func debugBlock(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	idStr := ps[0].Value
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -45,11 +53,25 @@ func debugBlock(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	unwrapBase64Fields(any)
 	recSquashAttributes(any)
+
+	resp := DebugBlockResponse{
+		Timestamp: timestamp,
+		Height:    height,
+		Results:   any,
+	}
+
+	mResp, err := json.Marshal(resp)
+
+	if err != nil {
+		fmt.Fprint(w, "Failed to marshal DebugBlockResponse{}: ", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	e := json.NewEncoder(w)
 	e.SetIndent("", "\t")
 
 	// Error discarded
-	_ = e.Encode(any)
+	_ = e.Encode(mResp)
 }
 
 func TimestampAndHeight(ctx context.Context, id int64) (
@@ -103,22 +125,25 @@ func unwrapBase64Fields(any interface{}) {
 
 // Replace these:
 // "attributes": [
-// 	  {
-//      "index": true,
-//      "key": "firstAttr",
-//      "value": "42"
-// 	  },
-// 	  {
-// 	    "index": true,
-// 	    "key": "secondAttr",
-// 	    "value": "textvalue"
-// 	  }
-//  ]
+//
+//		  {
+//	     "index": true,
+//	     "key": "firstAttr",
+//	     "value": "42"
+//		  },
+//		  {
+//		    "index": true,
+//		    "key": "secondAttr",
+//		    "value": "textvalue"
+//		  }
+//	 ]
+//
 // With this:
-// "attributes": {
-//   "firstAttr": "42",
-//   "secondAttr": "textvalue"
-// }
+//
+//	"attributes": {
+//	  "firstAttr": "42",
+//	  "secondAttr": "textvalue"
+//	}
 //
 // If attributes doesn't look like this, keeps original.
 func recSquashAttributes(any interface{}) {
