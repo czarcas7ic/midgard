@@ -28,6 +28,7 @@ func loadMainnet202104Corrections(chainID string) {
 		loadMainnetcorrectGenesisNode()
 		loadMainnetMissingWithdraws()
 		loadMainnetBalanceCorrections()
+		loadMainnetMissingRefund()
 		loadMainnetPreregisterThornames()
 		registerArtificialPoolBallanceChanges(
 			mainnetArtificialDepthChanges, "Midgard fix on mainnet")
@@ -155,6 +156,57 @@ func loadMainnetMissingWithdraws() {
 		RuneE8:   0,
 		AssetE8:  0,
 		Units:    2228000000,
+	})
+}
+
+//////////////////////// Missing Swap Refund
+
+// https://gitlab.com/thorchain/thornode/-/merge_requests/2716
+// tried to refund ETH asset that never
+// went out by sending RUNE back to the user from Asgard Module
+func loadMainnetMissingRefund() {
+	// First Tx
+	AdditionalEvents.Add(9187906, func(meta *Metadata) {
+		swap := Swap{
+			// fabricated txID = keccak-256(memo)
+			Tx:             []byte("EE31ACC02D631DC3220990A1DD2E9030F4CFC227A61E975B5DEF1037106D1CCD"),
+			Chain:          []byte("ETH"),
+			FromAddr:       []byte("0x094a8C7478fCcb34bc84577C1230DA8E7913B7D5"),
+			ToAddr:         []byte("0xe4ddca21881bac219af7f217703db0475d2a9f02"),
+			FromAsset:      []byte("ETH.ETH"),
+			FromE8:         540874489,
+			ToAsset:        []byte("THOR.RUNE"),
+			ToE8:           450000000000,
+			Memo:           []byte("REFUND:B07A6B1B40ADBA2E404D9BCE1BEF6EDE6F70AD135E83806E4F4B6863CF637D0B"),
+			Pool:           []byte("ETH.ETH"),
+			SwapSlipBP:     0,
+			ToE8Min:        0,
+			LiqFeeInRuneE8: 0,
+			LiqFeeE8:       0,
+		}
+		Recorder.OnSwap(&swap, meta)
+	})
+
+	// Second Tx
+	AdditionalEvents.Add(9187906, func(meta *Metadata) {
+		swap := Swap{
+			// fabricated txID = keccak-256(memo)
+			Tx:             []byte("0A61B99DC6B1A4499A72238AC767C09C310326875F9E7B870C908357B09202E9"),
+			Chain:          []byte("ETH"),
+			FromAddr:       []byte("0x094a8C7478fCcb34bc84577C1230DA8E7913B7D5"),
+			ToAddr:         []byte("0xe4ddca21881bac219af7f217703db0475d2a9f02"),
+			FromAsset:      []byte("ETH.ETH"),
+			FromE8:         541086437,
+			ToAsset:        []byte("THOR.RUNE"),
+			ToE8:           450000000000,
+			Memo:           []byte("REFUND:4795A3C036322493A9692B5D44E7D4FF29C3E2C1E848637184E98FE8B05FD06E"),
+			Pool:           []byte("ETH.ETH"),
+			SwapSlipBP:     0,
+			ToE8Min:        0,
+			LiqFeeInRuneE8: 0,
+			LiqFeeE8:       0,
+		}
+		Recorder.OnSwap(&swap, meta)
 	})
 }
 
