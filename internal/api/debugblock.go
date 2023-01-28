@@ -36,7 +36,6 @@ func debugBlock(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		fmt.Fprintf(w, "Height and timestamp lookup error: %v", err)
 		return
 	}
-	fmt.Fprintf(w, "Height: %d ; Timestamp: %d\n", height, timestamp)
 
 	var results *coretypes.ResultBlockResults
 	results, err = sync.GlobalSync.FetchSingle(height)
@@ -60,18 +59,7 @@ func debugBlock(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		Results:   any,
 	}
 
-	mResp, err := json.Marshal(resp)
-
-	if err != nil {
-		fmt.Fprint(w, "Failed to marshal DebugBlockResponse{}: ", err)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	e := json.NewEncoder(w)
-	e.SetIndent("", "\t")
-
-	// Error discarded
-	_ = e.Encode(mResp)
+	respJSON(w, resp)
 }
 
 func TimestampAndHeight(ctx context.Context, id int64) (
