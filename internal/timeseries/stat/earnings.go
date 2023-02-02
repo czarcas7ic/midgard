@@ -16,6 +16,7 @@ type poolEarnings struct {
 	runeLiquidityFees      int64 // fees charged in RUNE
 	assetLiquidityFees     int64 // fees charged in asset
 	totalLiquidityFeesRune int64 // asset + RUNE fees in RUNE
+	saverRewards           int64 // saver reward
 	rewards                int64 // rewards sent to / extracted from pool each block
 }
 
@@ -26,6 +27,7 @@ func (pe *poolEarnings) toOapigen() oapigen.EarningsHistoryItemPool {
 		AssetLiquidityFees:     util.IntStr(pe.assetLiquidityFees),
 		TotalLiquidityFeesRune: util.IntStr(pe.totalLiquidityFeesRune),
 		Rewards:                util.IntStr(pe.rewards),
+		SaverEarning:           util.IntStr(pe.saverRewards),
 		Earnings:               util.IntStr(pe.totalLiquidityFeesRune + pe.rewards),
 	}
 }
@@ -87,6 +89,7 @@ func GetEarningsHistory(ctx context.Context, buckets db.Buckets) (oapigen.Earnin
 	poolRewardsQ, params := timeseries.RewardEntriesAggregate.BucketedQuery(`
 		SELECT
 			rune_e8,
+			saver_e8,
 			aggregate_timestamp/1000000000 AS start_time,
 			pool
 		FROM %s
@@ -194,9 +197,10 @@ func GetEarningsHistory(ctx context.Context, buckets db.Buckets) (oapigen.Earnin
 
 	for poolRewardsRows.Next() {
 		var runeE8 int64
+		var saverE8 int64
 		var startTime db.Second
 		var pool string
-		err := poolRewardsRows.Scan(&runeE8, &startTime, &pool)
+		err := poolRewardsRows.Scan(&runeE8, &saverE8, &startTime, &pool)
 		if err != nil {
 			return oapigen.EarningsHistoryResponse{}, err
 		}
@@ -208,6 +212,10 @@ func GetEarningsHistory(ctx context.Context, buckets db.Buckets) (oapigen.Earnin
 		// Add rewards to earnings by pool
 		intervalPoolEarningsMaps[startTime].getPoolEarnings(pool).rewards += runeE8
 		metaPoolEarningsMap.getPoolEarnings(pool).rewards += runeE8
+
+		// Add saver reward to the pool
+		intervalPoolEarningsMaps[startTime].getPoolEarnings(pool).saverRewards += saverE8
+		metaPoolEarningsMap.getPoolEarnings(pool).saverRewards += saverE8
 
 		// Add rewards to total pool rewards
 		intervalTotalPoolRewards[startTime] += runeE8
@@ -334,7 +342,8 @@ func GetEarningsHistory(ctx context.Context, buckets db.Buckets) (oapigen.Earnin
 		earningsItem := buildEarningsItem(
 			timestamp, endTime,
 			intervalTotalLiquidityFees[timestamp], intervalTotalPoolRewards[timestamp],
-			intervalTotalBondingRewards[timestamp], intervalNodeCountWeightedSum[timestamp],
+			intervalTotalBondingRewards[timestamp],
+			intervalNodeCountWeightedSum[timestamp],
 			usdPrices[i].RunePriceUSD, earningsItemPools)
 
 		earnings.Intervals = append(earnings.Intervals, earningsItem)

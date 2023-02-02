@@ -374,6 +374,7 @@ CALL setup_hypertable('rewards_events');
 CREATE TABLE rewards_event_entries (
     pool                TEXT NOT NULL,
     rune_e8             BIGINT NOT NULL,
+    saver_e8            BIGINT NOT NULL,
     event_id            BIGINT NOT NULL,
     block_timestamp     BIGINT NOT NULL
 );

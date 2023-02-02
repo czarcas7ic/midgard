@@ -152,7 +152,8 @@ func PoolStatus(ctx context.Context, pool string) (string, error) {
 var RewardEntriesAggregate = db.RegisterAggregate(
 	db.NewAggregate("rewards_event_entries", "rewards_event_entries").
 		AddGroupColumn("pool").
-		AddBigintSumColumn("rune_e8"))
+		AddBigintSumColumn("rune_e8").
+		AddBigintSumColumn("saver_e8"))
 
 // TotalLiquidityFeesRune gets sum of liquidity fees in Rune for a given time interval
 func TotalLiquidityFeesRune(ctx context.Context, from time.Time, to time.Time) (int64, error) {

@@ -1614,6 +1614,7 @@ components:
         - assetLiquidityFees
         - runeLiquidityFees
         - totalLiquidityFeesRune
+        - saverEarning
         - rewards
         - earnings
       description: pool earnings data during the time interval
@@ -1631,6 +1632,10 @@ components:
           type: string
           description: |
             Int64(e8), total liquidity fees (assetFees + runeFees) collected, shown in RUNE
+        saverEarning:
+          type: string
+          description: |
+            Int64(e8), total reward gained by the pool collected since timeframe, shown in pool ASSET
         rewards:
           type: string
           description: |

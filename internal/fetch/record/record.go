@@ -57,6 +57,19 @@ func (r *eventRecorder) OnAdd(e *Add, meta *Metadata) {
 	// donate events for saver yield mint synths
 	if GetCoinType(e.Pool) == AssetSynth && string(e.Memo) == "THOR-SAVERS-YIELD" {
 		r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Pool))), e.AssetE8)
+
+		// Add saver vault earnings to rewards_event_entries
+		// The pool is already is synth so it will be added to the aggregate without problem
+		// as new pool
+		err := InsertWithMeta("rewards_event_entries", meta,
+			[]string{"pool", "rune_e8", "saver_e8"},
+			util.ConvertSynthPoolToNative(string(e.Pool)), 0, e.AssetE8)
+		if err != nil {
+			miderr.LogEventParseErrorF(
+				"synth donate event from height %d lost on %s",
+				meta.BlockHeight, err)
+			return
+		}
 	}
 }
 
@@ -227,9 +240,9 @@ func (r *eventRecorder) OnRewards(e *Rewards, meta *Metadata) {
 		return
 	}
 
-	cols2 := []string{"pool", "rune_e8"}
+	cols2 := []string{"pool", "rune_e8", "saver_e8"}
 	for _, p := range e.PerPool {
-		err := InsertWithMeta("rewards_event_entries", meta, cols2, p.Asset, p.E8)
+		err := InsertWithMeta("rewards_event_entries", meta, cols2, p.Asset, p.E8, 0)
 		if err != nil {
 			miderr.LogEventParseErrorF(
 				"reserve event pools from height %d lost on %s",
