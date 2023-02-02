@@ -1635,7 +1635,7 @@ components:
         saverEarning:
           type: string
           description: |
-            Int64(e8), total reward gained by the pool collected since timeframe, shown in pool ASSET
+            Int64(e8), total saver reward collected by the pool, shown in pool's ASSET
         rewards:
           type: string
           description: |

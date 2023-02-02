@@ -58,9 +58,10 @@ func (r *eventRecorder) OnAdd(e *Add, meta *Metadata) {
 	if GetCoinType(e.Pool) == AssetSynth && string(e.Memo) == "THOR-SAVERS-YIELD" {
 		r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Pool))), e.AssetE8)
 
-		// Add saver vault earnings to rewards_event_entries
-		// The pool is already is synth so it will be added to the aggregate without problem
-		// as new pool
+		// On a donate event with `THOR-SAVERS-YIELD` we add a row to the `rewards_event_entries` table
+		// which would be normally filled only from reward events.
+		// This is unlike other cases where we have 1:1 mapping between events and tables,
+		// but we do this to simplify serving.
 		err := InsertWithMeta("rewards_event_entries", meta,
 			[]string{"pool", "rune_e8", "saver_e8"},
 			util.ConvertSynthPoolToNative(string(e.Pool)), 0, e.AssetE8)
