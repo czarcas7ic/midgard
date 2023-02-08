@@ -1065,6 +1065,11 @@ func (e *Swap) LoadTendermint(attrs []abci.EventAttribute) error {
 		var err error
 		switch string(attr.Key) {
 		case "id":
+			// This check is due to the recent refund actions emitted with null `tx` attribute
+			// More info: https://gitlab.com/thorchain/thornode/-/merge_requests/2716
+			if attr.Value == nil {
+				return fmt.Errorf("swap transaction with malformed id")
+			}
 			e.Tx = attr.Value
 		case "chain":
 			e.Chain = attr.Value
