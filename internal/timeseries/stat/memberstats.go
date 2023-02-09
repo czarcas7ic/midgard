@@ -20,7 +20,7 @@ func membersCount(ctx context.Context, pools []string, until *db.Nano) (map[stri
 			DISTINCT on (pool) pool, count 
 		FROM midgard_agg.members_count
 		` + db.Where(timeFilter, "pool = ANY($1)") + `
-		ORDER BY pool, block_timestamp desc
+		ORDER BY pool, block_timestamp DESC
 	`
 
 	poolsCount := make(map[string]int64)
@@ -60,21 +60,13 @@ func GetMembersCountBucket(ctx context.Context, buckets db.Buckets, pool string)
 	beforeCount = lastCountValue
 
 	q := `
-		WITH 
-		truncate AS (
-			SELECT
-				pool,
-				count,
-				block_timestamp,
-				event_id,
-				` + db.SelectTruncatedTimestamp("block_timestamp", buckets) + ` AS truncated
-			FROM midgard_agg.members_count
-			ORDER BY truncated ASC
-		)
-		SELECT DISTINCT ON (truncated) truncated, count
-		FROM truncate
+		SELECT DISTINCT ON (truncated)
+			` + db.SelectTruncatedTimestamp("block_timestamp", buckets) + ` AS truncated,
+			count
+		FROM midgard_agg.members_count
 		WHERE pool = $1 AND $2 <= block_timestamp AND block_timestamp < $3
-		ORDER BY truncated, block_timestamp desc
+		ORDER BY truncated, block_timestamp DESC
+
 	`
 
 	qargs := []interface{}{pool, buckets.Start().ToNano(), buckets.End().ToNano()}
