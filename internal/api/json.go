@@ -447,6 +447,7 @@ func toTVLHistoryResponse(depths []stat.TVLDepthBucket, bonds []stat.BondBucket)
 	for i, bucket := range depths {
 		pools := 2 * bucket.TotalPoolDepth
 		bonds := bonds[i].Bonds
+		poolsDepth := toOapiPoolsDepth(bucket.PoolsMapRuneDepth)
 		result.Intervals = append(result.Intervals, oapigen.TVLHistoryItem{
 			StartTime:        util.IntStr(bucket.Window.From.ToI()),
 			EndTime:          util.IntStr(bucket.Window.Until.ToI()),
@@ -454,11 +455,23 @@ func toTVLHistoryResponse(depths []stat.TVLDepthBucket, bonds []stat.BondBucket)
 			TotalValueBonded: showBonds(util.IntStr(bonds)),
 			TotalValueLocked: showBonds(util.IntStr(pools + bonds)),
 			RunePriceUSD:     floatStr(bucket.RunePriceUSD),
+			PoolsDepth:       poolsDepth,
 		})
 	}
 	result.Meta = result.Intervals[len(depths)-1]
 	result.Meta.StartTime = result.Intervals[0].StartTime
 	return
+}
+
+func toOapiPoolsDepth(poolsMapDepth map[string]int64) []oapigen.DepthHistoryItemPool {
+	ret := make([]oapigen.DepthHistoryItemPool, 0)
+	for poolName, poolDepth := range poolsMapDepth {
+		ret = append(ret, oapigen.DepthHistoryItemPool{
+			Pool:       poolName,
+			TotalDepth: util.IntStr(2 * poolDepth),
+		})
+	}
+	return ret
 }
 
 func jsonNetwork(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

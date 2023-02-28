@@ -6,6 +6,7 @@ import (
 
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
+	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/timeseries"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 )
@@ -17,9 +18,10 @@ type PoolDepthBucket struct {
 }
 
 type TVLDepthBucket struct {
-	Window         db.Window
-	TotalPoolDepth int64
-	RunePriceUSD   float64
+	Window            db.Window
+	TotalPoolDepth    int64
+	RunePriceUSD      float64
+	PoolsMapRuneDepth map[string]int64
 }
 
 // - Queries database, possibly multiple rows per window.
@@ -178,8 +180,12 @@ func TVLDepthHistory(ctx context.Context, buckets db.Buckets) (
 		runePriceUSD := runePriceUSDForDepths(poolDepths)
 
 		var depth int64 = 0
-		for _, pair := range poolDepths {
+		ret[idx].PoolsMapRuneDepth = map[string]int64{}
+		for poolName, pair := range poolDepths {
 			depth += pair.RuneDepth
+			if record.GetCoinType([]byte(poolName)) == record.AssetNative {
+				ret[idx].PoolsMapRuneDepth[poolName] = pair.RuneDepth
+			}
 		}
 
 		ret[idx].Window = bucketWindow

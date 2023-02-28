@@ -1910,6 +1910,7 @@ components:
         - endTime
         - totalValuePooled
         - runePriceUSD
+        - poolsDepth
       properties:
         startTime:
           type: string
@@ -1923,6 +1924,10 @@ components:
             Int64(e8) in rune, the total pooled value (both assets and rune) in all of the pools at
             the end of the interval.
             Note: this is twice the aggregate Rune depth of all pools.
+        poolsDepth:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepthHistoryItemPool'
         totalValueBonded:
           type: string
           description: |
@@ -1938,6 +1943,21 @@ components:
           type: string
           description: |
             Float, the price of Rune based on the deepest USD pool at the end of the interval.
+    DepthHistoryItemPool:
+      type: object
+      required:
+        - pool
+        - totalDepth
+      properties:
+        pool:
+          type: string
+          description: asset for the given pool
+        totalDepth:
+          type: string
+          description: |
+            Int64(e8) in rune, the total value in the pool (both assets and rune) at the end of the interval.
+            Note: this is twice of the pool's Rune depth. (as pools are symmetrically balance)
+
 
     Nodes:
       type: array
