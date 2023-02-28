@@ -53,14 +53,26 @@ func TestTVLHistoryE2E(t *testing.T) {
 	var jsonResult oapigen.TVLHistoryResponse
 	testdb.MustUnmarshal(t, body, &jsonResult)
 
-	require.Equal(t, oapigen.TVLHistoryItem{
-		StartTime:        epochStr("2020-01-09 00:00:00"),
-		EndTime:          epochStr("2020-01-14 00:00:00"),
-		TotalValuePooled: "356",
-		TotalValueBonded: stringp("0"),
-		TotalValueLocked: stringp("356"),
-		RunePriceUSD:     "2",
-	}, jsonResult.Meta)
+	require.Equal(t, epochStr("2020-01-09 00:00:00"), jsonResult.Meta.StartTime)
+	require.Equal(t, epochStr("2020-01-14 00:00:00"), jsonResult.Meta.EndTime)
+	require.Equal(t, "356", jsonResult.Meta.TotalValuePooled)
+	require.Equal(t, stringp("0"), jsonResult.Meta.TotalValueBonded)
+	require.Equal(t, stringp("356"), jsonResult.Meta.TotalValueLocked)
+	require.Equal(t, "2", jsonResult.Meta.RunePriceUSD)
+	require.Equal(t, 4, len(jsonResult.Meta.PoolsDepth))
+	for _, item := range jsonResult.Meta.PoolsDepth {
+		switch item.Pool {
+		case "ABC.USD1":
+			require.Equal(t, "0", item.TotalDepth)
+		case "ABC.XYZ":
+			require.Equal(t, "300", item.TotalDepth)
+		case "ABC.ABC":
+			require.Equal(t, "36", item.TotalDepth)
+		case "ABC.USD2":
+			require.Equal(t, "20", item.TotalDepth)
+		}
+	}
+
 	require.Equal(t, 5, len(jsonResult.Intervals))
 	require.Equal(t, epochStr("2020-01-09 00:00:00"), jsonResult.Intervals[0].StartTime)
 	require.Equal(t, epochStr("2020-01-10 00:00:00"), jsonResult.Intervals[0].EndTime)
@@ -118,6 +130,7 @@ func TestTVLHistoryBondsE2E(t *testing.T) {
 		TotalValueBonded: stringp("140"),
 		TotalValueLocked: stringp("140"),
 		RunePriceUSD:     "NaN",
+		PoolsDepth:       []oapigen.DepthHistoryItemPool{},
 	}, jsonResult.Meta)
 	require.Equal(t, 4, len(jsonResult.Intervals))
 	require.Equal(t, epochStr("2020-01-09 00:00:00"), jsonResult.Intervals[0].StartTime)
