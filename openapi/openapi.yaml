@@ -654,8 +654,8 @@ paths:
           required: false
           schema:
             type: string
-          examples: 
-            regularAsset: 
+          examples:
+            regularAsset:
               value: BTC.BTC,THOR.RUNE
               summary: Regular multiple asset query. (having at least either one of them)
             filterAsset:
@@ -963,7 +963,10 @@ components:
             properties:
               count:
                 type: string
-                description: Int64, number of results matching the given filters.
+                description: |
+                  Int64, number of results matching the given filters. It may be -1 if
+                  Midgard is having trouble counting the results and has to cancel the count query
+                  (temporary fix).
               actions:
                 type: array
                 items:

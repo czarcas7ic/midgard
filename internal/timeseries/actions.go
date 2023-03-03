@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/lib/pq"
+	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/util"
@@ -442,17 +444,27 @@ func GetActions(ctx context.Context, moment time.Time, params ActionsParams) (
 		return oapigen.ActionsResponse{}, err
 	}
 
-	// Get count
-	countRows, err := db.Query(ctx, countPS.Query, countPS.Values...)
+	var totalCount int = -1
+
+	// The actions endpoint is slow, often because the count query.
+	// Until the new API is implemented we cancel the query if it's slow and return count=-1
+	// https://discord.com/channels/838986635756044328/999334588583252078)
+	countDeadlineCtx, _ := context.WithDeadline(ctx,
+		time.Now().Add(config.Global.TmpActionsCountTimeout.Value()))
+	countRows, err := db.Query(countDeadlineCtx, countPS.Query, countPS.Values...)
 	if err != nil {
-		return oapigen.ActionsResponse{}, fmt.Errorf("actions count query: %w", err)
-	}
-	defer countRows.Close()
-	var totalCount uint
-	countRows.Next()
-	err = countRows.Scan(&totalCount)
-	if err != nil {
-		return oapigen.ActionsResponse{}, fmt.Errorf("actions count read: %w", err)
+		if err, ok := err.(net.Error); ok && err.Timeout() {
+			totalCount = -1
+		} else {
+			return oapigen.ActionsResponse{}, fmt.Errorf("actions count query: %w", err)
+		}
+	} else {
+		defer countRows.Close()
+		countRows.Next()
+		err = countRows.Scan(&totalCount)
+		if err != nil {
+			return oapigen.ActionsResponse{}, fmt.Errorf("actions count read: %w", err)
+		}
 	}
 
 	// Get results

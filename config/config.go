@@ -48,6 +48,9 @@ type Config struct {
 	CaseInsensitiveChains map[string]bool `yaml:"case_insensitive_chains" split_words:"true"`
 
 	Logs midlog.LogConfig `yaml:"logs" split_words:"true"`
+
+	// Temporary solution, will be field will be removed in the future.
+	TmpActionsCountTimeout Duration `yaml:"tmp_actions_count_timeout" split_words:"true"`
 }
 
 type BlockStore struct {
@@ -168,6 +171,7 @@ var defaultConfig = Config{
 		OnTransferEnabled: true,
 		OnMessageEnabled:  false,
 	},
+	TmpActionsCountTimeout: Duration(7000 * time.Millisecond),
 }
 
 var logger = midlog.LoggerForModule("config")
