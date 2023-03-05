@@ -603,3 +603,9 @@ func (*eventRecorder) OnSetNodeMimir(e *SetNodeMimir, meta *Metadata) {
 			meta.BlockHeight, err)
 	}
 }
+
+func (r *eventRecorder) OnMintBurn(e *MintBurn, meta *Metadata) {
+	if string(e.Reason) == "failed_refund" {
+		r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Asset))), -e.AssetE8)
+	}
+}

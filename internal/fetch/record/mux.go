@@ -318,11 +318,16 @@ func processEvent(event abci.Event, meta *Metadata) error {
 			return err
 		}
 		Recorder.OnSetNodeMimir(&x, meta)
+	case "mint_burn":
+		var x MintBurn
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnMintBurn(&x, meta)
 	case "tx":
 	case "coin_spent", "coin_received":
 	case "coinbase":
 	case "burn":
-	case "mint_burn":
 	case "tss_keygen", "tss_keysign":
 	case "create_client", "update_client":
 	case "connection_open_init":

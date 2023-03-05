@@ -1578,3 +1578,34 @@ func (e *SetNodeMimir) LoadTendermint(attrs []abci.EventAttribute) error {
 	}
 	return nil
 }
+
+type MintBurn struct {
+	Asset   []byte
+	AssetE8 int64
+	Reason  []byte
+	Supply  []byte
+}
+
+func (e *MintBurn) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		switch string(attr.Key) {
+		case "denom":
+			e.Asset = attr.Value
+		case "reason":
+			e.Reason = attr.Value
+		case "supply":
+			e.Supply = attr.Value
+		case "amount":
+			e.AssetE8, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed value: %w", err)
+			}
+		default:
+			miderr.LogEventParseErrorF(
+				"unknown mint_burn event attribute %q=%q",
+				attr.Key, attr.Value)
+		}
+	}
+	return nil
+}
