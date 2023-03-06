@@ -187,7 +187,7 @@ func (*eventRecorder) OnOutbound(e *Outbound, meta *Metadata) {
 	err := InsertWithMeta("outbound_events", meta, cols,
 		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.InTx)
 	if err != nil {
-		miderr.LogEventParseErrorF("outound event from height %d lost on %s", meta.BlockHeight, err)
+		miderr.LogEventParseErrorF("outbound event from height %d lost on %s", meta.BlockHeight, err)
 	}
 }
 
@@ -601,5 +601,14 @@ func (*eventRecorder) OnSetNodeMimir(e *SetNodeMimir, meta *Metadata) {
 		miderr.LogEventParseErrorF(
 			"set_node_mimir event from height %d lost on %s",
 			meta.BlockHeight, err)
+	}
+}
+
+func (r *eventRecorder) OnMintBurn(e *MintBurn, meta *Metadata) {
+	// Reflect synth burning when done for MintBurn reason "failed_refund" .
+	if GetCoinType(e.Asset) == AssetSynth &&
+		string(e.Supply) == "burn" &&
+		string(e.Reason) == "failed_refund" {
+		r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Asset))), -e.AssetE8)
 	}
 }
