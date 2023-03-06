@@ -1584,3 +1584,46 @@ func (e *SetNodeMimir) LoadTendermint(attrs []abci.EventAttribute) error {
 	}
 	return nil
 }
+
+type MintBurn struct {
+	Asset   []byte
+	AssetE8 int64 // Asset quantity times 100 M
+	Reason  []byte
+	Supply  []byte
+}
+
+func (e *MintBurn) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		switch string(attr.Key) {
+		case "denom":
+			if attr.Value != nil {
+				// Code based on normalizeAsset .
+				asset := string(attr.Value)
+				if asset == "rune" {
+					e.Asset = []byte("THOR.RUNE")
+				} else {
+					e.Asset = []byte(strings.ToUpper(asset))
+				}
+			}
+		case "amount":
+			e.AssetE8, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed amount: %w", err)
+			}
+		case "reason":
+			e.Reason = attr.Value
+		case "supply":
+			sValue := string(attr.Value)
+			if sValue == "mint" || sValue == "burn" {
+				e.Supply = attr.Value
+			} else {
+				miderr.LogEventParseErrorF("unknown supply type: %q", attr.Value)
+			}
+		default:
+			miderr.LogEventParseErrorF("unknown mint_burn event attribute %q=%q", attr.Key, attr.Value)
+		}
+	}
+
+	return nil
+}

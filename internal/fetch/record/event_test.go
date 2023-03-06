@@ -168,6 +168,46 @@ func TestTransfer(t *testing.T) {
 	require.Equal(t, "BNB/BNB", string(event.Asset))
 }
 
+func TestBond(t *testing.T) {
+	var event Bond
+	err := event.LoadTendermint(toAttrs(map[string]string{
+		// "bond_type": "0", // Because of the nature of this test
+		// (and THORNode's EventBond Attributes() using string(m.BondType) rather than m.BondType.String()),
+		// non-string bond_type cannot be represented.
+		"amount": "100",
+		"chain":  "THOR",
+		"coin":   "100 THOR.RUNE",
+		"from":   "tthor1zf3gsk7edzwl9syyefvfhle37cjtql35h6k85m",
+		"id":     "98C1864036571E805BB0E0CCBAFF0F8D80F69BDEA32D5B26E0DDB95301C74D0C",
+		"memo":   "BOND:tthor1zf3gsk7edzwl9syyefvfhle37cjtql35h6k85m",
+		"to":     "tthor17gw75axcnr8747pkanye45pnrwk7p9c3uhzgff",
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if event.E8 != 100 || event.AssetE8 != 100 || string(event.Asset) != "THOR.RUNE" {
+		t.Errorf(`got %d / %d / %q when expecting 100 / 100 / THOR.RUNE"`, event.E8, event.AssetE8, event.Asset)
+	}
+}
+
+func TestMintBurn(t *testing.T) {
+	var event MintBurn
+	err := event.LoadTendermint(toAttrs(map[string]string{
+		"supply": "burn",
+		"denom":  "bnb/bnb",
+		"amount": "10",
+		"reason": "failed_refund",
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(event.Supply) != "burn" || string(event.Asset) != "BNB/BNB" || event.AssetE8 != 10 || string(event.Reason) != "failed_refund" {
+		t.Errorf(`got %s / %q / %d / %s when expecting burn / BNB/BNB / 10 / failed_refund"`, event.Supply, event.Asset, event.AssetE8, event.Reason)
+	}
+}
+
 func toAttrs(m map[string]string) []abci.EventAttribute {
 	a := make([]abci.EventAttribute, 0, len(m))
 	for k, v := range m {
