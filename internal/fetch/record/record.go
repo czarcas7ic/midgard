@@ -613,4 +613,11 @@ func (r *eventRecorder) OnMintBurn(e *MintBurn, meta *Metadata) {
 			"mint_burn event from height %d lost on %s",
 			meta.BlockHeight, err)
 	}
+
+	// Reflect synth burning when done for MintBurn reason "failed_refund" .
+	if GetCoinType(e.Asset) == AssetSynth &&
+		string(e.Supply) == "burn" &&
+		string(e.Reason) == "failed_refund" {
+		r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Asset))), -e.AssetE8)
+	}
 }
