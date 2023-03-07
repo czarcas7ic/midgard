@@ -496,7 +496,7 @@ func (r *eventRecorder) OnWithdraw(e *Withdraw, meta *Metadata) {
 	//   - for Rune there is no minimum amount, if some rune is sent it's kept as donation.
 	//   - when for non chain native assets (e.g. ETH.USDT) the EmitAssetE8 could not have contained
 	//     the coin sent in.
-	if meta.BlockHeight < withdrawCoinKeptHeight {
+	if meta.BlockHeight < withdrawCoinKeptHeight || meta.BlockHeight >= withdrawCoinPooledHeight {
 		if e.AssetE8 != 0 && string(e.Pool) == string(e.Asset) {
 			r.AddPoolAssetE8Depth(e.Pool, e.AssetE8)
 		}

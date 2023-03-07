@@ -199,6 +199,10 @@ func registerArtificialPoolBallanceChanges(changes artificialPoolBallanceChanges
 // where the logic change happened.
 var withdrawCoinKeptHeight int64 = 0
 
+// In Mainnet later, the logic was changed to add the withdraw coin in the pool,
+// rather than in the vault.  This variable describes the height where the logic change happened.
+var withdrawCoinPooledHeight int64 = 0
+
 func (m AddEventsFuncMap) Add(height int64, f AddEventsFunc) {
 	fOrig, alreadyExists := m[height]
 	if alreadyExists {
