@@ -81,6 +81,7 @@ func DeleteTables(t *testing.T) {
 	MustExec(t, "DELETE FROM add_events")
 	MustExec(t, "DELETE FROM refund_events")
 	MustExec(t, "DELETE FROM transfer_events")
+	MustExec(t, "DELETE FROM mint_burn_events")
 
 	clearAggregates(t)
 }
@@ -383,6 +384,24 @@ func InsertSwitchEvent(t *testing.T, fake FakeSwitch) {
 	timestamp := nanoWithDefault(fake.BlockTimestamp)
 	MustExec(t, insertq,
 		fake.FromAddr, fake.ToAddr, fake.BurnAsset, fake.BurnE8, timestamp)
+}
+
+type FakeMintBurn struct {
+	Asset          string
+	AssetE8        int64
+	Supply         string
+	Reason         string
+	BlockTimestamp string
+}
+
+func InsertMintBurnEvent(t *testing.T, fake FakeMintBurn) {
+	const insertq = `INSERT INTO mint_burn_events ` +
+		`(asset, asset_e8, supply, reason, event_id, block_timestamp) ` +
+		`VALUES ($1, $2, $3, $4, 0, $5)`
+
+	timestamp := nanoWithDefault(fake.BlockTimestamp)
+	MustExec(t, insertq,
+		fake.Asset, fake.AssetE8, fake.Supply, fake.Reason, timestamp)
 }
 
 func InsertRewardsEvent(t *testing.T, bondE8 int64, fakeTimestamp string) {
