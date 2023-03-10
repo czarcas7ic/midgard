@@ -603,3 +603,14 @@ CREATE TABLE set_node_mimir_events (
 );
 
 CALL setup_hypertable('set_node_mimir_events');
+
+CREATE TABLE mint_burn_events (
+    asset               TEXT,
+    asset_e8            BIGINT NOT NULL,
+    supply              TEXT,
+    reason              TEXT,
+    event_id            BIGINT NOT NULL,
+    block_timestamp     BIGINT NOT NULL
+);
+
+CALL setup_hypertable('mint_burn_events');
