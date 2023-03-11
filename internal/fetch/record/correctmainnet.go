@@ -27,6 +27,7 @@ func loadMainnet202104Corrections(chainID string) {
 		loadMainnetWithdrawIncreasesUnits()
 		loadMainnetcorrectGenesisNode()
 		loadMainnetMissingWithdraws()
+		loadMainnetRemoveLiquidityCorrections()
 		loadMainnetBalanceCorrections()
 		loadMainnetMissingRefund()
 		loadMainnetPreregisterThornames()
@@ -208,6 +209,255 @@ func loadMainnetMissingRefund() {
 		}
 		Recorder.OnSwap(&swap, meta)
 	})
+}
+
+//////////////////////// Fix HEGIC pool missbalance.
+
+// When pool gets removed by thornode `removeLiquidityProviders` the event contains null value
+// And gets ignored by Midgard. Here is the fix from thornode:
+// https://gitlab.com/thorchain/thornode/-/merge_requests/2819
+
+func loadMainnetRemoveLiquidityCorrections() {
+	corrections := []Withdraw{
+		{
+			FromAddr:   []byte("0x8ea72dffeb4c752d67d6590673b1c2c3ff7afe33"),
+			StakeUnits: 2530873057,
+		},
+		{
+			FromAddr:   []byte("0x9fd89ff191c9b4c4e25e0b3e3e16783514e480eb"),
+			StakeUnits: 346609448,
+		},
+		{
+			FromAddr:   []byte("thor123hnhqjlfjny7rzj8fxzgdlkmxjvup279dpkq0"),
+			StakeUnits: 291454169,
+		},
+		{
+			FromAddr:   []byte("thor125ynwnann7969mjhynqcp5je834kunz4cx0rq7"),
+			StakeUnits: 3375794,
+		},
+		{
+			FromAddr:   []byte("thor12qjtp8c5hhl9e5rl04ynfvlwfp2xucsqhdw92s"),
+			StakeUnits: 23494480,
+		},
+		{
+			FromAddr:   []byte("thor13f2zmmjkflfyeghupyegf3z44e95s8nfg479jd"),
+			StakeUnits: 1868006,
+		},
+		{
+			FromAddr:   []byte("thor15sj246ny895psa3wymlt7am7slcr8n94t3em89"),
+			StakeUnits: 12069444899,
+		},
+		{
+			FromAddr:   []byte("thor16fyjsvr4p08rzpkaxk6r5d20mst5ln7mthq4yt"),
+			StakeUnits: 346542576,
+		},
+		{
+			FromAddr:   []byte("thor16jg26p48ue58kjxsu5l5w0gx6qdlaxhxsnrjzu"),
+			StakeUnits: 465518306,
+		},
+		{
+			FromAddr:   []byte("thor178wlyhtpvth7f7zmrusfcqurvysxv9jngalunk"),
+			StakeUnits: 32844877,
+		},
+		{
+			FromAddr:   []byte("thor18ealt7vp5w362mqsjgjwdm7dxgu0032vs4xlc0"),
+			StakeUnits: 3372615,
+		},
+		{
+			FromAddr:   []byte("thor18l7mjv9lv3j3q4f3gh3fffyms8cpvjquvywcnc"),
+			StakeUnits: 18682220,
+		},
+		{
+			FromAddr:   []byte("thor19dq0hcxmau6tp6fgkl30vf2snkntv2jpq0skfp"),
+			StakeUnits: 16997920483,
+		},
+		{
+			FromAddr:   []byte("thor19kuxhqy870ysu5ej65rw4ezu8cejjj6p88tpar"),
+			StakeUnits: 328354924,
+		},
+		{
+			FromAddr:   []byte("thor19ytzkff7a3qy7nmnkx5a82urehuuxr3sjwrgmw"),
+			StakeUnits: 6982566186,
+		},
+		{
+			FromAddr:   []byte("thor1amxc5dg4eetej7pg4nkzw60cpr6t4809xf8tnv"),
+			StakeUnits: 33125146,
+		},
+		{
+			FromAddr:   []byte("thor1axsyxqkfxzaf86kkxmy0ltjdsjneqkun5lkjpx"),
+			StakeUnits: 337576,
+		},
+		{
+			FromAddr:   []byte("thor1c7a5lqssq7esh8tp3jmezaavvax5pmg65eevt5"),
+			StakeUnits: 854431703,
+		},
+		{
+			FromAddr:   []byte("thor1ezr4ky0ve2fzqr9s4estpg9zq9g2dk9q5thzhu"),
+			StakeUnits: 1255928536,
+		},
+		{
+			FromAddr:   []byte("thor1fn46pkfs7tcme664492m4z5jwf8cmyp4anlnfe"),
+			StakeUnits: 3732928,
+		},
+		{
+			FromAddr:   []byte("thor1fq2fhrk84hxyme2ta35ne6v35u7zh4k0wqsx06"),
+			StakeUnits: 299940491,
+		},
+		{
+			FromAddr:   []byte("thor1fs5f4adte00m78j7g6ztkjvln9p8p5heymd2wz"),
+			StakeUnits: 74670193,
+		},
+		{
+			FromAddr:   []byte("thor1gjsuaqca7u64u2zx5wwded53j94k5yyrmfnz2w"),
+			StakeUnits: 3416668,
+		},
+		{
+			FromAddr:   []byte("thor1gp7dufplc92sxdlxfsmj6fx8uvya7mydcrdag9"),
+			StakeUnits: 40241,
+		},
+		{
+			FromAddr:   []byte("thor1hfvq8s40e5s83055jagmzrnhp3ugda64wwtya6"),
+			StakeUnits: 35601008,
+		},
+		{
+			FromAddr:   []byte("thor1hjfu0jhkutq942ucs7nzvfrfa30kwtxxcy7yvf"),
+			StakeUnits: 383673,
+		},
+		{
+			FromAddr:   []byte("thor1jf074m34qjaxpkh4mev2uaz6x249npfvpwwwtk"),
+			StakeUnits: 696625,
+		},
+		{
+			FromAddr:   []byte("thor1jmawmz2hvgdzmhsuh8phyktwhwrz5u9v4h63ce"),
+			StakeUnits: 186818,
+		},
+		{
+			FromAddr:   []byte("thor1kd9h7m9l2h8wf2js72caqzq4978p2mcsnvta2s"),
+			StakeUnits: 100539730,
+		},
+		{
+			FromAddr:   []byte("thor1knsxcjtz3raqyzxk5z87senlwx53v9hkncjrv4"),
+			StakeUnits: 411925945,
+		},
+		{
+			FromAddr:   []byte("thor1l5vlnutqvh2zv3uruy6kk0s6dunz0xj6z048pa"),
+			StakeUnits: 331272269,
+		},
+		{
+			FromAddr:   []byte("thor1lghm6wmqtrz5mzupm9c5lk4xtr2xv3835rf935"),
+			StakeUnits: 8292276,
+		},
+		{
+			FromAddr:   []byte("thor1m07uxkdpgxyt7um0g36z62z02ehzjfgzvpeewp"),
+			StakeUnits: 2993590,
+		},
+		{
+			FromAddr:   []byte("thor1m490synp6glkq4skext84x6xfqgg3j69l0ngpp"),
+			StakeUnits: 32050412,
+		},
+		{
+			FromAddr:   []byte("thor1mtch7p7ctmhz0fatg38zz64rlvu95c5vhsrm3f"),
+			StakeUnits: 4021806,
+		},
+		{
+			FromAddr:   []byte("thor1n00szt2yqrne3dmlpqd04swhmmrujh7hqp9a4v"),
+			StakeUnits: 8043290,
+		},
+		{
+			FromAddr:   []byte("thor1n244qlmax8kkpjre7wrluy3kxx3frnzl37m95n"),
+			StakeUnits: 98542193,
+		},
+		{
+			FromAddr:   []byte("thor1n9s7t8hscr7j8g5kzacscdream72kx2u4w3dlc"),
+			StakeUnits: 3286235,
+		},
+		{
+			FromAddr:   []byte("thor1pavmt8hlv6v7r70y8dugqfyd98hf39h94ty25j"),
+			StakeUnits: 7112626,
+		},
+		{
+			FromAddr:   []byte("thor1r0aw24dwea2373h2mfrx3ut04s2jqnvj67p3jp"),
+			StakeUnits: 1871484,
+		},
+		{
+			FromAddr:   []byte("thor1rdttlqjj3a8puat9h4xqvc7jxewaa5yf4x5tdq"),
+			StakeUnits: 3736128,
+		},
+		{
+			FromAddr:   []byte("thor1tgs7xd2xq57vwhgzzv7qv9d68plpn0hxw7ufxa"),
+			StakeUnits: 37782627,
+		},
+		{
+			FromAddr:   []byte("thor1ukag0a5l0p4gqdmmzq3lw0cycuks73nddaurpx"),
+			StakeUnits: 116437252,
+		},
+		{
+			FromAddr:   []byte("thor1ve0z79dtukzun96shykyr7z8zdufzezkqzhzqd"),
+			StakeUnits: 37784440,
+		},
+		{
+			FromAddr:   []byte("thor1vjm299wprqwz5m0kp5dnaph573u4glk2x3dx3y"),
+			StakeUnits: 2939544248,
+		},
+		{
+			FromAddr:   []byte("thor1vqd6djdqn4hlrquxuwz2na3mac8qm8qgwfu7ps"),
+			StakeUnits: 66276710,
+		},
+		{
+			FromAddr:   []byte("thor1wmme5j3jd4jtldxcvq2mrgcrc5mtctj606fjnm"),
+			StakeUnits: 15084927,
+		},
+		{
+			FromAddr:   []byte("thor1wp8s062268tv3fvxxl8tgy62aq0rk203pylh5z"),
+			StakeUnits: 3154314583,
+		},
+		{
+			FromAddr:   []byte("thor1ws0sltg9ayyxp2777xykkqakwv2hll5ywuwkzl"),
+			StakeUnits: 31875829,
+		},
+		{
+			FromAddr:   []byte("thor1wtttw6j3xvxm85j80m3qv3zhz70wem0a6xkh37"),
+			StakeUnits: 1657489,
+		},
+		{
+			FromAddr:   []byte("thor1x64thscxsl39pun3lqzwhge890tvhvgd3dxc7q"),
+			StakeUnits: 46107090,
+		},
+		{
+			FromAddr:   []byte("thor1y45hs4jaufkckmz4kj6gu30h7c9s7v4t2unwn2"),
+			StakeUnits: 63077766,
+		},
+		{
+			FromAddr:   []byte("thor1yv36jpsn2qvds7vg74g0fpyfu6d5np2hhdp627"),
+			StakeUnits: 65694437,
+		},
+		{
+			FromAddr:   []byte("thor1zw4n0zgf7v75l9t6hfyw0fgz9tn84vfu9jz77h"),
+			StakeUnits: 33015622,
+		},
+	}
+
+	fn := func(meta *Metadata) {
+		for _, c := range corrections {
+			withdraw := Withdraw{
+				Asymmetry:           0.0,
+				BasisPoints:         10000,
+				Chain:               []byte("THOR"),
+				Pool:                []byte("ETH.HEGIC-0X584BC13C7D411C00C01A62E8019472DE68768430"),
+				Asset:               []byte("THOR.RUNE"),
+				ToAddr:              []byte(""),
+				Memo:                []byte(""),
+				Tx:                  []byte("0000000000000000000000000000000000000000000000000000000000000000"),
+				EmitRuneE8:          0,
+				EmitAssetE8:         0,
+				ImpLossProtectionE8: 0,
+				FromAddr:            c.FromAddr,
+				StakeUnits:          c.StakeUnits,
+			}
+			Recorder.OnWithdraw(&withdraw, meta)
+		}
+	}
+	AdditionalEvents.Add(7171200, fn)
 }
 
 //////////////////////// Fix withdraw assets not forwarded.
