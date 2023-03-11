@@ -324,6 +324,12 @@ func processEvent(event abci.Event, meta *Metadata) error {
 			return err
 		}
 		Recorder.OnMintBurn(&x, meta)
+	case "version":
+		var x Version
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnVersion(&x, meta)
 	case "tx":
 	case "coin_spent", "coin_received":
 	case "coinbase":

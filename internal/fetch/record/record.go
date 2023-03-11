@@ -621,3 +621,14 @@ func (r *eventRecorder) OnMintBurn(e *MintBurn, meta *Metadata) {
 		r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Asset))), -e.AssetE8)
 	}
 }
+
+func (*eventRecorder) OnVersion(e *Version, meta *Metadata) {
+	cols := []string{"version"}
+	err := InsertWithMeta("network_version_events", meta, cols,
+		e.Version)
+	if err != nil {
+		miderr.LogEventParseErrorF(
+			"version event from height %d lost on %s",
+			meta.BlockHeight, err)
+	}
+}

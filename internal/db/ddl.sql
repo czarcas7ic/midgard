@@ -614,3 +614,11 @@ CREATE TABLE mint_burn_events (
 );
 
 CALL setup_hypertable('mint_burn_events');
+
+CREATE TABLE network_version_events (
+    version             TEXT NOT NULL,
+    event_id            BIGINT NOT NULL,
+    block_timestamp     BIGINT NOT NULL
+);
+
+CALL setup_hypertable('network_version_events');

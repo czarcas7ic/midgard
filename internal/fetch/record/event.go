@@ -1627,3 +1627,20 @@ func (e *MintBurn) LoadTendermint(attrs []abci.EventAttribute) error {
 
 	return nil
 }
+
+type Version struct {
+	Version []byte
+}
+
+func (e *Version) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		switch string(attr.Key) {
+		case "version":
+			e.Version = attr.Value
+		default:
+			miderr.LogEventParseErrorF("unknown version event attribute %q=%q", attr.Key, attr.Value)
+		}
+	}
+
+	return nil
+}
