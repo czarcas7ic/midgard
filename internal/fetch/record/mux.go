@@ -330,6 +330,18 @@ func processEvent(event abci.Event, meta *Metadata) error {
 			return err
 		}
 		Recorder.OnVersion(&x, meta)
+	case "loan_open":
+		var x LoanOpen
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnLoanOpen(&x, meta)
+	case "loan_repayment":
+		var x LoanRepayment
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnLoanRepayment(&x, meta)
 	case "tx":
 	case "coin_spent", "coin_received":
 	case "coinbase":

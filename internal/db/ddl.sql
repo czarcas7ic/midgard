@@ -623,3 +623,26 @@ CREATE TABLE network_version_events (
 );
 
 CALL setup_hypertable('network_version_events');
+CREATE TABLE loan_open_events (
+    owner                   TEXT NOT NULL,
+    collateral_up           BIGINT NOT NULL,
+    debt_up                 BIGINT NOT NULL,
+    collateralization_ratio BIGINT NOT NULL,
+    collateral_asset        TEXT NOT NULL,
+    target_asset            TEXT NOT NULL,
+    event_id                BIGINT NOT NULL,
+    block_timestamp         BIGINT NOT NULL
+);
+
+CALL setup_hypertable('loan_open_events');
+
+CREATE TABLE loan_repayment_events (
+    owner                   TEXT NOT NULL,
+    collateral_down         BIGINT NOT NULL,
+    debt_down               BIGINT NOT NULL,
+    collateral_asset        TEXT NOT NULL,
+    event_id                BIGINT NOT NULL,
+    block_timestamp         BIGINT NOT NULL
+);
+
+CALL setup_hypertable('loan_repayment_events');

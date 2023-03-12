@@ -638,3 +638,26 @@ func (*eventRecorder) OnVersion(e *Version, meta *Metadata) {
 			meta.BlockHeight, err)
 	}
 }
+
+func (*eventRecorder) OnLoanOpen(e *LoanOpen, meta *Metadata) {
+	cols := []string{"owner", "collateral_up", "debt_up",
+		"collateralization_ratio", "collateral_asset", "target_asset"}
+	err := InsertWithMeta("loan_open_events", meta, cols,
+		e.Owner, e.CollateralUp, e.DebtUp, e.CollateralizationRatio, e.CollateralAsset, e.TargetAsset)
+	if err != nil {
+		miderr.LogEventParseErrorF(
+			"loan_open event from height %d lost on %s",
+			meta.BlockHeight, err)
+	}
+}
+
+func (*eventRecorder) OnLoanRepayment(e *LoanRepayment, meta *Metadata) {
+	cols := []string{"owner", "collateral_down", "debt_down", "collateral_asset"}
+	err := InsertWithMeta("loan_repayment_events", meta, cols,
+		e.Owner, e.CollateralDown, e.DebtDown, e.CollateralAsset)
+	if err != nil {
+		miderr.LogEventParseErrorF(
+			"loan_repayment event from height %d lost on %s",
+			meta.BlockHeight, err)
+	}
+}

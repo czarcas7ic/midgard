@@ -1641,6 +1641,82 @@ func (e *Version) LoadTendermint(attrs []abci.EventAttribute) error {
 			miderr.LogEventParseErrorF("unknown version event attribute %q=%q", attr.Key, attr.Value)
 		}
 	}
+	return nil
+}
 
+type LoanOpen struct {
+	CollateralUp           int64
+	DebtUp                 int64
+	CollateralAsset        []byte
+	CollateralizationRatio int64
+	Owner                  []byte
+	TargetAsset            []byte
+}
+
+func (e *LoanOpen) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		switch string(attr.Key) {
+		case "collateral_up":
+			e.CollateralUp, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed value: %w", err)
+			}
+		case "debt_up":
+			e.DebtUp, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed value: %w", err)
+			}
+		case "collateralization_ratio":
+			e.CollateralizationRatio, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed value: %w", err)
+			}
+		case "collateral_asset":
+			e.CollateralAsset = attr.Value
+		case "target_asset":
+			e.TargetAsset = attr.Value
+		case "owner":
+			e.Owner = attr.Value
+		default:
+			miderr.LogEventParseErrorF(
+				"unknown loan_open event attribute %q=%q",
+				attr.Key, attr.Value)
+		}
+	}
+	return nil
+}
+
+type LoanRepayment struct {
+	CollateralDown  int64
+	DebtDown        int64
+	CollateralAsset []byte
+	Owner           []byte
+}
+
+func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		switch string(attr.Key) {
+		case "collateral_down":
+			e.CollateralDown, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed value: %w", err)
+			}
+		case "debt_down":
+			e.DebtDown, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed value: %w", err)
+			}
+		case "collateral_asset":
+			e.CollateralAsset = attr.Value
+		case "owner":
+			e.Owner = attr.Value
+		default:
+			miderr.LogEventParseErrorF(
+				"unknown loan_repayment event attribute %q=%q",
+				attr.Key, attr.Value)
+		}
+	}
 	return nil
 }
