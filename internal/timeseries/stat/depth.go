@@ -3,6 +3,7 @@ package stat
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
@@ -182,9 +183,12 @@ func TVLDepthHistory(ctx context.Context, buckets db.Buckets) (
 		var depth int64 = 0
 		ret[idx].PoolsMapRuneDepth = map[string]int64{}
 		for poolName, pair := range poolDepths {
-			depth += pair.RuneDepth
-			if record.GetCoinType([]byte(poolName)) == record.AssetNative {
-				ret[idx].PoolsMapRuneDepth[poolName] = pair.RuneDepth
+			// exclude derived asset pools, e.g. THOR.BTC
+			if !strings.HasPrefix(strings.ToUpper(poolName), "THOR.") {
+				depth += pair.RuneDepth
+				if record.GetCoinType([]byte(poolName)) == record.AssetNative {
+					ret[idx].PoolsMapRuneDepth[poolName] = pair.RuneDepth
+				}
 			}
 		}
 
