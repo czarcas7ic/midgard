@@ -18,6 +18,7 @@ import (
 	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
 
 	"gitlab.com/thorchain/midgard/internal/fetch/notinchain"
+	"gitlab.com/thorchain/midgard/internal/fetch/record"
 )
 
 // ErrBeyondLast denies a request into the future.
@@ -324,8 +325,10 @@ func GetNetworkData(ctx context.Context) (oapigen.Network, error) {
 
 	_, runeE8DepthPerPool, timestamp := AssetAndRuneDepths()
 	var runeDepth int64
-	for _, depth := range runeE8DepthPerPool {
-		runeDepth += depth
+	for poolName, depth := range runeE8DepthPerPool {
+		if record.GetCoinType([]byte(poolName)) != record.AssetDerived {
+			runeDepth += depth
+		}
 	}
 	currentHeight, _, _ := LastBlock()
 
