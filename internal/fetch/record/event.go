@@ -60,11 +60,14 @@ const (
 	AssetSynth
 	// UnknownCoin unknown coin
 	UnknownCoin
+	//Dervied Asset coin, mostly made for THORFi
+	AssetDerived
 )
 
 var (
 	nativeSeparator = []byte(".")
 	synthSeparator  = []byte("/")
+	derivedAsset    = []byte("THOR.")
 )
 
 func GetCoinType(asset []byte) CoinType {
@@ -73,6 +76,9 @@ func GetCoinType(asset []byte) CoinType {
 	}
 	if bytes.Contains(asset, synthSeparator) {
 		return AssetSynth
+	}
+	if bytes.HasPrefix(bytes.ToUpper(asset), derivedAsset) {
+		return AssetDerived
 	}
 	if bytes.Contains(asset, nativeSeparator) {
 		return AssetNative
