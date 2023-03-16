@@ -41,10 +41,9 @@ func loadMainnet202104Corrections(chainID string) {
 	}
 
 	if chainID == ChainIDMainnet202203 {
-		// This is the block (2023-XX-XX) upon the switch from v1.106.0 to v1.107.0,
+		// This is the block (2023-03-16) upon the switch from v1.106.0 to v1.107.0,
 		// specifically the implementation of THORNode MR !2777 resolving THORNode Issue #1415.
-		// DRAFT PLACEHOLDER; delete this line and fill in the actual implementation height and date.
-		withdrawCoinPooledHeight = 10000000
+		withdrawCoinPooledHeight = 9989661
 	}
 }
 
