@@ -26,6 +26,9 @@ var aggMembers string
 //go:embed rune_price.sql
 var aggRunePrice string
 
+//go:embed borrowers.sql
+var aggBorrowers string
+
 const (
 	aggregatesRefreshInterval = 1 * time.Minute
 	aggregatesMaxStepNano     = Nano(20 * 24 * 60 * 60 * 1e9)
@@ -390,7 +393,7 @@ func WatermarkedMaterializedTables() []string {
 }
 
 func AggregatesDDL() []string {
-	parts := []string{TableCleanup("midgard_agg"), aggDDLPrefix, aggBalances, aggMembers, aggRunePrice}
+	parts := []string{TableCleanup("midgard_agg"), aggDDLPrefix, aggBalances, aggMembers, aggRunePrice, aggBorrowers}
 	var b strings.Builder
 
 	// Sort to iterate in deterministic order.
@@ -592,6 +595,18 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 		_, err := TheDB.ExecContext(ctx, q)
 		if err != nil {
 			log.Error().Err(err).Msg("Refreshing rune price")
+		}
+	}
+
+	{
+		// Refresh borrowers (lending feature)
+		if ctx.Err() != nil {
+			return
+		}
+		q := fmt.Sprintf("CALL midgard_agg.update_borrowers('%d')", refreshEnd)
+		_, err := TheDB.ExecContext(ctx, q)
+		if err != nil {
+			log.Error().Err(err).Msg("Refreshing borrowers")
 		}
 	}
 
