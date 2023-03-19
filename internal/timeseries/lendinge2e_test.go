@@ -3,8 +3,9 @@ package timeseries_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"gitlab.com/thorchain/midgard/internal/db/testdb"
-	"gitlab.com/thorchain/midgard/internal/util/midlog"
+	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
 )
 
 func TestSimpleBorrowersE2E(t *testing.T) {
@@ -12,54 +13,36 @@ func TestSimpleBorrowersE2E(t *testing.T) {
 
 	blocks.NewBlock(t, "2020-09-01 00:10:00",
 		testdb.LoanOpen{
-			Owner:                  "bnbaddr2",
-			CollateralUp:           2,
-			DebtUp:                 1,
-			CollateralAsset:        "BNB.ASSET1",
+			Owner:                  "btcaddr1",
+			CollateralUp:           20,
+			DebtUp:                 10,
+			CollateralAsset:        "BTC.BTC",
 			CollateralizationRatio: 50000,
-			TargetAsset:            "BNB.ASSET2",
+			TargetAsset:            "ETH.USDT",
 		},
 	)
 
 	blocks.NewBlock(t, "2020-09-01 00:20:00",
 		testdb.LoanRepayment{
-			Owner:           "bnbaddr2",
-			CollateralDown:  2,
-			DebtDown:        1,
-			CollateralAsset: "BNB.ASSET1",
+			Owner:           "btcaddr1",
+			CollateralDown:  10,
+			DebtDown:        5,
+			CollateralAsset: "BTC.BTC",
 		},
 	)
 
-	blocks.NewBlock(t, "2020-09-02 00:10:00",
-		testdb.LoanOpen{
-			Owner:                  "bnbaddr1",
-			CollateralUp:           2,
-			DebtUp:                 1,
-			CollateralAsset:        "BNB.ASSET1",
-			CollateralizationRatio: 50000,
-			TargetAsset:            "BNB.ASSET2",
-		},
-	)
+	body := testdb.CallJSON(t, "http://localhost:8080/v2/borrower/btcaddr1")
 
-	blocks.NewBlock(t, "2020-09-02 00:20:00",
-		testdb.LoanOpen{
-			Owner:                  "bnbaddr1",
-			CollateralUp:           2,
-			DebtUp:                 1,
-			CollateralAsset:        "BNB.ASSET1",
-			CollateralizationRatio: 50000,
-			TargetAsset:            "BNB.ASSET2",
-		},
-		testdb.LoanOpen{
-			Owner:                  "bnbaddr2",
-			CollateralUp:           2,
-			DebtUp:                 1,
-			CollateralAsset:        "BNB.ASSET1",
-			CollateralizationRatio: 50000,
-			TargetAsset:            "BNB.ASSET2",
-		},
-	)
+	var jsonApiResult oapigen.BorrowerDetailsResponse
+	testdb.MustUnmarshal(t, body, &jsonApiResult)
 
-	midlog.Debug("Here is a test.")
-
+	require.Equal(t, 1, len(jsonApiResult.Pools))
+	btcDebt := jsonApiResult.Pools[0]
+	require.Equal(t, "BTC.BTC", btcDebt.CollateralAsset)
+	require.Equal(t, "30", btcDebt.CollateralUp)
+	require.Equal(t, "10", btcDebt.CollateralDown)
+	require.Equal(t, "10", btcDebt.DebtUpTor)
+	require.Equal(t, "5", btcDebt.DebtDownTor)
+	require.Equal(t, "1598919000", btcDebt.LastOpenLoanTimestamp)
+	require.Equal(t, "1598919600", btcDebt.LastRepayLoanTimestamp)
 }

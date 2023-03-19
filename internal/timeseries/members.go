@@ -195,3 +195,81 @@ func GetMemberPools(ctx context.Context, address []string, poolType MemberPoolTy
 	}
 	return results, nil
 }
+
+type Borrower struct {
+	CollateralAsset        string
+	TargetAssets           []string
+	DebtUpTor              int64
+	DebtDownTor            int64
+	CollateralUp           int64
+	CollateralDown         int64
+	LastOpenLoanTimestamp  int64
+	LastRepayLoanTimestamp int64
+}
+
+func (borrower Borrower) toOapigen() oapigen.BorrowerPool {
+	return oapigen.BorrowerPool{
+		CollateralAsset:        borrower.CollateralAsset,
+		TargetAssets:           borrower.TargetAssets,
+		DebtUpTor:              util.IntStr(borrower.DebtUpTor),
+		DebtDownTor:            util.IntStr(borrower.DebtDownTor),
+		CollateralUp:           util.IntStr(borrower.CollateralUp),
+		CollateralDown:         util.IntStr(borrower.CollateralDown),
+		LastOpenLoanTimestamp:  util.IntStr(borrower.LastOpenLoanTimestamp),
+		LastRepayLoanTimestamp: util.IntStr(borrower.LastRepayLoanTimestamp),
+	}
+}
+
+type Borrowers []Borrower
+
+func (borrowers Borrowers) ToOapigen() []oapigen.BorrowerPool {
+	ret := make([]oapigen.BorrowerPool, len(borrowers))
+	for i, borrower := range borrowers {
+		ret[i] = borrower.toOapigen()
+	}
+
+	return ret
+}
+
+func GetBorrower(ctx context.Context, address []string) (Borrowers, error) {
+	q := `
+		SELECT
+			collateral_asset,
+			target_assets,
+			debt_up,
+			debt_down,
+			collateral_up,
+			collateral_down,
+			COALESCE(last_open_loan_timestamp / 1000000000, 0),
+			COALESCE(last_repay_loan_timestamp / 1000000000, 0)
+		FROM midgard_agg.borrowers
+		WHERE borrower_id = ANY($1)
+		ORDER BY collateral_asset
+	`
+
+	rows, err := db.Query(ctx, q, pq.Array(address))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results Borrowers
+	for rows.Next() {
+		var entry Borrower
+		err := rows.Scan(
+			&entry.CollateralAsset,
+			pq.Array(&entry.TargetAssets),
+			&entry.DebtUpTor,
+			&entry.DebtDownTor,
+			&entry.CollateralUp,
+			&entry.CollateralDown,
+			&entry.LastOpenLoanTimestamp,
+			&entry.LastRepayLoanTimestamp,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, entry)
+	}
+	return results, nil
+}

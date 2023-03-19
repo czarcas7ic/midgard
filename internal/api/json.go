@@ -912,6 +912,33 @@ func jsonMemberDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	})
 }
 
+func jsonBorrowerDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	urlParams := r.URL.Query()
+
+	if merr := util.CheckUrlEmpty(urlParams); merr != nil {
+		merr.ReportHTTP(w)
+		return
+	}
+
+	addr := strings.Join(withLowered(ps[0].Value), ",")
+
+	addrs := strings.Split(addr, ",")
+	pools, err := timeseries.GetBorrower(r.Context(), addrs)
+	if err != nil {
+		respError(w, err)
+		return
+	}
+
+	if len(pools) == 0 {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	respJSON(w, oapigen.BorrowerDetailsResponse{
+		Pools: pools.ToOapigen(),
+	})
+}
+
 func getSaversRedeemValue(pools timeseries.MemberPools, poolsDepthMap timeseries.DepthMap,
 	poolsUnitsMap map[string]int64) map[string]int64 {
 	poolRedeemValueMap := map[string]int64{}

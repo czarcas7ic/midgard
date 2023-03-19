@@ -796,6 +796,27 @@ paths:
         "200":
           $ref: '#/components/responses/MemberDetailsResponse'
 
+  "/v2/borrower/{address}":
+    get:
+      operationId: GetBorrowerDetail
+      summary: Borrower Details
+      description: |
+        Returns an array of statistics for all the open loans associated with a given
+        borrower address.
+      parameters:
+        - name: address
+          in: path
+          description: |
+            Address to match borrower, an asset address is given.
+            Query can also be multiple addresses should be seperated by comma (',')
+          required: true
+          schema:
+            type: string
+          example: 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m,bc1qcxssye4j6730h7ehgega3gyykkuwgdgmmpu62n'
+      responses:
+        "200":
+          $ref: '#/components/responses/BorrowerDetailsResponse'
+
   "/v2/saver/{address}":
     get:
       operationId: GetSaverDetail
@@ -1035,6 +1056,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/MemberDetails'
+    BorrowerDetailsResponse:
+      description: object containing loan data for a specific borrower
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BorrowerDetails'
     SaverDetailsResponse:
       description: object containing saver data for a specific member
       content:
@@ -2511,6 +2538,55 @@ components:
         dateLastAdded:
           type: string
           description: Int64, Unix timestamp for the last time member deposited into the pool
+    BorrowerDetails:
+      type: object
+      required:
+        - pools
+      properties:
+        pools:
+          type: array
+          items:
+              $ref: '#/components/schemas/BorrowerPool'
+          description: List details of all the loans identified with the given address
+    BorrowerPool:
+      type: object
+      required:
+        - collateral_asset
+        - target_assets
+        - debt_up_tor
+        - debt_down_tor
+        - collateral_up
+        - collateral_down
+        - last_open_loan_timestamp
+        - last_repay_loan_timestamp
+      properties:
+        collateral_asset:
+          type: string
+          description: The asset that the borrower used as collateral
+        target_assets:
+          type: array
+          items:
+            type: string
+            description: All target assets that the user used as debt target 
+            example: 'ETH.ETH'
+        debt_up_tor:
+          type: string
+          description: Int64(e8), The total amount of debt user is given as debt. denominated in TOR.
+        debt_down_tor:
+          type: string
+          description: Int64(e8), The total amount of debt that the user paid back. denominated in TOR.
+        collateral_up:
+          type: string
+          description: Int64(e8), The total amount of collateral that user has given
+        collateral_down:
+          type: string
+          description: Int64(e8), The total amount of collateral the system paid back to the user
+        last_open_loan_timestamp:
+          type: string
+          description: Int64, Unix timestamp for the last time borrower opened a loan
+        last_repay_loan_timestamp:
+          type: string
+          description: Int64, Unix timestamp for the last time borrower repayment occurred
     Savers:
       type: array
       items:
