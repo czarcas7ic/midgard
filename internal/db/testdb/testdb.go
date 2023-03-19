@@ -83,6 +83,8 @@ func DeleteTables(t *testing.T) {
 	MustExec(t, "DELETE FROM transfer_events")
 	MustExec(t, "DELETE FROM mint_burn_events")
 	MustExec(t, "DELETE FROM network_version_events")
+	MustExec(t, "DELETE FROM loan_open_events")
+	MustExec(t, "DELETE FROM loan_repayment_events")
 
 	clearAggregates(t)
 }
@@ -98,6 +100,9 @@ func clearAggregates(t *testing.T) {
 	MustExec(t, "DELETE FROM midgard_agg.members_log")
 	MustExec(t, "DELETE FROM midgard_agg.members")
 	MustExec(t, "DELETE FROM midgard_agg.members_count")
+	MustExec(t, "DELETE FROM midgard_agg.borrowers_log")
+	MustExec(t, "DELETE FROM midgard_agg.borrowers")
+	MustExec(t, "DELETE FROM midgard_agg.borrowers_count")
 }
 
 func InitTest(t *testing.T) {

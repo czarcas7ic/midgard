@@ -441,3 +441,39 @@ func (x Version) ToTendermint() abci.Event {
 		"version": x.Version,
 	})}
 }
+
+type LoanOpen struct {
+	Owner                  string
+	CollateralUp           int64
+	DebtUp                 int64
+	CollateralAsset        string
+	CollateralizationRatio int64
+	TargetAsset            string
+}
+
+func (x LoanOpen) ToTendermint() abci.Event {
+	return abci.Event{Type: "loan_open", Attributes: toAttributes(map[string]string{
+		"owner":                   x.Owner,
+		"collateral_up":           util.IntStr(x.CollateralUp),
+		"debt_up":                 util.IntStr(x.DebtUp),
+		"collateralization_ratio": util.IntStr(x.CollateralizationRatio),
+		"collateral_asset":        x.CollateralAsset,
+		"target_asset":            x.TargetAsset,
+	})}
+}
+
+type LoanRepayment struct {
+	Owner           string
+	CollateralDown  int64
+	DebtDown        int64
+	CollateralAsset string
+}
+
+func (x LoanRepayment) ToTendermint() abci.Event {
+	return abci.Event{Type: "loan_repayment", Attributes: toAttributes(map[string]string{
+		"owner":            x.Owner,
+		"collateral_down":  util.IntStr(x.CollateralDown),
+		"debt_down":        util.IntStr(x.DebtDown),
+		"collateral_asset": x.CollateralAsset,
+	})}
+}
