@@ -391,6 +391,10 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 		direction = db.RuneToSynth
 	case fromCoin == AssetSynth && toCoin == Rune:
 		direction = db.SynthToRune
+	case fromCoin == Rune && toCoin == AssetDerived:
+		direction = db.RuneToDerived
+	case fromCoin == AssetDerived && toCoin == Rune:
+		direction = db.DerivedToRune
 	default:
 		miderr.LogEventParseErrorF(
 			"swap event from height %d lost - exactly one side should be Rune. fromCoin: %s toCoin: %s",

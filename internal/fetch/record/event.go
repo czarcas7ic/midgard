@@ -60,7 +60,7 @@ const (
 	AssetSynth
 	// UnknownCoin unknown coin
 	UnknownCoin
-	//Dervied Asset coin, mostly made for THORFi
+	//Derived Asset coin, mostly made for THORFi
 	AssetDerived
 )
 
