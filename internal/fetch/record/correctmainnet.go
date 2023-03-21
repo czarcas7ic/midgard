@@ -15,6 +15,7 @@ import (
 // This file contains many small independent corrections
 
 const ChainIDMainnet202104 = "thorchain"
+const ChainIDMainnet202203 = "thorchain-mainnet-v1"
 
 func loadMainnet202104Corrections(chainID string) {
 	if chainID == ChainIDMainnet202104 {
@@ -33,8 +34,16 @@ func loadMainnet202104Corrections(chainID string) {
 		loadMainnetPreregisterThornames()
 		registerArtificialPoolBallanceChanges(
 			mainnetArtificialDepthChanges, "Midgard fix on mainnet")
+		// Actually block 2104917 (2021-09-15) upon the switch from v0.64.0 to v0.67.0,
+		// specifically the implementation of THORNode MR !1834 resolving THORNode Issue #1052.
 		withdrawCoinKeptHeight = 1970000
 		GlobalWithdrawCorrection = correctWithdawsMainnetFilter
+	}
+
+	if chainID == ChainIDMainnet202203 {
+		// This is the block (2023-03-16) upon the switch from v1.106.0 to v1.107.0,
+		// specifically the implementation of THORNode MR !2777 resolving THORNode Issue #1415.
+		withdrawCoinPooledHeight = 9989661
 	}
 }
 
