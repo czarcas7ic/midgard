@@ -605,7 +605,7 @@ func (*eventRecorder) OnSetNodeMimir(e *SetNodeMimir, meta *Metadata) {
 }
 
 func (r *eventRecorder) OnMintBurn(e *MintBurn, meta *Metadata) {
-	cols := []string{"asset", "asset_8", "supply", "reason"}
+	cols := []string{"asset", "asset_e8", "supply", "reason"}
 	err := InsertWithMeta("mint_burn_events", meta, cols,
 		e.Asset, e.AssetE8, e.Supply, e.Reason)
 	if err != nil {
