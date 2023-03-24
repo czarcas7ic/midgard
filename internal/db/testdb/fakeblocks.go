@@ -431,3 +431,13 @@ func (x Transfer) ToTendermint() abci.Event {
 		"amount":    x.AssetAmount,
 	})}
 }
+
+type Version struct {
+	Version string
+}
+
+func (x Version) ToTendermint() abci.Event {
+	return abci.Event{Type: "version", Attributes: toAttributes(map[string]string{
+		"version": x.Version,
+	})}
+}

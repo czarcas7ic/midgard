@@ -262,6 +262,20 @@ func ActiveNodeCount(ctx context.Context, moment db.Nano) (int64, error) {
 	return nodeStartCount, nil
 }
 
+func ActiveNetworkVersion(ctx context.Context) (string, error) {
+	networkVersionQ := `
+	SELECT version 
+	FROM network_version_events 
+	ORDER BY block_timestamp DESC limit 1`
+
+	var networkVersion string
+	err := QueryOneValue(&networkVersion, ctx, networkVersionQ)
+	if err != nil {
+		return networkVersion, err
+	}
+	return networkVersion, nil
+}
+
 func newNodes(ctx context.Context, moment time.Time) (map[string]string, error) {
 	// could optimise by only fetching latest
 	const q = "SELECT node_addr FROM new_node_events WHERE block_timestamp <= $1"
