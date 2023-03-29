@@ -5,6 +5,7 @@ CREATE TABLE midgard_agg.members_log (
     member_id text NOT NULL,
     pool text NOT NULL,
     change_type text NOT NULL, -- add, withdraw, pending_add, pending_withdraw
+    basis_points bigint, -- only withraws have basis points, for other change types it's NULL
     lp_units_delta bigint NOT NULL,
     lp_units_total bigint NOT NULL,
     -- asset fields
@@ -32,6 +33,7 @@ CREATE VIEW midgard_agg.members_log_partial AS (
             COALESCE(rune_addr, asset_addr) AS member_id,
             pool,
             'add' AS change_type,
+            NULL::bigint AS basis_points,
             stake_units AS lp_units_delta,
             NULL::bigint AS lp_units_total,
             asset_addr,
@@ -52,6 +54,7 @@ CREATE VIEW midgard_agg.members_log_partial AS (
             from_addr AS member_id,
             pool,
             'withdraw' AS change_type,
+            basis_points AS basis_points,
             -stake_units AS lp_units_delta,
             NULL::bigint AS lp_units_total,
             NULL AS asset_addr,
@@ -72,6 +75,7 @@ CREATE VIEW midgard_agg.members_log_partial AS (
             COALESCE(rune_addr, asset_addr) AS member_id,
             pool,
             'pending_' || pending_type AS change_type,
+            NULL::bigint AS basis_points,
             0 AS lp_units_delta,
             NULL::bigint AS lp_units_total,
             asset_addr,
@@ -97,11 +101,13 @@ CREATE TABLE midgard_agg.members (
     lp_units_total bigint NOT NULL,
     -- asset fields
     asset_addr text,
+    asset_e8_deposit bigint NOT NULL,
     added_asset_e8_total bigint NOT NULL,
     withdrawn_asset_e8_total bigint NOT NULL,
     pending_asset_e8_total bigint NOT NULL,
     -- rune fields
     rune_addr text,
+    rune_e8_deposit bigint NOT NULL,
     added_rune_e8_total bigint NOT NULL,
     withdrawn_rune_e8_total bigint NOT NULL,
     pending_rune_e8_total bigint NOT NULL,
@@ -155,6 +161,8 @@ BEGIN
         member.added_rune_e8_total = 0;
         member.withdrawn_rune_e8_total = 0;
         member.pending_rune_e8_total = 0;
+        member.asset_e8_deposit = 0;
+        member.rune_e8_deposit = 0;
 
         -- Add to members count table
         INSERT INTO midgard_agg.members_count VALUES
@@ -186,6 +194,10 @@ BEGIN
         member.added_asset_e8_total := member.added_asset_e8_total + NEW.asset_e8_delta;
         member.added_rune_e8_total := member.added_rune_e8_total + NEW.rune_e8_delta;
 
+        -- Calculate deposited Value here
+        member.asset_e8_deposit := member.asset_e8_deposit + NEW.asset_e8_delta;
+        member.rune_e8_deposit := member.rune_e8_deposit + NEW.rune_e8_delta;
+
         -- Reset pending asset and rune
         NEW.pending_asset_e8_delta := -member.pending_asset_e8_total;
         NEW.pending_rune_e8_delta := -member.pending_rune_e8_total;
@@ -200,6 +212,9 @@ BEGIN
         -- Deltas are negative here
         member.withdrawn_asset_e8_total := member.withdrawn_asset_e8_total - NEW.asset_e8_delta;
         member.withdrawn_rune_e8_total := member.withdrawn_rune_e8_total - NEW.rune_e8_delta;
+        -- Calculate deposited Value here
+        member.asset_e8_deposit := ((10000 - NEW.basis_points)/10000) * member.asset_e8_deposit;
+        member.rune_e8_deposit := ((10000 - NEW.basis_points)/10000) * member.rune_e8_deposit;
     END IF;
 
     IF NEW.change_type = 'pending_add' THEN
@@ -217,7 +232,6 @@ BEGIN
     -- Record into the log the new pending totals.
     NEW.pending_asset_e8_total := member.pending_asset_e8_total;
     NEW.pending_rune_e8_total := member.pending_rune_e8_total;
-
 
     -- Update the `members` table:
     IF member.lp_units_total = 0 AND member.pending_asset_e8_total = 0
@@ -242,10 +256,12 @@ BEGIN
             -- Note, `EXCLUDED` is exactly the `member` variable here
             lp_units_total = EXCLUDED.lp_units_total,
             asset_addr = EXCLUDED.asset_addr,
+            asset_e8_deposit = EXCLUDED.asset_e8_deposit,
             added_asset_e8_total = EXCLUDED.added_asset_e8_total,
             withdrawn_asset_e8_total = EXCLUDED.withdrawn_asset_e8_total,
             pending_asset_e8_total = EXCLUDED.pending_asset_e8_total,
             rune_addr = EXCLUDED.rune_addr,
+            rune_e8_deposit = EXCLUDED.rune_e8_deposit,
             added_rune_e8_total = EXCLUDED.added_rune_e8_total,
             withdrawn_rune_e8_total = EXCLUDED.withdrawn_rune_e8_total,
             pending_rune_e8_total = EXCLUDED.pending_rune_e8_total,

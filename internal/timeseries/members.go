@@ -51,6 +51,8 @@ type MemberPool struct {
 	RuneAddress    string
 	AssetAddress   string
 	LiquidityUnits int64
+	AssetDeposit   int64
+	RuneDeposit    int64
 	RuneAdded      int64
 	AssetAdded     int64
 	RunePending    int64
@@ -67,6 +69,8 @@ func (memberPool MemberPool) toOapigen() oapigen.MemberPool {
 		RuneAddress:    memberPool.RuneAddress,
 		AssetAddress:   memberPool.AssetAddress,
 		LiquidityUnits: util.IntStr(memberPool.LiquidityUnits),
+		RuneDeposit:    util.IntStr(memberPool.RuneDeposit),
+		AssetDeposit:   util.IntStr(memberPool.AssetDeposit),
 		RuneAdded:      util.IntStr(memberPool.RuneAdded),
 		AssetAdded:     util.IntStr(memberPool.AssetAdded),
 		RuneWithdrawn:  util.IntStr(memberPool.RuneWithdrawn),
@@ -83,6 +87,7 @@ func (memberPool MemberPool) toSavers() oapigen.SaverPool {
 		Pool:           util.ConvertSynthPoolToNative(memberPool.Pool),
 		AssetAddress:   memberPool.AssetAddress,
 		AssetAdded:     util.IntStr(memberPool.AssetAdded),
+		AssetDeposit:   util.IntStr(memberPool.AssetDeposit),
 		SaverUnits:     util.IntStr(memberPool.LiquidityUnits),
 		AssetWithdrawn: util.IntStr(memberPool.AssetWithdrawn),
 		DateFirstAdded: util.IntStr(memberPool.DateFirstAdded),
@@ -141,6 +146,8 @@ func GetMemberPools(ctx context.Context, address []string, poolType MemberPoolTy
 			COALESCE(rune_addr, ''),
 			COALESCE(asset_addr, ''),
 			lp_units_total,
+			asset_e8_deposit,
+			rune_e8_deposit,
 			added_rune_e8_total,
 			added_asset_e8_total,
 			withdrawn_rune_e8_total,
@@ -168,6 +175,8 @@ func GetMemberPools(ctx context.Context, address []string, poolType MemberPoolTy
 			&entry.RuneAddress,
 			&entry.AssetAddress,
 			&entry.LiquidityUnits,
+			&entry.AssetDeposit,
+			&entry.RuneDeposit,
 			&entry.RuneAdded,
 			&entry.AssetAdded,
 			&entry.RuneWithdrawn,
