@@ -19,8 +19,10 @@ import (
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/db/dbinit"
+	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/timeseries"
 	"gitlab.com/thorchain/midgard/internal/timeseries/stat"
+	"gitlab.com/thorchain/midgard/internal/util"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
 )
 
@@ -56,13 +58,16 @@ type Pool struct {
 	RuneDepth   int64  `json:"balance_rune,string"`
 	SynthSupply int64  `json:"synth_supply,string"`
 	LPUnits     int64  `json:"LP_units,string"`
+	SaversDepth int64  `json:"savers_depth,string"`
+	SaversUnits int64  `json:"savers_units,string"`
 	Status      string `json:"status"`
 	Timestamp   db.Nano
 }
 
 func (pool Pool) String() string {
-	return fmt.Sprintf("%s [Asset: %d, Rune: %d, Synth: %d, Units: %d]",
-		pool.Pool, pool.AssetDepth, pool.RuneDepth, pool.SynthSupply, pool.LPUnits)
+	return fmt.Sprintf("%s [Asset: %d, Rune: %d, Synth: %d, Units: %d, Savers Depth: %d, Savers Units: %d]",
+		pool.Pool, pool.AssetDepth, pool.RuneDepth, pool.SynthSupply,
+		pool.LPUnits, pool.SaversDepth, pool.SaversUnits)
 }
 
 type State struct {
@@ -175,7 +180,10 @@ func getMidgardState(ctx context.Context, height int64, timestamp db.Nano) (stat
 		if err != nil {
 			midlog.FatalE(err, "Query error")
 		}
-		midlog.DebugF("Fetching Midgard pool: %s", poolName)
+
+		if record.GetCoinType([]byte(poolName)) == record.AssetNative {
+			midlog.DebugF("Fetching Midgard pool: %s", poolName)
+		}
 
 		status = poolsWithStatus[poolName]
 		if status == "" {
@@ -216,6 +224,9 @@ func queryThorNode(thorNodeUrl string, urlPath string, height int64, dest interf
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		midlog.FatalE(err, "Error while reading the result")
+	}
 
 	err = json.Unmarshal(body, dest)
 	if err != nil {
@@ -332,8 +343,14 @@ func compareStates(midgardState, thornodeState State) (problems Problems) {
 		}
 
 		midgardPool, ok := midgardState.Pools[thornodePool.Pool]
+		midgardSynthPool, synthOk := midgardState.Pools[util.ConvertNativePoolToSynth(thornodePool.Pool)]
 		prompt := fmt.Sprintf("\t- [Pool:%s]:", thornodePool.Pool)
+
 		delete(midgardState.Pools, thornodePool.Pool)
+		if synthOk {
+			delete(midgardState.Pools, util.ConvertNativePoolToSynth(thornodePool.Pool))
+		}
+
 		if !ok {
 			fmt.Fprintf(&errors, "%s Did not find pool in Midgard (Exists in Thornode)\n", prompt)
 			continue
@@ -372,12 +389,30 @@ func compareStates(midgardState, thornodeState State) (problems Problems) {
 			fmt.Fprintf(&errors, "%s Status mismatch Thornode: %s, Midgard: %s\n",
 				prompt, strings.ToLower(thornodePool.Status), midgardPool.Status)
 		}
+
+		if synthOk && midgardSynthPool.AssetDepth != thornodePool.SaversDepth {
+			mismatchingPools[thornodePool.Pool] = true
+			fmt.Fprintf(
+				&errors, "%s Pool Savers Depth mismatch Thornode: %d, Midgard: %d\n",
+				prompt, thornodePool.SaversDepth, midgardSynthPool.AssetDepth)
+		}
+
+		if synthOk && midgardSynthPool.LPUnits != thornodePool.SaversUnits {
+			mismatchingPools[thornodePool.Pool] = true
+			fmt.Fprintf(
+				&errors, "%s Pool Savers Units mismatch Thornode: %d, Midgard: %d\n",
+				prompt, thornodePool.SaversUnits, midgardSynthPool.LPUnits)
+		}
 	}
 
 	for name, pool := range midgardState.Pools {
+		isSynth := record.GetCoinType([]byte(name)) == record.AssetSynth
+
 		prompt := fmt.Sprintf("\t- [Pool:%s]:", name)
-		if pool.RuneDepth > 0 && pool.AssetDepth > 0 {
+		if !isSynth && pool.RuneDepth > 0 && pool.AssetDepth > 0 {
 			fmt.Fprintf(&errors, "%s Did not find pool in Thornode (Exists in Midgard)\n", prompt)
+		} else if isSynth && pool.AssetDepth > 0 {
+			fmt.Fprintf(&errors, "%s Did not find saver for this pool in Thornode (Exists in Midgard)\n", prompt)
 		}
 	}
 
@@ -585,11 +620,16 @@ func binarySearchPool(ctx context.Context, thorNodeUrl string, pool string, minH
 		queryThorNode(thorNodeUrl, "/pool/"+pool, middleHeight, &thorNodePool)
 		midlog.DebugF("Thornode: %v", thorNodePool)
 		midgardPool := midgardPoolAtHeight(ctx, pool, middleHeight)
+		midgardSynthPool := midgardPoolAtHeight(ctx, util.ConvertNativePoolToSynth(pool), middleHeight)
+		midgardPool.SaversDepth = midgardSynthPool.AssetDepth
+		midgardPool.SaversUnits = midgardSynthPool.LPUnits
 		midlog.DebugF("Midgard: %v", midgardPool)
 		ok := (thorNodePool.AssetDepth == midgardPool.AssetDepth &&
 			thorNodePool.RuneDepth == midgardPool.RuneDepth &&
 			thorNodePool.SynthSupply == midgardPool.SynthSupply &&
-			(!CheckUnits || thorNodePool.LPUnits == midgardPool.LPUnits))
+			(!CheckUnits || thorNodePool.LPUnits == midgardPool.LPUnits) &&
+			(!CheckUnits || thorNodePool.SaversUnits == midgardSynthPool.LPUnits) &&
+			(midgardSynthPool.AssetDepth == thorNodePool.SaversDepth))
 		if ok {
 			midlog.DebugF("Same at height %d", middleHeight)
 			minHeight = middleHeight
@@ -600,10 +640,16 @@ func binarySearchPool(ctx context.Context, thorNodeUrl string, pool string, minH
 	}
 
 	midgardPoolBefore := midgardPoolAtHeight(ctx, pool, maxHeight-1)
+	midgardSynthPoolBefore := midgardPoolAtHeight(ctx, util.ConvertNativePoolToSynth(pool), maxHeight-1)
+	midgardPoolBefore.SaversDepth = midgardSynthPoolBefore.AssetDepth
+	midgardPoolBefore.SaversUnits = midgardSynthPoolBefore.LPUnits
 
 	var thorNodePool Pool
 	queryThorNode(thorNodeUrl, "/pool/"+pool, maxHeight, &thorNodePool)
 	midgardPool := midgardPoolAtHeight(ctx, pool, maxHeight)
+	midgardSynthPool := midgardPoolAtHeight(ctx, util.ConvertNativePoolToSynth(pool), maxHeight)
+	midgardPool.SaversDepth = midgardSynthPool.AssetDepth
+	midgardPool.SaversUnits = midgardSynthPool.LPUnits
 
 	midlog.InfoF("[%s] First difference at height: %d timestamp: %d date: %s",
 		pool, maxHeight, midgardPool.Timestamp,
@@ -631,6 +677,12 @@ func binarySearchPool(ctx context.Context, thorNodeUrl string, pool string, minH
 	logWithPercent("Midgard Unit excess",
 		midgardPool.LPUnits-thorNodePool.LPUnits,
 		midgardPoolBefore.LPUnits)
+	logWithPercent("Midgard Savers Depth excess",
+		midgardSynthPool.AssetDepth-thorNodePool.SaversDepth,
+		midgardSynthPoolBefore.AssetDepth)
+	logWithPercent("Midgard Savers Units excess",
+		midgardSynthPool.LPUnits-thorNodePool.SaversUnits,
+		midgardSynthPoolBefore.LPUnits)
 
 	logAllEventsAtHeight(ctx, pool, midgardPool.Timestamp)
 }
