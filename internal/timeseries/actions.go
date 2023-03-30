@@ -13,7 +13,6 @@ import (
 	"github.com/lib/pq"
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
-	"gitlab.com/thorchain/midgard/internal/fetch/record"
 	"gitlab.com/thorchain/midgard/internal/util"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
@@ -419,25 +418,6 @@ func (a *action) completeFromDBRead(meta *actionMeta, fees coinList) {
 	if a.pools == nil {
 		a.pools = []string{}
 	}
-
-	isDoubleSwap := a.actionType == "swap" && !meta.SwapSingle
-	outs := []transaction{}
-	for _, t := range a.out {
-		// When we have a double swap: Asset1->Rune ; Rune->Asset2
-		// then we have two outbound_events: one for the Rune and one for Asset2.
-		// We hide the Rune outbound and show only the Asset2 outbound to the user.
-		// TxID is "" for THOR.RUNE transactions.
-		if !(t.TxID == "" && isDoubleSwap) {
-			outs = append(outs, t)
-		} else {
-			isSynth := len(t.Coins) != 0 &&
-				record.GetCoinType([]byte(t.Coins[0].Asset)) == record.AssetSynth
-			if isSynth {
-				outs = append(outs, t)
-			}
-		}
-	}
-	a.out = outs
 
 	// process status
 	a.status = "success"

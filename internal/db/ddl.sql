@@ -309,6 +309,7 @@ CREATE TABLE outbound_events (
     asset_e8        BIGINT NOT NULL,
     memo            TEXT NOT NULL,
     in_tx           TEXT NOT NULL,
+    internal        BOOLEAN,
     event_id        BIGINT NOT NULL,
     block_timestamp BIGINT NOT NULL
 );

@@ -323,13 +323,15 @@ CREATE VIEW midgard_agg.swap_actions AS
             'affiliateFee',
                 SUBSTRING(swap_in.memo FROM '^[^:]+:(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int,
             'affiliateAddress',
-                SUBSTRING(swap_in.memo FROM '^[^:]+:(?:[^:]*:){3}([^:]+)')
+                SUBSTRING(swap_in.memo FROM '^[^:]+:(?:[^:]*:){3}([^:]+)'),
+            'outRuneE8',
+                swap_in.to_e8
             ) AS meta
     FROM swap_events AS swap_in
     INNER JOIN swap_events AS swap_out
     ON swap_in.tx = swap_out.tx AND swap_in.block_timestamp = swap_out.block_timestamp
-    WHERE swap_in.from_asset <> swap_out.to_asset AND swap_in.to_asset = 'THOR.RUNE'
-        AND swap_out.from_asset = 'THOR.RUNE'
+    WHERE swap_in.from_asset <> swap_out.to_asset AND swap_in.to_e8 = swap_out.from_e8
+        AND swap_in.to_asset = 'THOR.RUNE' AND swap_out.from_asset = 'THOR.RUNE' 
     ;
 
 CREATE VIEW midgard_agg.addliquidity_actions AS
@@ -433,6 +435,19 @@ $BODY$;
 -- TODO(huginn): Remove duplicates from these lists?
 CREATE PROCEDURE midgard_agg.actions_add_outbounds(t1 bigint, t2 bigint)
 LANGUAGE SQL AS $BODY$
+    UPDATE outbound_events as o
+    SET
+        internal = TRUE
+    FROM (
+        SELECT
+            main_ref,
+            action_type,
+            (meta ->> 'outRuneE8')::bigint as out_e8
+        FROM midgard_agg.actions
+        WHERE 1 <= block_timestamp AND block_timestamp < t2 
+        ) as a
+    WHERE o.in_tx = a.main_ref AND a.out_e8 = o.asset_e8 AND o.asset = 'THOR.RUNE' AND a.action_type = 'swap';
+
     UPDATE midgard_agg.actions AS a
     SET
         addresses = a.addresses || o.froms || o.tos,
@@ -448,7 +463,7 @@ LANGUAGE SQL AS $BODY$
             array_agg(asset :: text) AS assets,
             jsonb_agg(mktransaction(tx, to_addr, (asset, asset_e8))) AS outs
         FROM outbound_events
-        WHERE t1 <= block_timestamp AND block_timestamp < t2
+        WHERE t1 <= block_timestamp AND block_timestamp < t2 AND internal IS NOT TRUE
         GROUP BY in_tx
         ) AS o
     WHERE
