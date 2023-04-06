@@ -1159,12 +1159,11 @@ components:
             Float, Also called APR. Annual return estimated linearly (not compounded) from
             a period of typically the last 30 or 100 days (configurable by the period parameter,
             default is 30). E.g. 0.1 means 10% yearly return.
-            Due to Impermanent Loss and Synths this might be negative, but given Impermanent
-            Loss Protection for 100+ day members, frontends might show MAX(APR, 0).
+            Due to Synths this might be negative.
         poolAPY:
           type: string
           description: |
-            Float, MAX(AnnualPercentageRate, 0)
+            Exactly what annualPercentageRate is showing because ILP is deprecated.
         saversAPR:
           type: string
           description: |
@@ -1315,12 +1314,11 @@ components:
             Float, Also called APR. Annual return estimated linearly (not compounded) from
             a period of typically the last 30 or 100 days (configurable by the period parameter,
             default is 30). E.g. 0.1 means 10% yearly return.
-            Due to Impermanent Loss and Synths this might be negative, but given Impermanent
-            Loss Protection for 100+ day members, frontends might show MAX(APR, 0).
+            Due to Synths this might be negative.
         poolAPY:
           type: string
           description: |
-            Float, MAX(AnnualPercentageRate, 0)
+            Exactly what annualPercentageRate is showing because ILP is deprecated.
         addAssetLiquidityVolume:
           type: string
           description: Int64(e8), same as history/liquidity_changes:addAssetLiquidityVolume

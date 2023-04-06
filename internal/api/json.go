@@ -734,7 +734,7 @@ func buildPoolDetail(
 		AssetDepth:           util.IntStr(assetDepth),
 		RuneDepth:            util.IntStr(runeDepth),
 		AnnualPercentageRate: floatStr(apr),
-		PoolAPY:              floatStr(util.Max(apr, 0)),
+		PoolAPY:              floatStr(apr),
 		AssetPrice:           floatStr(price),
 		AssetPriceUSD:        floatStr(priceUSD),
 		Status:               status,

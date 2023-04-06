@@ -57,7 +57,7 @@ func setAggregatesStats(
 	ret.AssetDepth = util.IntStr(poolInfo.AssetDepth)
 	ret.RuneDepth = util.IntStr(poolInfo.RuneDepth)
 	ret.AnnualPercentageRate = floatStr(apr)
-	ret.PoolAPY = floatStr(util.Max(apr, 0))
+	ret.PoolAPY = floatStr(apr)
 	ret.AssetPrice = floatStr(price)
 	ret.AssetPriceUSD = floatStr(priceUSD)
 	ret.Status = status
