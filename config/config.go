@@ -51,6 +51,8 @@ type Config struct {
 
 	// Temporary solution, will be field will be removed in the future.
 	TmpActionsCountTimeout Duration `yaml:"tmp_actions_count_timeout" split_words:"true"`
+
+	Endpoints Endpoints `yaml:"endpoints" split_words:"true"`
 }
 
 type BlockStore struct {
@@ -132,6 +134,17 @@ type Websockets struct {
 	ConnectionLimit int  `yaml:"connection_limit" split_words:"true"`
 }
 
+type Endpoints struct {
+	ActionParams ActionParams `yaml:"action_params" split_words:"true"`
+}
+
+// Actions endpoint parameters maximum number possible to query
+type ActionParams struct {
+	MaxLimit     uint64 `yaml:"max_limit" split_words:"true"`
+	MaxAddresses int    `yaml:"max_addresses" split_words:"true"`
+	MaxAssets    int    `yaml:"max_assets" split_words:"true"`
+}
+
 var defaultConfig = Config{
 	ListenPort: 8080,
 	ThorChain: ThorChain{
@@ -172,6 +185,13 @@ var defaultConfig = Config{
 		OnMessageEnabled:  false,
 	},
 	TmpActionsCountTimeout: Duration(7000 * time.Millisecond),
+	Endpoints: Endpoints{
+		ActionParams: ActionParams{
+			MaxLimit:     50,
+			MaxAddresses: 50,
+			MaxAssets:    4,
+		},
+	},
 }
 
 var logger = midlog.LoggerForModule("config")

@@ -19,9 +19,6 @@ import (
 	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
 )
 
-const MaxAssets = 4
-const MaxAddresses = 50
-const MaxLimit = 50
 const DefaultLimit = 50
 
 func floatStr(f float64) string {
@@ -179,12 +176,18 @@ type parsedActionsParams struct {
 }
 
 func (p ActionsParams) parse() (parsedActionsParams, error) {
+	MaxLimit := config.Global.Endpoints.ActionParams.MaxLimit
+	MaxAddresses := config.Global.Endpoints.ActionParams.MaxAddresses
+	MaxAssets := config.Global.Endpoints.ActionParams.MaxAssets
+
 	var limit uint64
 	if p.Limit != "" {
 		var err error
 		limit, err = strconv.ParseUint(p.Limit, 10, 64)
 		if err != nil || limit < 1 || MaxLimit < limit {
-			return parsedActionsParams{}, errors.New("'limit' must be an integer between 1 and 50")
+			return parsedActionsParams{}, miderr.BadRequestF(
+				"'limit' must be an integer between 1 and %d",
+				MaxLimit)
 		}
 	} else {
 		limit = DefaultLimit
