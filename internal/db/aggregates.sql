@@ -286,10 +286,20 @@ CREATE VIEW midgard_agg.swap_actions AS
             'swapTarget', to_e8_min,
             'swapSlip', swap_slip_bp,
             'memo', memo,
-            'affiliateFee',
-                SUBSTRING(memo FROM '^[^:]+:(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int,
-            'affiliateAddress',
-                SUBSTRING(memo FROM '^[^:]+:(?:[^:]*:){3}([^:]+)')
+            'affiliateFee', CASE
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
+                    SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){3}(\d{1,5}?)(?::|$)')::int
+                ELSE NULL
+            END,
+            'affiliateAddress', CASE
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN 
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)') 
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
+                    SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
+                ELSE NULL
+            END
             ) AS meta
     FROM swap_events AS single_swaps
     WHERE NOT EXISTS (
@@ -320,10 +330,20 @@ CREATE VIEW midgard_agg.swap_actions AS
             'swapSlip', swap_in.swap_slip_BP + swap_out.swap_slip_BP
                 - swap_in.swap_slip_BP*swap_out.swap_slip_BP/10000,
             'memo', swap_in.memo,
-            'affiliateFee',
-                SUBSTRING(swap_in.memo FROM '^[^:]+:(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int,
-            'affiliateAddress',
-                SUBSTRING(swap_in.memo FROM '^[^:]+:(?:[^:]*:){3}([^:]+)'),
+            'affiliateFee', CASE
+                WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
+                    SUBSTRING(swap_in.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+                WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
+                    SUBSTRING(swap_in.memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){3}(\d{1,5}?)(?::|$)')::int
+                ELSE NULL
+            END,
+            'affiliateAddress', CASE
+                WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN 
+                    SUBSTRING(swap_in.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)') 
+                WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
+                    SUBSTRING(swap_in.memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
+                ELSE NULL
+            END,
             'outRuneE8',
                 swap_in.to_e8
             ) AS meta

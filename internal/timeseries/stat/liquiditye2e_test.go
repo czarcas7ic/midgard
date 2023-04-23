@@ -204,3 +204,59 @@ func TestImpermanentLoss(t *testing.T) {
 
 	require.Equal(t, "42", jsonResult.Meta.ImpermanentLossProtectionPaid)
 }
+
+// This testcase tests an edge case where saver with affiliate is happening and midgard get its
+// affiliate from swap event that is created afterward.
+func TestSaverAddAffiliate(t *testing.T) {
+	blocks := testdb.InitTestBlocks(t)
+
+	blocks.NewBlock(t, "2000-01-01 00:00:00",
+		testdb.AddLiquidity{
+			Pool:        "BTC.BTC",
+			AssetAmount: 100,
+			RuneAmount:  200,
+		},
+		testdb.PoolActivate("BTC.BTC"),
+	)
+
+	blocks.NewBlock(t, "2020-01-01 01:00:00",
+		testdb.AddLiquidity{
+			Pool:        "BTC/BTC",
+			AssetAmount: 10,
+			RuneAmount:  0,
+		},
+		testdb.Swap{
+			TxID:               "7F95AE00E74118E5EE87A90FFC0EE4FB3D9236F6246BE7235DCA1090D0B2F83C",
+			Pool:               "BTC.BTC",
+			Coin:               "10 BTC.BTC",
+			EmitAsset:          "20 THOR.RUNE",
+			LiquidityFeeInRune: 1,
+			Slip:               0,
+			Memo:               "+:BTC/BTC::thor1xmaggkcln5m5fnha2780xrdrulmplvfrz6wj3l:30",
+		},
+		testdb.Outbound{
+			Chain:  "THOR",
+			Coin:   "20 THOR.RUNE",
+			InTxID: "7F95AE00E74118E5EE87A90FFC0EE4FB3D9236F6246BE7235DCA1090D0B2F83C",
+			Memo:   "+:BTC/BTC::thor1xmaggkcln5m5fnha2780xrdrulmplvfrz6wj3l:30",
+		},
+		testdb.Swap{
+			TxID:               "7F95AE00E74118E5EE87A90FFC0EE4FB3D9236F6246BE7235DCA1090D0B2F83C",
+			Pool:               "BTC.BTC",
+			Coin:               "20 THOR.RUNE",
+			EmitAsset:          "10 BTC/BTC",
+			LiquidityFeeInRune: 1,
+			Slip:               0,
+			Memo:               "+:BTC/BTC::thor1xmaggkcln5m5fnha2780xrdrulmplvfrz6wj3l:30",
+		},
+	)
+
+	body := testdb.CallJSON(t, "http://localhost:8080/v2/actions?txid=7F95AE00E74118E5EE87A90FFC0EE4FB3D9236F6246BE7235DCA1090D0B2F83C")
+
+	var jsonResult oapigen.ActionsResponse
+	testdb.MustUnmarshal(t, body, &jsonResult)
+
+	require.Equal(t, *jsonResult.Count, "1")
+	require.Equal(t, jsonResult.Actions[0].Metadata.Swap.AffiliateAddress, "thor1xmaggkcln5m5fnha2780xrdrulmplvfrz6wj3l")
+	require.Equal(t, jsonResult.Actions[0].Metadata.Swap.AffiliateFee, "30")
+}
