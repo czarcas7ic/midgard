@@ -34,6 +34,7 @@ type action struct {
 	date       int64
 	height     int64
 	metadata   oapigen.Metadata
+	eventId    int64
 }
 
 func (a action) toOapigen() oapigen.Action {
@@ -156,23 +157,56 @@ func (a *actionMeta) Scan(value interface{}) error {
 }
 
 type ActionsParams struct {
-	Limit      string
-	Offset     string
-	ActionType string
-	Address    string
-	TXId       string
-	Asset      string
-	Affiliate  string
+	Limit         string
+	NextPageToken string
+	PrevPageToken string
+	Timestamp     string
+	Height        string
+	FromTimestamp string
+	FromHeight    string
+	Offset        string
+	ActionType    string
+	Address       string
+	TXId          string
+	Asset         string
+	Affiliate     string
 }
 
 type parsedActionsParams struct {
 	limit            uint64
+	nextPageToken    uint64
+	prevPageToken    uint64
+	timestamp        uint64
+	height           uint64
+	fromTimestamp    uint64
+	fromHeight       uint64
 	offset           uint64
 	types            []string
 	addresses        []string
 	txid             string
 	assets           []string
 	affiliateAddress string
+	oldAction        bool
+}
+
+func isMutuallyExclusive(p map[string]string) error {
+	count := 0
+	errFmt := "Parameters "
+	for key, val := range p {
+		if val != "" {
+			count++
+		}
+		errFmt += fmt.Sprintf("'%s' ", key)
+	}
+	if count > 1 {
+		errFmt += "shouldn't be coming together"
+		return errors.New(errFmt)
+	}
+	return nil
+}
+
+func (p parsedActionsParams) IsReverseLookup() bool {
+	return p.prevPageToken != 0 || p.fromHeight != 0 || p.fromTimestamp != 0
 }
 
 func (p ActionsParams) parse() (parsedActionsParams, error) {
@@ -193,6 +227,72 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 		limit = DefaultLimit
 	}
 
+	var nextPageToken uint64
+	if p.NextPageToken != "" {
+		var err error
+		nextPageToken, err = strconv.ParseUint(p.NextPageToken, 10, 64)
+		if err != nil {
+			return parsedActionsParams{}, errors.New("'nextPageToken' must be a non negative integer")
+		}
+	} else {
+		nextPageToken = 0
+	}
+
+	var timestamp uint64
+	if p.Timestamp != "" {
+		var err error
+		timestamp, err = strconv.ParseUint(p.Timestamp, 10, 64)
+		if err != nil {
+			return parsedActionsParams{}, errors.New("'timestamp' must be a non negative integer")
+		}
+	} else {
+		timestamp = 0
+	}
+
+	var height uint64
+	if p.Height != "" {
+		var err error
+		height, err = strconv.ParseUint(p.Height, 10, 64)
+		if err != nil {
+			return parsedActionsParams{}, errors.New("'height' must be a non negative integer")
+		}
+	} else {
+		height = 0
+	}
+
+	var prevPageToken uint64
+	if p.PrevPageToken != "" {
+		var err error
+		prevPageToken, err = strconv.ParseUint(p.PrevPageToken, 10, 64)
+		if err != nil {
+			return parsedActionsParams{}, errors.New("'prevPageToken' must be a non negative integer")
+		}
+	} else {
+		prevPageToken = 0
+	}
+
+	var fromTimestamp uint64
+	if p.FromTimestamp != "" {
+		var err error
+		fromTimestamp, err = strconv.ParseUint(p.FromTimestamp, 10, 64)
+		if err != nil {
+			return parsedActionsParams{}, errors.New("'fromTimestamp' must be a non negative integer")
+		}
+	} else {
+		fromTimestamp = 0
+	}
+
+	var fromHeight uint64
+	if p.FromHeight != "" {
+		var err error
+		fromHeight, err = strconv.ParseUint(p.FromHeight, 10, 64)
+		if err != nil {
+			return parsedActionsParams{}, errors.New("'fromHeight' must be a non negative integer")
+		}
+	} else {
+		fromHeight = 0
+	}
+
 	var offset uint64
 	if p.Offset != "" {
 		var err error
@@ -202,6 +302,24 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 		}
 	} else {
 		offset = 0
+	}
+
+	nextParams := map[string]string{"NextPageToken": p.NextPageToken, "Timestamp": p.Timestamp, "Height": p.Height}
+	err := isMutuallyExclusive(nextParams)
+	if err != nil {
+		return parsedActionsParams{}, err
+	}
+
+	prevParams := map[string]string{"PrevPageToken": p.PrevPageToken, "FromTimestamp": p.FromHeight, "FromHeight": p.FromHeight}
+	err = isMutuallyExclusive(prevParams)
+	if err != nil {
+		return parsedActionsParams{}, err
+	}
+
+	// set default actions param to be on oldactions
+	oldAction := true
+	if nextPageToken != 0 || timestamp != 0 || height != 0 || fromHeight != 0 || fromTimestamp != 0 || prevPageToken != 0 {
+		oldAction = false
 	}
 
 	types := make([]string, 0)
@@ -241,12 +359,19 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 
 	return parsedActionsParams{
 		limit:            limit,
+		nextPageToken:    nextPageToken,
+		prevPageToken:    prevPageToken,
+		timestamp:        timestamp,
+		height:           height,
+		fromTimestamp:    fromTimestamp,
+		fromHeight:       fromHeight,
 		offset:           offset,
 		types:            types,
 		addresses:        addresses,
 		txid:             p.TXId,
 		assets:           assets,
 		affiliateAddress: p.Affiliate,
+		oldAction:        oldAction,
 	}, nil
 }
 
@@ -265,9 +390,8 @@ func runActionsQuery(ctx context.Context, q preparedSqlStatement) ([]action, err
 		var outs transactionList
 		var fees coinList
 		var meta actionMeta
-		var eid int64
 		err := rows.Scan(
-			&eid,
+			&result.eventId,
 			&result.date,
 			&result.actionType,
 			pq.Array(&result.pools),
@@ -280,7 +404,7 @@ func runActionsQuery(ctx context.Context, q preparedSqlStatement) ([]action, err
 			return nil, fmt.Errorf("actions read: %w", err)
 		}
 
-		result.height = db.HeightFromEventId(eid)
+		result.height = db.HeightFromEventId(result.eventId)
 		result.in = ins
 		result.out = outs
 		result.completeFromDBRead(&meta, fees)
@@ -448,25 +572,26 @@ func GetActions(ctx context.Context, moment time.Time, params ActionsParams) (
 	}
 
 	var totalCount int = -1
-
-	// The actions endpoint is slow, often because the count query.
-	// Until the new API is implemented we cancel the query if it's slow and return count=-1
-	// https://discord.com/channels/838986635756044328/999334588583252078)
-	countDeadlineCtx, _ := context.WithDeadline(ctx,
-		time.Now().Add(config.Global.TmpActionsCountTimeout.Value()))
-	countRows, err := db.Query(countDeadlineCtx, countPS.Query, countPS.Values...)
-	if err != nil {
-		if err, ok := err.(net.Error); ok && err.Timeout() {
-			totalCount = -1
-		} else {
-			return oapigen.ActionsResponse{}, fmt.Errorf("actions count query: %w", err)
-		}
-	} else {
-		defer countRows.Close()
-		countRows.Next()
-		err = countRows.Scan(&totalCount)
+	if parsedParams.oldAction {
+		// The actions endpoint is slow, often because the count query.
+		// Until the new API is implemented we cancel the query if it's slow and return count=-1
+		// https://discord.com/channels/838986635756044328/999334588583252078)
+		countDeadlineCtx, _ := context.WithDeadline(ctx,
+			time.Now().Add(config.Global.TmpActionsCountTimeout.Value()))
+		countRows, err := db.Query(countDeadlineCtx, countPS.Query, countPS.Values...)
 		if err != nil {
-			return oapigen.ActionsResponse{}, fmt.Errorf("actions count read: %w", err)
+			if err, ok := err.(net.Error); ok && err.Timeout() {
+				totalCount = -1
+			} else {
+				return oapigen.ActionsResponse{}, fmt.Errorf("actions count query: %w", err)
+			}
+		} else {
+			defer countRows.Close()
+			countRows.Next()
+			err = countRows.Scan(&totalCount)
+			if err != nil {
+				return oapigen.ActionsResponse{}, fmt.Errorf("actions count read: %w", err)
+			}
 		}
 	}
 
@@ -477,10 +602,31 @@ func GetActions(ctx context.Context, moment time.Time, params ActionsParams) (
 	}
 
 	oapigenActions := make([]oapigen.Action, len(actions))
+	metaData := oapigen.ActionMeta{}
 	for i, action := range actions {
+		if parsedParams.IsReverseLookup() {
+			i = len(actions) - 1 - i
+		}
+
 		oapigenActions[i] = action.toOapigen()
+		if i == len(actions)-1 {
+			metaData.NextPageToken = util.IntStr(action.eventId)
+		}
+		if i == 0 {
+			metaData.PrevPageToken = util.IntStr(action.eventId)
+		}
 	}
-	return oapigen.ActionsResponse{Count: util.IntStr(int64(totalCount)), Actions: oapigenActions}, nil
+
+	totalCountStr := util.IntStr(int64(totalCount))
+	totalCountPtr := &totalCountStr
+	if !parsedParams.oldAction {
+		totalCountPtr = nil
+	}
+
+	return oapigen.ActionsResponse{
+		Count:   totalCountPtr,
+		Actions: oapigenActions,
+		Meta:    metaData}, nil
 }
 
 // Helper structs to build needed queries
@@ -548,6 +694,42 @@ func actionsPreparedStatements(moment time.Time,
 			AND meta->'affiliateAddress' ? #AFFILIATE#`
 	}
 
+	if params.nextPageToken != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#NEXTPAGETOKEN#", params.nextPageToken})
+		whereQuery += `
+			AND event_id < #NEXTPAGETOKEN#`
+	}
+
+	if params.timestamp != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#TIMESTAMP#", params.timestamp})
+		whereQuery += `
+			AND block_timestamp < #TIMESTAMP#`
+	}
+
+	if params.height != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#HEIGHT#", db.HeightToEventId(params.height)})
+		whereQuery += `
+			AND event_id < #HEIGHT#`
+	}
+
+	if params.prevPageToken != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#PREVPAGETOKEN#", params.prevPageToken})
+		whereQuery += `
+			AND event_id > #PREVPAGETOKEN#`
+	}
+
+	if params.fromTimestamp != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#FROMTIMESTAMP#", params.fromTimestamp})
+		whereQuery += `
+			AND block_timestamp > #FROMTIMESTAMP#`
+	}
+
+	if params.fromHeight != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#FROMHEIGHT#", db.HeightToEventId(params.fromHeight)})
+		whereQuery += `
+			AND event_id > #FROMHEIGHT#`
+	}
+
 	// build and return final queries
 	countQuery := `SELECT count(1) FROM midgard_agg.actions` + whereQuery
 	countQueryValues := make([]interface{}, 0)
@@ -590,11 +772,22 @@ func actionsPreparedStatements(moment time.Time,
 		`
 	}
 
-	resultsQuery := mainQuery + `
+	orderQuery := `
 		ORDER BY event_id DESC
 		LIMIT #LIMIT#
 		OFFSET #OFFSET#
 	`
+
+	if params.IsReverseLookup() {
+		orderQuery = `
+			ORDER BY event_id
+			LIMIT #LIMIT#
+			OFFSET #OFFSET#
+		`
+	}
+
+	resultsQuery := mainQuery + orderQuery
+
 	resultsQueryValues := make([]interface{}, 0)
 	for i, queryValue := range append(baseValues, subsetValues...) {
 		position := i + 1

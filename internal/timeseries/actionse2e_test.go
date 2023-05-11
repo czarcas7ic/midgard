@@ -53,7 +53,7 @@ func TestActionsE2E(t *testing.T) {
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
-	require.Equal(t, "3", v.Count)
+	require.Equal(t, "3", *v.Count)
 
 	basicTx0 := v.Actions[0]
 	basicTx1 := v.Actions[1]
@@ -75,7 +75,7 @@ func TestActionsE2E(t *testing.T) {
 
 	testdb.MustUnmarshal(t, body, &v)
 
-	require.Equal(t, "1", v.Count)
+	require.Equal(t, "1", *v.Count)
 	typeTx0 := v.Actions[0]
 
 	if typeTx0.Type != "swap" {
@@ -87,7 +87,7 @@ func TestActionsE2E(t *testing.T) {
 
 	testdb.MustUnmarshal(t, body, &v)
 
-	require.Equal(t, "2", v.Count)
+	require.Equal(t, "2", *v.Count)
 	assetTx0 := v.Actions[0]
 	assetTx1 := v.Actions[1]
 
@@ -104,7 +104,7 @@ func txResponseCount(t *testing.T, url string) string {
 
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
-	return v.Count
+	return strconv.Itoa((len(v.Actions)))
 }
 
 func TestDepositStakeByTxIds(t *testing.T) {
@@ -750,7 +750,7 @@ func checkFilter(t *testing.T, urlPostfix string, expectedResultsPool []string) 
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
-	require.Equal(t, strconv.Itoa(len(expectedResultsPool)), v.Count)
+	require.Equal(t, strconv.Itoa(len(expectedResultsPool)), *v.Count)
 	for i, pool := range expectedResultsPool {
 		require.Equal(t, []string{pool}, v.Actions[i].Pools)
 	}
@@ -1455,7 +1455,7 @@ func TestMultipleActionType(t *testing.T) {
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
-	require.Equal(t, "2", v.Count)
+	require.Equal(t, "2", *v.Count)
 }
 
 func TestMultipleActionInvalidType(t *testing.T) {

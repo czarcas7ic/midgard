@@ -695,6 +695,54 @@ paths:
             type: integer
             format: int64
             minimum: 0
+        - name: nextPageToken
+          in: query
+          description: if this is given, the actions for the next page will be given
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: timestamp
+          in: query
+          description: if this is given, the actions older than the timestamp will be given
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: height
+          in: query
+          description: if this is given, the actions older than the height will be given
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: prevPageToken
+          in: query
+          description: if this is given, the actions for the previous page will be given
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: fromTimestamp
+          in: query
+          description: if this is given, the actions newer than the timestamp will be given
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: fromHeight
+          in: query
+          description: if this is given, the actions newer than the height will be given
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
       responses:
         "200":
           $ref: '#/components/responses/ActionsResponse'
@@ -958,15 +1006,19 @@ components:
           schema:
             type: object
             required:
-              - count
               - actions
+              - meta
             properties:
+              meta:
+                type: object
+                $ref: '#/components/schemas/ActionMeta'
+                description: The current action query metadata, e.g. NextPageToken
               count:
                 type: string
                 description: |
                   Int64, number of results matching the given filters. It may be -1 if
                   Midgard is having trouble counting the results and has to cancel the count query
-                  (temporary fix).
+                  (temporary fix). Also, if new action parameters is used it won't be returned.
               actions:
                 type: array
                 items:
@@ -2171,6 +2223,23 @@ components:
         metadata:
           description: Metadata associated with the action
           $ref: '#/components/schemas/Metadata'
+    ActionMeta:
+      type: object
+      description: action query metadata
+      required:
+        - nextPageToken
+        - prevPageToken
+      properties:
+        nextPageToken:
+          type: string
+          description: |
+            Int64, The last action event_id that can be used for pagination. 
+            This token is needed to be given for next page.
+        prevPageToken:
+          type: string
+          description: |
+            Int64, The first action event_id that can be used for previous pagination.
+            This token is needed to be given for previous page.
     Transaction:
       type: object
       description: Transaction data

@@ -109,6 +109,7 @@ CREATE TABLE midgard_agg.actions (
 CREATE INDEX ON midgard_agg.actions (event_id DESC);
 CREATE INDEX ON midgard_agg.actions (action_type, event_id DESC);
 CREATE INDEX ON midgard_agg.actions (main_ref, event_id DESC);
+CREATE INDEX ON midgard_agg.actions (block_timestamp, event_id DESC);
 
 CREATE INDEX ON midgard_agg.actions USING gin (addresses);
 CREATE INDEX ON midgard_agg.actions USING gin (transactions);

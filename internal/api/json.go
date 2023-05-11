@@ -1131,13 +1131,19 @@ func cachedJsonStats() httprouter.Handle {
 func jsonActions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	urlParams := r.URL.Query()
 	params := timeseries.ActionsParams{
-		Limit:      util.ConsumeUrlParam(&urlParams, "limit"),
-		Offset:     util.ConsumeUrlParam(&urlParams, "offset"),
-		ActionType: util.ConsumeUrlParam(&urlParams, "type"),
-		Address:    util.ConsumeUrlParam(&urlParams, "address"),
-		TXId:       util.ConsumeUrlParam(&urlParams, "txid"),
-		Asset:      util.ConsumeUrlParam(&urlParams, "asset"),
-		Affiliate:  util.ConsumeUrlParam(&urlParams, "affiliate"),
+		Limit:         util.ConsumeUrlParam(&urlParams, "limit"),
+		NextPageToken: util.ConsumeUrlParam(&urlParams, "nextPageToken"),
+		PrevPageToken: util.ConsumeUrlParam(&urlParams, "prevPageToken"),
+		Timestamp:     util.ConsumeUrlParam(&urlParams, "timestamp"),
+		Height:        util.ConsumeUrlParam(&urlParams, "height"),
+		FromTimestamp: util.ConsumeUrlParam(&urlParams, "fromTimestamp"),
+		FromHeight:    util.ConsumeUrlParam(&urlParams, "fromHeight"),
+		Offset:        util.ConsumeUrlParam(&urlParams, "offset"),
+		ActionType:    util.ConsumeUrlParam(&urlParams, "type"),
+		Address:       util.ConsumeUrlParam(&urlParams, "address"),
+		TXId:          util.ConsumeUrlParam(&urlParams, "txid"),
+		Asset:         util.ConsumeUrlParam(&urlParams, "asset"),
+		Affiliate:     util.ConsumeUrlParam(&urlParams, "affiliate"),
 	}
 
 	merr := util.CheckUrlEmpty(urlParams)

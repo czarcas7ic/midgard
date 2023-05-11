@@ -76,3 +76,7 @@ func ParseEventId(eid int64) (res EventId) {
 func HeightFromEventId(eid int64) int64 {
 	return eid / blockHeightScale
 }
+
+func HeightToEventId(height uint64) uint64 {
+	return height * blockHeightScale
+}
