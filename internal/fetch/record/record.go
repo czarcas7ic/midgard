@@ -458,6 +458,12 @@ func (r *eventRecorder) OnWithdraw(e *Withdraw, meta *Metadata) {
 	if aE8 != 0 {
 		emitAssetInRune = int64(float64(e.EmitAssetE8)*(float64(rE8)/float64(aE8)) + 0.5)
 	}
+	// there have been events from thornode with attribute `to` as null
+	// mostly in pool cycle, for pool removal. although it's fixed on the newer versions
+	// this check make sure that the eailer versions will make the pools membership correct.
+	if e.ToAddr == nil {
+		e.ToAddr = []byte("")
+	}
 
 	cols := []string{
 		"tx", "chain", "from_addr", "to_addr", "asset",
