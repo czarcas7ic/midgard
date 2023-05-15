@@ -185,6 +185,24 @@ BEGIN
 END
 $BODY$;
 
+CREATE FUNCTION midgard_agg.out_tx(
+    txid text,
+    address text,
+    height text,
+    VARIADIC coins coin_rec[]
+) RETURNS jsonb LANGUAGE plpgsql AS $BODY$
+DECLARE
+    ret jsonb;
+BEGIN
+    ret := jsonb_build_object('txID', txid, 'address', address, 'coins', coins(VARIADIC coins));
+    IF height IS NOT NULL THEN
+        ret := ret || jsonb_build_object('height', height);
+    END IF;
+
+    RETURN ret;
+END;
+$BODY$;
+
 --
 -- Basic VIEWs that build actions
 --
@@ -499,7 +517,7 @@ LANGUAGE SQL AS $BODY$
             array_agg(to_addr :: text) AS tos,
             array_agg(tx :: text) AS transactions,
             array_agg(asset :: text) AS assets,
-            jsonb_agg(mktransaction(tx, to_addr, (asset, asset_e8))) AS outs
+            jsonb_agg(midgard_agg.out_tx(tx, to_addr, TRUNC(event_id / 1e10)::text, (asset, asset_e8))) AS outs
         FROM outbound_events
         WHERE t1 <= block_timestamp AND block_timestamp < t2 AND internal IS NOT TRUE
         GROUP BY in_tx
