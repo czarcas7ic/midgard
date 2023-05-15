@@ -279,6 +279,7 @@ func TestSingleSwapToRuneFields(t *testing.T) {
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
+	outHeight := "2"
 	require.Equal(t, []oapigen.Action{{
 		Date:   util.IntStr(db.StrToSec("2020-09-01 00:00:01").ToNano().ToI()),
 		Height: "2",
@@ -291,6 +292,7 @@ func TestSingleSwapToRuneFields(t *testing.T) {
 			Address: "thoraddr",
 			Coins:   []oapigen.Coin{{Amount: "100", Asset: "THOR.RUNE"}},
 			TxID:    "outTXID",
+			Height:  &outHeight,
 		}},
 		Metadata: oapigen.Metadata{Swap: &oapigen.SwapMetadata{
 			LiquidityFee:     "10000",
@@ -351,6 +353,7 @@ func TestSingleSwapToAssetFields(t *testing.T) {
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
+	outHeight := "2"
 	require.Equal(t, []oapigen.Action{{
 		Date:   util.IntStr(db.StrToSec("2020-09-01 00:00:01").ToNano().ToI()),
 		Height: "2",
@@ -363,6 +366,7 @@ func TestSingleSwapToAssetFields(t *testing.T) {
 			Address: "btcadddr",
 			Coins:   []oapigen.Coin{{Amount: "55000", Asset: "BTC.BTC"}},
 			TxID:    "12121",
+			Height:  &outHeight,
 		}},
 		Metadata: oapigen.Metadata{Swap: &oapigen.SwapMetadata{
 			LiquidityFee:     "20000",
@@ -448,6 +452,7 @@ func TestDoubleSwapFields(t *testing.T) {
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
+	outHeight := "2"
 	require.Equal(t, []oapigen.Action{{
 		Date:   util.IntStr(db.StrToSec("2020-09-01 00:00:01").ToNano().ToI()),
 		Height: "2",
@@ -460,6 +465,7 @@ func TestDoubleSwapFields(t *testing.T) {
 			Address: "btc1",
 			Coins:   []oapigen.Coin{{Amount: "55000", Asset: "BTC.BTC"}},
 			TxID:    "2345",
+			Height:  &outHeight,
 		}},
 		Metadata: oapigen.Metadata{Swap: &oapigen.SwapMetadata{
 			LiquidityFee:     "30000", // 10000 + 20000
@@ -989,16 +995,19 @@ func TestWithdrawFields(t *testing.T) {
 		},
 	}, metadata.NetworkFees)
 
+	outHeight := "3"
 	require.Equal(t, []oapigen.Transaction{
 		{
 			Address: "assetaddr",
 			TxID:    "99999",
 			Coins:   oapigen.Coins{{Amount: "90", Asset: "BTC.BTC"}},
+			Height:  &outHeight,
 		},
 		{
 			Address: "runeaddr",
 			TxID:    "",
 			Coins:   oapigen.Coins{{Amount: "198", Asset: "THOR.RUNE"}},
+			Height:  &outHeight,
 		},
 	}, action.Out)
 
@@ -1087,6 +1096,7 @@ func TestRefundFields(t *testing.T) {
 
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
+	outHeight := "3"
 	require.Equal(t, []oapigen.Action{{
 		Date:   util.IntStr(db.StrToSec("2020-09-01 00:00:05").ToNano().ToI()),
 		Height: "2",
@@ -1108,6 +1118,7 @@ func TestRefundFields(t *testing.T) {
 			Address: "userassteaddr",
 			Coins:   []oapigen.Coin{{Amount: "990", Asset: "BTC.BTC"}},
 			TxID:    "99999",
+			Height:  &outHeight,
 		}},
 		Pools:  []string{},
 		Status: "success",
@@ -1193,6 +1204,7 @@ func TestAffiliateFields(t *testing.T) {
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
+	outHeight := "2"
 	require.Equal(t, []oapigen.Action{{
 		Date:   util.IntStr(db.StrToSec("2020-09-01 00:00:01").ToNano().ToI()),
 		Height: "2",
@@ -1205,6 +1217,7 @@ func TestAffiliateFields(t *testing.T) {
 			Address: "thoraddr",
 			Coins:   []oapigen.Coin{{Amount: "100", Asset: "THOR.RUNE"}},
 			TxID:    "outTXID",
+			Height:  &outHeight,
 		}},
 		Metadata: oapigen.Metadata{Swap: &oapigen.SwapMetadata{
 			LiquidityFee:     "10000",
@@ -1289,6 +1302,7 @@ func TestAffiliateFieldsDoubleSwap(t *testing.T) {
 	var v oapigen.ActionsResponse
 	testdb.MustUnmarshal(t, body, &v)
 
+	outHeight := "2"
 	require.Equal(t, []oapigen.Action{{
 		Date:   util.IntStr(db.StrToSec("2020-09-01 00:00:01").ToNano().ToI()),
 		Height: "2",
@@ -1301,6 +1315,7 @@ func TestAffiliateFieldsDoubleSwap(t *testing.T) {
 			Address: "btc1",
 			Coins:   []oapigen.Coin{{Amount: "55000", Asset: "BTC.BTC"}},
 			TxID:    "2345",
+			Height:  &outHeight,
 		}},
 		Metadata: oapigen.Metadata{Swap: &oapigen.SwapMetadata{
 			LiquidityFee:     "30000", // 10000 + 20000
