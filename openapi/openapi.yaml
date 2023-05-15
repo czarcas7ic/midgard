@@ -2318,6 +2318,10 @@ components:
         coins:
           $ref: '#/components/schemas/Coins'
           description: Coins sent in the transaction
+        height:
+          type: string
+          description: |
+            The height where the outbound transaction happened.
     Coins:
       type: array
       items:

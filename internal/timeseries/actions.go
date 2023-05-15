@@ -64,14 +64,21 @@ type transaction struct {
 	Address string   `json:"address"`
 	Coins   coinList `json:"coins"`
 	TxID    string   `json:"txID"`
+	Height  *string  `json:"height"`
 }
 
 func (tx transaction) toOapigen() oapigen.Transaction {
-	return oapigen.Transaction{
+	ret := oapigen.Transaction{
 		Address: tx.Address,
 		TxID:    tx.TxID,
 		Coins:   tx.Coins.toOapigen(),
 	}
+
+	if tx.Height != nil {
+		ret.Height = tx.Height
+	}
+
+	return ret
 }
 
 type transactionList []transaction
