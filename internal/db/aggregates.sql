@@ -464,7 +464,7 @@ LANGUAGE SQL AS $BODY$
             action_type,
             (meta ->> 'outRuneE8')::bigint as out_e8
         FROM midgard_agg.actions
-        WHERE 1 <= block_timestamp AND block_timestamp < t2 
+        WHERE t1 <= block_timestamp AND block_timestamp < t2 
         ) as a
     WHERE o.in_tx = a.main_ref AND a.out_e8 = o.asset_e8 AND o.asset = 'THOR.RUNE' AND a.action_type = 'swap';
 
