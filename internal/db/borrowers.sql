@@ -11,6 +11,7 @@ CREATE TABLE midgard_agg.borrowers_log (
     debt_down BIGINT,
     collateral_up BIGINT,
     collateral_down BIGINT,
+    collateralization_ratio BIGINT,
     --
     event_id bigint NOT NULL,
     block_timestamp bigint NOT NULL
@@ -27,6 +28,7 @@ CREATE VIEW midgard_agg.borrowers_log_partial AS (
             NULL::bigint AS debt_down,
             collateral_up,
             NULL::bigint AS collateral_down,
+            collateralization_ratio,
             event_id,
             block_timestamp
         FROM loan_open_events
@@ -40,6 +42,7 @@ CREATE VIEW midgard_agg.borrowers_log_partial AS (
             debt_down,
             NULL::bigint AS collateral_up,
             collateral_down,
+            NULL::bigint AS collateralization_ratio,
             event_id,
             block_timestamp
         FROM loan_repayment_events
@@ -56,6 +59,7 @@ CREATE TABLE midgard_agg.borrowers (
     debt_down bigint NOT NULL,
     collateral_up bigint NOT NULL,
     collateral_down bigint NOT NULL,
+    total_collateral_tor bigint NOT NULL,
     --
     last_open_loan_timestamp bigint,
     last_repay_loan_timestamp bigint,
@@ -102,6 +106,7 @@ BEGIN
         borrower.collateral_down = 0;
         borrower.last_open_loan_timestamp = 0;
         borrower.last_repay_loan_timestamp = 0;
+        borrower.total_collateral_tor = 0;
 
         -- Add to borrowers count table
         INSERT INTO midgard_agg.borrowers_count VALUES
@@ -123,7 +128,8 @@ BEGIN
     --  can change the debt in log to debt_delta as members
     IF NEW.change_type = 'open' THEN
         borrower.debt_up := borrower.debt_up + NEW.debt_up;
-        borrower.collateral_up := borrower.debt_up + NEW.collateral_up;
+        borrower.collateral_up := borrower.collateral_up + NEW.collateral_up;
+        borrower.total_collateral_tor := borrower.total_collateral_tor + (NEW.debt_up * NEW.collateralization_ratio / 10000);
 
         IF NOT NEW.target_asset = ANY(borrower.target_assets) THEN
             borrower.target_assets := borrower.target_assets || NEW.target_asset;
@@ -133,6 +139,10 @@ BEGIN
     END IF;
 
     IF NEW.change_type = 'repayment' THEN
+        IF borrower.debt_up > borrower.debt_down THEN
+            borrower.total_collateral_tor := borrower.total_collateral_tor - (borrower.total_collateral_tor * NEW.debt_down / (borrower.debt_up - borrower.debt_down));
+        END IF;
+
         borrower.debt_down := borrower.debt_down + NEW.debt_down;
         borrower.collateral_down := borrower.collateral_down + NEW.collateral_down;
 
@@ -141,9 +151,6 @@ BEGIN
 
     -- Update the `borrowers` table:
     IF borrower.debt_up - borrower.debt_down <= 0 THEN
-        DELETE FROM midgard_agg.borrowers
-        WHERE borrower_id = borrower.borrower_id AND collateral_asset = borrower.collateral_asset;
-
         -- Remove borrower from borrowers count table
         INSERT INTO midgard_agg.borrowers_count VALUES
         (
@@ -165,6 +172,7 @@ BEGIN
             debt_down = EXCLUDED.debt_down,
             collateral_up = EXCLUDED.collateral_up,
             collateral_down = EXCLUDED.collateral_down,
+            total_collateral_tor = EXCLUDED.total_collateral_tor,
             last_open_loan_timestamp = EXCLUDED.last_open_loan_timestamp,
             last_repay_loan_timestamp = EXCLUDED.last_repay_loan_timestamp;
     END IF;
