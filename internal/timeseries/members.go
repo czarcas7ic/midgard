@@ -44,6 +44,34 @@ func GetMemberIds(ctx context.Context, pool *string) (addrs []string, err error)
 	return addrs, nil
 }
 
+func GetBorrowerIds(ctx context.Context, asset *string) (addrs []string, err error) {
+	assetFilter := ""
+	qargs := []interface{}{}
+	if asset != nil {
+		assetFilter = "collateral_asset = $1"
+		qargs = append(qargs, asset)
+	}
+
+	q := "SELECT DISTINCT borrower_id FROM midgard_agg.borrowers " + db.Where(assetFilter)
+
+	rows, err := db.Query(ctx, q, qargs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var borrower string
+		err := rows.Scan(&borrower)
+		if err != nil {
+			return nil, err
+		}
+		addrs = append(addrs, borrower)
+	}
+
+	return addrs, nil
+}
+
 // TODO(HooriRn): this struct might not be needed since the graphql depracation. (delete-graphql)
 // Info of a member in a specific pool.
 type MemberPool struct {

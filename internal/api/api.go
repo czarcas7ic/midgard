@@ -73,6 +73,7 @@ func InitHandler(nodeURL string) {
 	addMeasured(router, "/v2/history/tvl", jsonTVLHistory)
 	addMeasured(router, "/v2/network", jsonNetwork)
 	addMeasured(router, "/v2/nodes", jsonNodes)
+	addMeasured(router, "/v2/borrowers", jsonBorrowers)
 	addMeasured(router, "/v2/borrower/:addr", jsonBorrowerDetails)
 	addMeasured(router, "/v2/members", jsonMembers)
 	addMeasured(router, "/v2/member/:addr", jsonMemberDetails)

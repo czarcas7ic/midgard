@@ -912,6 +912,33 @@ func jsonMemberDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	})
 }
 
+func jsonBorrowers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	urlParams := r.URL.Query()
+
+	var asset *string
+	assetParam := util.ConsumeUrlParam(&urlParams, "asset")
+	if assetParam != "" {
+		asset = &assetParam
+		if !timeseries.PoolExists(*asset) {
+			miderr.BadRequestF("Unknown asset: %s", *asset).ReportHTTP(w)
+			return
+		}
+	}
+	merr := util.CheckUrlEmpty(urlParams)
+	if merr != nil {
+		merr.ReportHTTP(w)
+		return
+	}
+
+	addrs, err := timeseries.GetBorrowerIds(r.Context(), asset)
+	if err != nil {
+		respError(w, err)
+		return
+	}
+	result := oapigen.Borrowers(addrs)
+	respJSON(w, result)
+}
+
 func jsonBorrowerDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	urlParams := r.URL.Query()
 

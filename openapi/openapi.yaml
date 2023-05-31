@@ -796,6 +796,24 @@ paths:
         "200":
           $ref: '#/components/responses/MemberDetailsResponse'
 
+  "/v2/borrowers":
+    get:
+      operationId: GetBorrowersAddresses
+      summary: Borrowers List
+      description: |
+        Returns an array containing the addresses for all borrowers.
+        Addresses are only shown once.
+      parameters:
+        - name: asset
+          in: query
+          description: Return only borrowers getting loan against this asset as collateral.
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          "$ref": "#/components/responses/BorrowersResponse"
+
   "/v2/borrower/{address}":
     get:
       operationId: GetBorrowerDetail
@@ -1056,6 +1074,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/MemberDetails'
+    BorrowersResponse:
+      description: array of all the borrowers
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Borrowers'
     BorrowerDetailsResponse:
       description: object containing loan data for a specific borrower
       content:
@@ -2538,6 +2562,12 @@ components:
         dateLastAdded:
           type: string
           description: Int64, Unix timestamp for the last time member deposited into the pool
+    Borrowers:
+      type: array
+      items:
+        type: string
+        description: Borrower address
+        example: tbnb1fj2lqj8dvr5pumfchc7ntlfqd2v6zdxqwjewf5
     BorrowerDetails:
       type: object
       required:
