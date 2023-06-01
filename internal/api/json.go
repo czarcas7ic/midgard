@@ -640,6 +640,7 @@ type poolAggregates struct {
 	liquidityUnits       map[string]int64
 	annualPercentageRate map[string]float64
 	saverDataMap         map[string]SaverData
+	lendingDataMap       map[string]timeseries.LendingInfo
 }
 
 func getPoolAggregates(ctx context.Context, pools []string, apyBucket db.Buckets) (
@@ -676,12 +677,18 @@ func getPoolAggregates(ctx context.Context, pools []string, apyBucket db.Buckets
 		return nil, err
 	}
 
+	mapLendingInfo, err := timeseries.GetLendingData(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	aggregates := poolAggregates{
 		depths:               latestState.Pools,
 		dailyVolumes:         dailyVolumes,
 		liquidityUnits:       liquidityUnitsNow,
 		annualPercentageRate: aprs,
 		saverDataMap:         saverData,
+		lendingDataMap:       mapLendingInfo,
 	}
 
 	return &aggregates, nil
@@ -723,6 +730,8 @@ func buildPoolDetail(
 	priceUSD := price * runePriceUsd
 	saversUnit := aggregates.saverDataMap[pool].SaversUnits
 	saversDepth := aggregates.saverDataMap[pool].SaversDepth
+	totalCollateral := aggregates.lendingDataMap[pool].TotalCollateral
+	totalDebtTor := aggregates.lendingDataMap[pool].TotalDebtTor
 
 	saversAPR := 0.00
 	if _, ok := aggregates.depths[util.ConvertNativePoolToSynth(pool)]; ok {
@@ -747,6 +756,8 @@ func buildPoolDetail(
 		SaversUnits:          util.IntStr(saversUnit),
 		SaversDepth:          util.IntStr(saversDepth),
 		SaversAPR:            floatStr(saversAPR),
+		TotalCollateral:      util.IntStr(totalCollateral),
+		TotalDebtTor:         util.IntStr(totalDebtTor),
 	}
 }
 

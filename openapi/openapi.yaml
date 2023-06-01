@@ -1236,6 +1236,8 @@ components:
         - saversUnits
         - saversDepth
         - saversAPR
+        - totalCollateral
+        - totalDebtTor
       properties:
         asset:
           type: string
@@ -1299,6 +1301,12 @@ components:
         saversDepth:
             type: string
             description: Int64, Total synth locked in saver vault.
+        totalCollateral:
+            type: string
+            description: Int64, Total collateral of the pool created by the borrowers.
+        totalDebtTor:
+            type: string
+            description: Int64, Total debt of the pool by the borrowers.
 
     PoolStatsDetail:
       type: object
