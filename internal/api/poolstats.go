@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"gitlab.com/thorchain/midgard/internal/db"
@@ -141,12 +140,12 @@ func statsForPool(ctx context.Context, pool string, buckets db.Buckets) (
 	}
 
 	// TODO(huginn): optimize unique member adresses to use latest
-	members, err := timeseries.GetMemberIds(ctx, &pool)
+	_, memberBucket, err := stat.GetMembersCountBucket(ctx, buckets, pool)
 	if err != nil {
 		merr = miderr.InternalErrE(err)
 		return
 	}
-	ret.UniqueMemberCount = strconv.Itoa(len(members))
+	ret.UniqueMemberCount = util.IntStr(memberBucket[buckets.Count()-1].Count)
 
 	ret.UniqueSwapperCount = "0" // deprecated
 
