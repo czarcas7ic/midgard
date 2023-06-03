@@ -2321,7 +2321,7 @@ components:
         height:
           type: string
           description: |
-            The height where the outbound transaction happened.
+            The thorchain height that the outbound transaction occurred.
     Coins:
       type: array
       items:

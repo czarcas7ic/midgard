@@ -61,10 +61,11 @@ func (a action) toOapigen() oapigen.Action {
 }
 
 type transaction struct {
-	Address string   `json:"address"`
-	Coins   coinList `json:"coins"`
-	TxID    string   `json:"txID"`
-	Height  *string  `json:"height"`
+	Address  string   `json:"address"`
+	Coins    coinList `json:"coins"`
+	TxID     string   `json:"txID"`
+	Height   *string  `json:"height"`
+	Internal *bool    `json:"internal"`
 }
 
 func (tx transaction) toOapigen() oapigen.Transaction {
@@ -438,6 +439,18 @@ func (a *action) completeFromDBRead(meta *actionMeta, fees coinList) {
 		// toe8 of last swap (1st or 2nd) <= sum(outTxs.coin.amount) + networkfee.amount
 		// We would need to query toe8 in txInSelectQueries.
 		if len(a.out) == 0 {
+			a.status = "pending"
+			break
+		}
+
+		hasOut := false
+		for _, o := range a.out {
+			if o.Internal == nil {
+				hasOut = true
+				break
+			}
+		}
+		if !hasOut {
 			a.status = "pending"
 		}
 	case "refund":
