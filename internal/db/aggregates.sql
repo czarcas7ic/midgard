@@ -466,7 +466,7 @@ LANGUAGE SQL AS $BODY$
         FROM midgard_agg.actions
         WHERE t1 <= block_timestamp AND block_timestamp < t2 
         ) as a
-    WHERE o.in_tx = a.main_ref AND a.out_e8 = o.asset_e8 AND o.asset = 'THOR.RUNE' AND a.action_type = 'swap';
+    WHERE (o.in_tx = a.main_ref AND a.out_e8 = o.asset_e8 AND o.asset = 'THOR.RUNE' AND a.action_type = 'swap') OR (o.memo = 'noop');
 
     UPDATE midgard_agg.actions AS a
     SET
