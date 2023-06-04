@@ -150,6 +150,21 @@ BEGIN
 END
 $BODY$;
 
+CREATE FUNCTION midgard_agg.check_derived(ta text[]) RETURNS boolean
+LANGUAGE plpgsql AS $BODY$
+DECLARE
+    t text;
+BEGIN
+    FOREACH t IN ARRAY ta
+    LOOP
+        IF t ~ 'THOR\.(?!RUNE).+'  THEN
+            RETURN TRUE; 
+        END IF;
+    END LOOP;
+    RETURN FALSE;
+END
+$BODY$;
+
 CREATE FUNCTION midgard_agg.add_asset_types(ta text[]) RETURNS text[]
 LANGUAGE plpgsql AS $BODY$
 DECLARE
@@ -162,6 +177,9 @@ BEGIN
     END IF;
     IF midgard_agg.check_no_rune(ta) THEN
         t := array_append(t, 'norune');
+    END IF;
+    IF midgard_agg.check_derived(ta) THEN
+        t := array_append(t, 'derived');
     END IF;
     RETURN t;
 END
