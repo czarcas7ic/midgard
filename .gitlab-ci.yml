@@ -48,11 +48,9 @@ smoke:
     MIDGARD_IMAGE: registry.gitlab.com/thorchain/midgard:develop
     THORNODE_REPO: https://gitlab.com/thorchain/thornode.git
     THORNODE_IMAGE: registry.gitlab.com/thorchain/thornode:mocknet
-    BLOCK_TIME: 0.8s
-    THOR_BLOCK_TIME: 0.8s
-    GAIA_BLOCK_TIME: 0.8s
-    BLOCK_SCANNER_BACKOFF: 0.8s
-    ETH_BLOCK_TIME: "1"
+    THOR_BLOCK_TIME: 0.5s
+    BLOCK_TIME: "1"
+    BLOCK_SCANNER_BACKOFF: 0.3s
   before_script:
     # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27384#note_497228752
     - |
@@ -73,7 +71,12 @@ smoke:
   script:
     - cd ./thornode && make smoke-protob-docker smoke-remote-ci
   after_script:
-    - ./thornode/scripts/docker_logs.sh
+    - mkdir logs
+    - docker ps -a >./logs/ps.log 2>&1
+    - |
+      for name in $(docker ps --format '{{.Names}}'); do
+        docker logs "$name" >"./logs/$name.log" 2>&1
+      done
 
 build:
   stage: build
