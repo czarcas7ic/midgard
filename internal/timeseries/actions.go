@@ -180,20 +180,20 @@ type ActionsParams struct {
 }
 
 type parsedActionsParams struct {
-	limit            uint64
-	nextPageToken    uint64
-	prevPageToken    uint64
-	timestamp        uint64
-	height           uint64
-	fromTimestamp    uint64
-	fromHeight       uint64
-	offset           uint64
-	types            []string
-	addresses        []string
-	txid             string
-	assets           []string
-	affiliateAddress string
-	oldAction        bool
+	limit              uint64
+	nextPageToken      uint64
+	prevPageToken      uint64
+	timestamp          uint64
+	height             uint64
+	fromTimestamp      uint64
+	fromHeight         uint64
+	offset             uint64
+	types              []string
+	addresses          []string
+	txid               string
+	assets             []string
+	affiliateAddresses []string
+	oldAction          bool
 }
 
 func isMutuallyExclusive(p map[string]string) error {
@@ -364,21 +364,31 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 		}
 	}
 
+	var affiliateAddresses []string
+	if p.Affiliate != "" {
+		affiliateAddresses = strings.Split(p.Affiliate, ",")
+		if DefaultLimit < len(affiliateAddresses) {
+			return parsedActionsParams{}, miderr.BadRequestF(
+				"too many affiliate addresses: %d provided, maximum is %d",
+				len(assets), DefaultLimit)
+		}
+	}
+
 	return parsedActionsParams{
-		limit:            limit,
-		nextPageToken:    nextPageToken,
-		prevPageToken:    prevPageToken,
-		timestamp:        timestamp,
-		height:           height,
-		fromTimestamp:    fromTimestamp,
-		fromHeight:       fromHeight,
-		offset:           offset,
-		types:            types,
-		addresses:        addresses,
-		txid:             p.TXId,
-		assets:           assets,
-		affiliateAddress: p.Affiliate,
-		oldAction:        oldAction,
+		limit:              limit,
+		nextPageToken:      nextPageToken,
+		prevPageToken:      prevPageToken,
+		timestamp:          timestamp,
+		height:             height,
+		fromTimestamp:      fromTimestamp,
+		fromHeight:         fromHeight,
+		offset:             offset,
+		types:              types,
+		addresses:          addresses,
+		txid:               p.TXId,
+		assets:             assets,
+		affiliateAddresses: affiliateAddresses,
+		oldAction:          oldAction,
 	}, nil
 }
 
@@ -688,10 +698,10 @@ func actionsPreparedStatements(moment time.Time,
 			AND assets @> #ASSET#`
 	}
 
-	if params.affiliateAddress != "" {
-		baseValues = append(baseValues, namedSqlValue{"#AFFILIATE#", params.affiliateAddress})
+	if len(params.affiliateAddresses) != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#AFFILIATE#", pq.Array(params.affiliateAddresses)})
 		whereQuery += `
-			AND meta->'affiliateAddress' ? #AFFILIATE#`
+			AND meta->'affiliateAddress' ?| #AFFILIATE#`
 	}
 
 	if params.nextPageToken != 0 {

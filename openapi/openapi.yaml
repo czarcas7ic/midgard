@@ -673,11 +673,16 @@ paths:
         - name: affiliate
           in: query
           description: |
-            Affiliate address of the action (swap, refund)
+            Comma separated list. Affiliate address of the action (swap, refund)
           required: false
           schema:
             type: string
-          example: thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g
+          examples:
+            regular:
+              value: thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g
+            multiple:
+              value: ts,thor102y0m3uptg0vvudeyh00r2fnz70wq7d8y7mu2g
+              summary: Query affiliates that one is THORName and other is address
         - name: limit
           in: query
           description: number of actions returned, default is 50
