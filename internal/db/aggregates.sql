@@ -191,7 +191,8 @@ CREATE FUNCTION midgard_agg.out_tx(
     height text,
     internal boolean,
     VARIADIC coins coin_rec[]
-) RETURNS jsonb LANGUAGE plpgsql AS $BODY$
+) RETURNS jsonb 
+LANGUAGE plpgsql AS $BODY$
 DECLARE
     ret jsonb;
 BEGIN
@@ -204,7 +205,7 @@ BEGIN
     END IF;
 
     RETURN ret;
-END;
+END
 $BODY$;
 
 --
@@ -506,7 +507,12 @@ LANGUAGE SQL AS $BODY$
         FROM midgard_agg.actions
         WHERE t1 <= block_timestamp AND block_timestamp < t2 
         ) as a
-    WHERE (o.in_tx = a.main_ref AND a.out_e8 = o.asset_e8 AND o.asset = 'THOR.RUNE' AND a.action_type = 'swap') OR (o.memo = 'noop');
+    WHERE 
+        o.in_tx = a.main_ref AND 
+        a.out_e8 = o.asset_e8 AND 
+        o.asset = 'THOR.RUNE' AND 
+        a.action_type = 'swap'
+    ;
 
     UPDATE midgard_agg.actions AS a
     SET
