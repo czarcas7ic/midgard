@@ -510,7 +510,7 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 				Msg("Refreshing aggregates")
 			nextAggregateRefreshLog = now.Add(aggregatesRefreshInterval)
 			defer func() {
-				log.Debug().Float64("duration", float64(time.Since(now).Milliseconds())/1000).
+				log.Debug().Float64("duration (sec)", float64(time.Since(now).Milliseconds())/1000).
 					Msg("Refreshing aggregates done")
 			}()
 		}

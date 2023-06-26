@@ -17,6 +17,7 @@ import (
 // Use NewTimer for construction
 type Timer struct {
 	histogram *metrics.Histogram
+	latest    *[]time.Duration
 }
 
 var allTimers struct {
@@ -30,7 +31,9 @@ func NewTimer(name string) (ret Timer) {
 	ret = Timer{histogram: metrics.MustHistogram(
 		namePrefix+name,
 		"Timing histogram for : "+name,
-		1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-1, 1e-1, 3e-1, 1, 3, 10, 30)}
+		1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-1, 1e-1, 3e-1, 1, 3, 10, 30,
+		60, 120, 180, 60*4, 60*5, 60*10, 60*15, 60*30),
+		latest: &[]time.Duration{}}
 	allTimers.Lock()
 	allTimers.timers = append(allTimers.timers, ret)
 	allTimers.Unlock()
@@ -43,6 +46,11 @@ func (t *Timer) One() func() {
 	t0 := time.Now()
 	return func() {
 		t.histogram.AddSince(t0)
+		if len(*t.latest) < 5 {
+			*t.latest = append(*t.latest, time.Since(t0))
+		} else {
+			*t.latest = append((*t.latest)[1:], time.Since(t0))
+		}
 	}
 }
 
@@ -67,6 +75,11 @@ func (t *Timer) Print(w io.Writer) {
 			}
 		}
 		fmt.Fprint(w, "\n")
+		fmt.Fprint(w, "    Latest: ")
+		for i := len(*t.latest); i > 0; i-- {
+			fmt.Fprintf(w, " %s, ", (*t.latest)[i-1].String())
+		}
+		fmt.Fprint(w, "\n")
 	}
 }
 
@@ -80,9 +93,9 @@ func (t *Timer) String() string {
 // defer t.Batch(10)()
 //
 // Note: this adds just one value for the full batch. Implications:
-// - the count at the summary page has to be multiplied with the average batch
-//       size to get the true count.
-// - If batch sizes are different than this overrepresent small batches.
+//   - the count at the summary page has to be multiplied with the average batch
+//     size to get the true count.
+//   - If batch sizes are different than this overrepresent small batches.
 func (t *Timer) Batch(batchSize int) func() {
 	t0 := time.Now()
 	return func() {
