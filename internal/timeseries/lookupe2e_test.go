@@ -215,7 +215,7 @@ func TestAnnualPercentageRate(t *testing.T) {
 	blocks.NewBlock(t, "2010-02-03 23:57:00")
 
 	body := testdb.CallJSON(t,
-		fmt.Sprintf("http://localhost:8080/v2/pool/BTC.BTC"))
+		fmt.Sprintf("http://localhost:8080/v2/pool/BTC.BTC?period=30d"))
 
 	var result oapigen.PoolDetail
 	testdb.MustUnmarshal(t, body, &result)
@@ -267,7 +267,7 @@ func TestNegativeAPR(t *testing.T) {
 	blocks.NewBlock(t, "2010-02-03 23:57:00")
 
 	body := testdb.CallJSON(t,
-		fmt.Sprintf("http://localhost:8080/v2/pool/BTC.BTC"))
+		fmt.Sprintf("http://localhost:8080/v2/pool/BTC.BTC?period=30d"))
 
 	var result oapigen.PoolDetail
 	testdb.MustUnmarshal(t, body, &result)

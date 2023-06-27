@@ -451,7 +451,7 @@ func TestLiqUnitValueIndexSynths(t *testing.T) {
 	require.Equal(t, "1.000499875062461", jsonResult.Meta.LuviIncrease) //minimal luvi decrease
 
 	body = testdb.CallJSON(t,
-		fmt.Sprintf("http://localhost:8080/v2/pool/ETH.ETH"))
+		fmt.Sprintf("http://localhost:8080/v2/pool/ETH.ETH?period=30d"))
 
 	var poolResult oapigen.PoolDetail
 	testdb.MustUnmarshal(t, body, &poolResult)

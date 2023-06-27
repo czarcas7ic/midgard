@@ -1317,7 +1317,7 @@ func withLowered(s string) []string {
 func parsePeriodParam(urlParams *url.Values) (db.Buckets, error) {
 	period := util.ConsumeUrlParam(urlParams, "period")
 	if period == "" {
-		period = "30d"
+		period = "7d"
 	}
 	var buckets db.Buckets
 	now := db.NowSecond()
