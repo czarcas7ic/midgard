@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Midgard Public API
-  version: 2.16.0
+  version: 2.16.1
   contact:
     email: devs@thorchain.org
   description: >-
@@ -93,12 +93,12 @@ paths:
           in: query
           description: |
             Specifies the base interval from which annualPercentageRate and poolAPY is extrapolated.
-            Default is 30d.
+            Default is 14d.
           required: false
           example: "100d"
           schema:
             type: string
-            enum: ["1h", "24h", "7d", "30d", "90d", "100d", "180d", "365d", "all"]
+            enum: ["1h", "24h", "7d", "14d", "30d", "90d", "100d", "180d", "365d", "all"]
       responses:
         "200":
           $ref: '#/components/responses/PoolsResponse'
@@ -125,7 +125,7 @@ paths:
           example: "100d"
           schema:
             type: string
-            enum: ["1h", "24h", "7d", "30d", "90d", "100d", "180d", "365d", "all"]
+            enum: ["1h", "24h", "7d", "14d", "30d", "90d", "100d", "180d", "365d", "all"]
       responses:
         "200":
           $ref: '#/components/responses/PoolResponse'
@@ -154,7 +154,7 @@ paths:
           example: "24h"
           schema:
             type: string
-            enum: ["1h", "24h", "7d", "30d", "90d", "100d", "180d", "365d", "all"]
+            enum: ["1h", "24h", "7d", "14d", "30d", "90d", "100d", "180d", "365d", "all"]
       responses:
         "200":
           $ref: '#/components/responses/PoolStatsResponse'

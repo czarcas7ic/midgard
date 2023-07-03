@@ -1317,7 +1317,7 @@ func withLowered(s string) []string {
 func parsePeriodParam(urlParams *url.Values) (db.Buckets, error) {
 	period := util.ConsumeUrlParam(urlParams, "period")
 	if period == "" {
-		period = "7d"
+		period = "14d"
 	}
 	var buckets db.Buckets
 	now := db.NowSecond()
@@ -1328,6 +1328,8 @@ func parsePeriodParam(urlParams *url.Values) (db.Buckets, error) {
 		buckets = db.Buckets{Timestamps: db.Seconds{now - 24*60*60, now}}
 	case "7d":
 		buckets = db.Buckets{Timestamps: db.Seconds{now - 7*24*60*60, now}}
+	case "14d":
+		buckets = db.Buckets{Timestamps: db.Seconds{now - 14*24*60*60, now}}
 	case "30d":
 		buckets = db.Buckets{Timestamps: db.Seconds{now - 30*24*60*60, now}}
 	case "90d":
@@ -1342,7 +1344,7 @@ func parsePeriodParam(urlParams *url.Values) (db.Buckets, error) {
 		buckets = db.AllHistoryBuckets()
 	default:
 		return db.Buckets{}, fmt.Errorf(
-			"invalid `period` param: %s. Accepted values:  1h, 24h, 7d, 30d, 90d, 100d, 180d, 365d, all",
+			"invalid `period` param: %s. Accepted values:  1h, 24h, 7d, 14d, 30d, 90d, 100d, 180d, 365d, all",
 			period)
 	}
 
