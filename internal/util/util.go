@@ -26,6 +26,39 @@ func IntStr(v int64) string {
 	return strconv.FormatInt(v, 10)
 }
 
+type Asset struct {
+	Chain  string
+	Ticker string
+	Symbol string
+	Synth  bool
+}
+
+func AssetFromString(s string) (asset Asset) {
+	var parts []string
+	var sym string
+	if strings.Count(s, "/") > 0 {
+		parts = strings.SplitN(s, "/", 2)
+		asset.Synth = true
+	} else {
+		parts = strings.SplitN(s, ".", 2)
+		asset.Synth = false
+	}
+
+	if len(parts) == 1 {
+		asset.Chain = "THOR"
+		sym = parts[0]
+	} else {
+		asset.Chain = strings.ToUpper(parts[0])
+		sym = parts[1]
+	}
+
+	parts = strings.SplitN(sym, "-", 2)
+	asset.Symbol = strings.ToUpper(sym)
+	asset.Ticker = strings.ToUpper(parts[0])
+
+	return
+}
+
 func ConvertNativePoolToSynth(poolName string) string {
 	return strings.Replace(poolName, ".", "/", 1)
 }

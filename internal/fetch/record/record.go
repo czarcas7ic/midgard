@@ -510,10 +510,23 @@ func (r *eventRecorder) OnWithdraw(e *Withdraw, meta *Metadata) {
 	// This was not applied for rune or assets different then the native asset of the chain:
 	//   - for Rune there is no minimum amount, if some rune is sent it's kept as donation.
 	//   - when for non chain native assets (e.g. ETH.USDT) the EmitAssetE8 could not have contained
-	//     the coin sent in.
-	if meta.BlockHeight < withdrawCoinKeptHeight || meta.BlockHeight >= withdrawCoinPooledHeight {
+	//     the coin sent in. After withdrawCoinPooledHeight THORNode does not add AssetE8 into
+	//     the withdraw EmitAssetE8 instead it will be added to its corresponding pool
+	if meta.BlockHeight < withdrawCoinKeptHeight {
 		if e.AssetE8 != 0 && string(e.Pool) == string(e.Asset) {
 			r.AddPoolAssetE8Depth(e.Pool, e.AssetE8)
+		}
+	}
+
+	// In some cases a saver withdrawal to the LTC/LTC pool happens (saver vault) and the AssetE8
+	// will be added to the LTC.LTC pool. Also, another example can be withdrawal
+	// from ETH.USDC-ID (EmitAssetE8) with ETH.ETH (AssetE8) withdraw message,
+	// then ETH.ETH (AssetE8) will be added to its pool.
+	// Checking chain and depth here is just a sanity check.
+	if meta.BlockHeight >= withdrawCoinPooledHeight && e.AssetE8 != 0 {
+		if aD, rD, _ := r.CurrentDepths(e.Asset); (aD > 0 || rD > 0) &&
+			string(e.Chain) == util.AssetFromString(string(e.Pool)).Chain {
+			r.AddPoolAssetE8Depth(e.Asset, e.AssetE8)
 		}
 	}
 }
