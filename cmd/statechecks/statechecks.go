@@ -338,7 +338,8 @@ func compareStates(midgardState, thornodeState State) (problems Problems) {
 	errors := strings.Builder{}
 
 	for _, thornodePool := range thornodeState.Pools {
-		if thornodePool.Status == "Suspended" {
+		// ignore lending pools for now
+		if thornodePool.Status == "Suspended" || strings.HasPrefix(thornodePool.Pool, "THOR") {
 			continue
 		}
 
@@ -406,6 +407,10 @@ func compareStates(midgardState, thornodeState State) (problems Problems) {
 	}
 
 	for name, pool := range midgardState.Pools {
+		if pool.Status == "Suspended" || strings.HasPrefix(name, "THOR") {
+			continue
+		}
+
 		isSynth := record.GetCoinType([]byte(name)) == record.AssetSynth
 
 		prompt := fmt.Sprintf("\t- [Pool:%s]:", name)
