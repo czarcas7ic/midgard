@@ -103,6 +103,7 @@ func clearAggregates(t *testing.T) {
 	MustExec(t, "DELETE FROM midgard_agg.borrowers_log")
 	MustExec(t, "DELETE FROM midgard_agg.borrowers")
 	MustExec(t, "DELETE FROM midgard_agg.borrowers_count")
+	MustExec(t, "DELETE FROM midgard_agg.streaming_logs")
 }
 
 func InitTest(t *testing.T) {

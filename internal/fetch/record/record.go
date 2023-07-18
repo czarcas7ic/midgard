@@ -386,6 +386,11 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 			meta.BlockHeight, e.ToAsset)
 		return
 	}
+	mem := strings.SplitN(string(e.Memo), ":", 3)
+	isStreaming := false
+	if len(mem) == 3 && strings.Contains(mem[2], "/") {
+		isStreaming = true
+	}
 	var direction db.SwapDirection
 	switch {
 	case fromCoin == Rune && toCoin == AssetNative:
@@ -409,12 +414,12 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 	cols := []string{"tx", "chain", "from_addr", "to_addr",
 		"from_asset", "from_e8", "to_asset", "to_e8",
 		"memo", "pool", "to_e8_min", "swap_slip_bp", "liq_fee_e8", "liq_fee_in_rune_e8",
-		"_direction"}
+		"_direction", "_streaming"}
 	err := InsertWithMeta("swap_events", meta, cols,
 		e.Tx, e.Chain, e.FromAddr, e.ToAddr,
 		e.FromAsset, e.FromE8, e.ToAsset, e.ToE8,
 		e.Memo, e.Pool, e.ToE8Min, e.SwapSlipBP, e.LiqFeeE8, e.LiqFeeInRuneE8,
-		direction)
+		direction, isStreaming)
 	if err != nil {
 		miderr.LogEventParseErrorF("swap event from height %d lost on %s", meta.BlockHeight, err)
 		return

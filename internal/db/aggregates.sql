@@ -1,4 +1,3 @@
-
 -- version 1
 
 DROP SCHEMA IF EXISTS midgard_agg CASCADE;
@@ -127,7 +126,7 @@ DECLARE
 BEGIN
     FOREACH t IN ARRAY ta
     LOOP
-        IF t ~ '/'  THEN
+        IF t ~ '/' THEN
             RETURN TRUE; 
         END IF;
     END LOOP;
@@ -347,7 +346,7 @@ CREATE VIEW midgard_agg.swap_actions AS
         SELECT tx FROM swap_events
         WHERE block_timestamp = single_swaps.block_timestamp AND tx = single_swaps.tx
             AND from_asset <> single_swaps.from_asset
-    )
+    ) AND _streaming IS NOT TRUE
     UNION ALL
     -- Double swap (same txid in different pools)
     SELECT
@@ -385,14 +384,14 @@ CREATE VIEW midgard_agg.swap_actions AS
                     SUBSTRING(swap_in.memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
                 ELSE NULL
             END,
-            'outRuneE8',
-                swap_in.to_e8
+            'outRuneE8', swap_in.to_e8
             ) AS meta
     FROM swap_events AS swap_in
     INNER JOIN swap_events AS swap_out
     ON swap_in.tx = swap_out.tx AND swap_in.block_timestamp = swap_out.block_timestamp
     WHERE swap_in.from_asset <> swap_out.to_asset AND swap_in.to_e8 = swap_out.from_e8
-        AND swap_in.to_asset = 'THOR.RUNE' AND swap_out.from_asset = 'THOR.RUNE' 
+        AND swap_in.to_asset = 'THOR.RUNE' AND swap_out.from_asset = 'THOR.RUNE'
+        AND swap_in._streaming IS NOT TRUE
     ;
 
 CREATE VIEW midgard_agg.addliquidity_actions AS
@@ -467,7 +466,7 @@ BEGIN
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.swap_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
-
+    
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.addliquidity_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
@@ -500,25 +499,23 @@ LANGUAGE SQL AS $BODY$
     SET
         internal = TRUE
     FROM (
-        SELECT
-            main_ref,
-            action_type,
-            (meta ->> 'outRuneE8')::bigint as out_e8
-        FROM midgard_agg.actions
+        SELECT *
+        FROM swap_events
         WHERE t1 <= block_timestamp AND block_timestamp < t2 
         ) as a
     WHERE 
-        o.in_tx = a.main_ref AND 
-        a.out_e8 = o.asset_e8 AND 
-        o.asset = 'THOR.RUNE' AND 
-        a.action_type = 'swap'
+        o.in_tx = a.tx AND 
+        o.block_timestamp = a.block_timestamp AND
+        a.from_asset = 'THOR.RUNE' AND 
+        o.asset_e8 = a.from_e8 AND
+        o.asset = 'THOR.RUNE'
     ;
 
     UPDATE midgard_agg.actions AS a
     SET
-        addresses = a.addresses || o.froms || o.tos,
-        transactions = a.transactions || array_remove(o.transactions, NULL),
-        assets = a.assets || o.assets,
+        addresses = (with b as (select unnest(a.addresses || o.froms || o.tos) b) select array_agg(distinct b) from b),
+        transactions = (with b as (select unnest(a.transactions || array_remove(o.transactions, NULL)) b) select array_agg(distinct b) from b),
+        assets = (with b as (select unnest(a.assets || o.assets) b) select array_agg(distinct b) from b),
         outs = a.outs || o.outs
     FROM (
         SELECT
@@ -553,9 +550,97 @@ LANGUAGE SQL AS $BODY$
         f.tx = a.main_ref;
 $BODY$;
 
+CREATE TABLE midgard_agg.streaming_logs AS TABLE swap_events;
+
+CREATE FUNCTION midgard_agg.add_streaming_logs() RETURNS trigger
+LANGUAGE plpgsql AS $BODY$
+DECLARE
+    streaming_swap midgard_agg.actions;
+BEGIN
+    -- Look up the current state of the streaming_swap
+    SELECT * FROM midgard_agg.actions
+        WHERE main_ref = NEW.tx
+        FOR UPDATE INTO streaming_swap;
+
+    -- Convert sawp_events to actions
+    IF streaming_swap.main_ref IS NULL THEN
+        streaming_swap.event_id = NEW.event_id;
+        streaming_swap.block_timestamp = NEW.block_timestamp;
+        streaming_swap.action_type = 'swap';
+        streaming_swap.main_ref = NEW.tx;
+        streaming_swap.addresses = ARRAY[NEW.from_addr, NEW.to_addr] :: text[];
+        streaming_swap.transactions = ARRAY[NEW.tx] :: text[];
+        streaming_swap.assets = ARRAY[NEW.from_asset, NEW.to_asset] :: text[];
+        streaming_swap.pools = ARRAY[NEW.pool] :: text[]; -- if double we should add the other pool?
+        streaming_swap.ins = jsonb_build_array(mktransaction(NEW.tx, NEW.from_addr, (NEW.from_asset, NEW.from_e8)));
+        streaming_swap.outs = jsonb_build_array();
+        streaming_swap.fees = jsonb_build_array();
+        streaming_swap.meta = jsonb_build_object(
+            'streamingSwap', TRUE,
+            'count', 1,
+            'swapSingle', TRUE,
+            'liquidityFee', NEW.liq_fee_in_rune_e8,
+            'swapTarget', NEW.to_e8_min,
+            'swapSlip', NEW.swap_slip_bp,
+            'memo', NEW.memo,
+            'affiliateFee',
+                SUBSTRING(NEW.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+            ,
+            'affiliateAddress',
+                SUBSTRING(NEW.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)')
+            ,
+            'initialFromAsset', NEW.from_asset
+        );
+
+        INSERT INTO midgard_agg.actions VALUES (streaming_swap.*);
+    -- adding other in from partial
+    ELSE
+        IF NEW.from_asset = (streaming_swap.meta->>'initialFromAsset')::text THEN
+            -- should be update specific values on the jsonb
+            streaming_swap.ins := jsonb_set(streaming_swap.ins, '{0, "coins", 0, "amount"}',
+                to_jsonb((streaming_swap.ins #> '{0, "coins", 0, "amount"}')::int + NEW.from_e8));
+
+            UPDATE midgard_agg.actions SET
+                ins = streaming_swap.ins,
+                meta = streaming_swap.meta || jsonb_build_object('count', (meta->>'count')::int + 1)
+            WHERE main_ref = streaming_swap.main_ref;
+        ELSE
+            -- double swap
+            streaming_swap.pools := streaming_swap.pools || 
+                (CASE WHEN NOT streaming_swap.pools @> ARRAY[NEW.pool] THEN ARRAY[NEW.pool] ELSE NULL END);
+
+            UPDATE midgard_agg.actions SET
+                pools = streaming_swap.pools,
+                meta = streaming_swap.meta || jsonb_build_object('swapSingle', FALSE)
+            WHERE main_ref = streaming_swap.main_ref;
+        END IF;
+    END IF;
+
+
+    -- Never fails, just enriches the row to be inserted and updates the `members` table.
+    RETURN NEW;
+END;
+$BODY$;
+
+CREATE TRIGGER add_log_trigger
+    BEFORE INSERT ON midgard_agg.streaming_logs
+    FOR EACH ROW
+    EXECUTE FUNCTION midgard_agg.add_streaming_logs();
+
+
+CREATE PROCEDURE midgard_agg.insert_streaming_actions(t1 bigint, t2 bigint)
+LANGUAGE SQL AS $BODY$
+    INSERT INTO midgard_agg.streaming_logs (
+        SELECT * FROM swap_events
+        WHERE t1 <= block_timestamp AND block_timestamp < t2 AND _streaming = TRUE
+        ORDER BY event_id
+    );
+$BODY$;
+
 CREATE PROCEDURE midgard_agg.update_actions_interval(t1 bigint, t2 bigint)
 LANGUAGE SQL AS $BODY$
     CALL midgard_agg.insert_actions(t1, t2);
+    CALL midgard_agg.insert_streaming_actions(t1, t2); 
     CALL midgard_agg.trim_pending_actions(t1, t2);
     CALL midgard_agg.actions_add_outbounds(t1, t2);
     CALL midgard_agg.actions_add_fees(t1, t2);
