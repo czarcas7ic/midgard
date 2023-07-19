@@ -49,7 +49,7 @@ smoke:
     THORNODE_REPO: https://gitlab.com/thorchain/thornode.git
     THORNODE_IMAGE: registry.gitlab.com/thorchain/thornode:mocknet
     THOR_BLOCK_TIME: 0.5s
-    BLOCK_TIME: "1"
+    BLOCK_TIME: "2"
     BLOCK_SCANNER_BACKOFF: 0.3s
   before_script:
     # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27384#note_497228752
