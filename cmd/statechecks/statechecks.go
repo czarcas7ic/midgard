@@ -455,22 +455,38 @@ func midgardPoolAtHeight(ctx context.Context, pool string, height int64) Pool {
 	midlog.DebugF("Getting Midgard data at height: %d pool: %s", height, pool)
 
 	q := `
-	SELECT block_log.timestamp, asset_e8, rune_e8, synth_e8
-	FROM block_pool_depths
-	INNER JOIN block_log
-	ON block_pool_depths.block_timestamp <= block_log.timestamp
-	WHERE height=$1 AND pool = $2
-	ORDER BY block_timestamp DESC
-	LIMIT 1
+		SELECT timestamp
+		FROM block_log
+		WHERE height=$1
 	`
 
-	rows, err := db.Query(ctx, q, height, pool)
+	ret := Pool{Pool: pool}
+	rows, err := db.Query(ctx, q, height)
 	if err != nil {
 		midlog.FatalE(err, "Query error")
 	}
 	defer rows.Close()
 
-	ret := Pool{Pool: pool}
+	if rows.Next() {
+		err := rows.Scan(&ret.Timestamp)
+		if err != nil {
+			midlog.FatalE(err, "Query error")
+		}
+	}
+
+	q = `
+		SELECT block_timestamp, asset_e8, rune_e8, synth_e8
+		FROM block_pool_depths
+		WHERE block_timestamp<=$1 AND pool = $2
+		ORDER BY block_timestamp DESC
+		LIMIT 1
+	`
+
+	rows, err = db.Query(ctx, q, ret.Timestamp, pool)
+	if err != nil {
+		midlog.FatalE(err, "Query error")
+	}
+
 	if rows.Next() {
 		err := rows.Scan(&ret.Timestamp, &ret.AssetDepth, &ret.RuneDepth, &ret.SynthSupply)
 		if err != nil {
