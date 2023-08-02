@@ -598,11 +598,11 @@ BEGIN
         IF NEW.from_asset = (streaming_swap.meta->>'initialFromAsset')::text THEN
             -- should be update specific values on the jsonb
             streaming_swap.ins := jsonb_set(streaming_swap.ins, '{0, "coins", 0, "amount"}',
-                to_jsonb((streaming_swap.ins #> '{0, "coins", 0, "amount"}')::int + NEW.from_e8));
+                to_jsonb((streaming_swap.ins #> '{0, "coins", 0, "amount"}')::bigint + NEW.from_e8));
 
             UPDATE midgard_agg.actions SET
                 ins = streaming_swap.ins,
-                meta = streaming_swap.meta || jsonb_build_object('count', (meta->>'count')::int + 1)
+                meta = streaming_swap.meta || jsonb_build_object('count', (meta->>'count')::bigint + 1)
             WHERE main_ref = streaming_swap.main_ref;
         ELSE
             -- double swap
