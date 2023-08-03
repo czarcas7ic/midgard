@@ -576,7 +576,7 @@ BEGIN
         streaming_swap.outs = jsonb_build_array();
         streaming_swap.fees = jsonb_build_array();
         streaming_swap.meta = jsonb_build_object(
-            'streamingSwap', TRUE,
+            'swapStreaming', TRUE,
             'count', 1,
             'swapSingle', TRUE,
             'liquidityFee', NEW.liq_fee_in_rune_e8,

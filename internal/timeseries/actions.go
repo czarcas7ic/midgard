@@ -143,6 +143,7 @@ type actionMeta struct {
 	AffiliateFee     int64  `json:"affiliateFee"`
 	AffiliateAddress string `json:"affiliateAddress"`
 	Memo             string `json:"memo"`
+	SwapStreaming    bool   `json:"swapStreaming"`
 	// addLiquidity:
 	Status string `json:"status"`
 	// also LiquidityUnits
@@ -531,6 +532,7 @@ func (a *action) completeFromDBRead(meta *actionMeta, fees coinList) {
 			AffiliateFee:     util.IntStr(meta.AffiliateFee),
 			AffiliateAddress: meta.AffiliateAddress,
 			Memo:             meta.Memo,
+			IsStreamingSwap:  meta.SwapStreaming,
 		}
 	case "addLiquidity":
 		if meta.LiquidityUnits != 0 {

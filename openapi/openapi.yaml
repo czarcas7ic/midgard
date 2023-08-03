@@ -2365,6 +2365,7 @@ components:
         - affiliateFee
         - affiliateAddress
         - memo
+        - isStreamingSwap
       properties:
         networkFees:
           $ref: '#/components/schemas/NetworkFees'
@@ -2386,6 +2387,10 @@ components:
         memo:
           type: string
           description: Transaction memo of the swap action
+        isStreamingSwap:
+            type: boolean
+            description: indicate whether this action was streaming
+            example: true
     AddLiquidityMetadata:
       type: object
       required:
