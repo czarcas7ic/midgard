@@ -391,7 +391,7 @@ CREATE VIEW midgard_agg.swap_actions AS
     ON swap_in.tx = swap_out.tx AND swap_in.block_timestamp = swap_out.block_timestamp
     WHERE swap_in.from_asset <> swap_out.to_asset AND swap_in.to_e8 = swap_out.from_e8
         AND swap_in.to_asset = 'THOR.RUNE' AND swap_out.from_asset = 'THOR.RUNE'
-        AND swap_in._streaming IS NOT TRUE
+        AND swap_in._streaming IS NOT TRUE AND swap_in.memo != 'noop'
     ;
 
 CREATE VIEW midgard_agg.addliquidity_actions AS
