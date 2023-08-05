@@ -15,7 +15,7 @@ func TestSimpleBorrowersE2E(t *testing.T) {
 		testdb.LoanOpen{
 			Owner:                  "btcaddr1",
 			CollateralUp:           200,
-			DebtUpTor:              11,
+			DebtUpTor:              14,
 			CollateralAsset:        "BTC.BTC",
 			CollateralizationRatio: 30000,
 			TargetAsset:            "ETH.USDT",
@@ -25,7 +25,16 @@ func TestSimpleBorrowersE2E(t *testing.T) {
 	blocks.NewBlock(t, "2020-09-01 00:20:00",
 		testdb.LoanRepayment{
 			Owner:           "btcaddr1",
-			CollateralDown:  100,
+			CollateralDown:  50,
+			DebtDownTor:     7,
+			CollateralAsset: "BTC.BTC",
+		},
+	)
+
+	blocks.NewBlock(t, "2020-09-02 00:10:00",
+		testdb.LoanRepayment{
+			Owner:           "btcaddr1",
+			CollateralDown:  50,
 			DebtDownTor:     7,
 			CollateralAsset: "BTC.BTC",
 		},
@@ -41,8 +50,8 @@ func TestSimpleBorrowersE2E(t *testing.T) {
 	require.Equal(t, "BTC.BTC", btcDebt.CollateralAsset)
 	require.Equal(t, "200", btcDebt.CollateralUp)
 	require.Equal(t, "100", btcDebt.CollateralDown)
-	require.Equal(t, "11", btcDebt.DebtUpTor)
-	require.Equal(t, "7", btcDebt.DebtDownTor)
+	require.Equal(t, "14", btcDebt.DebtUpTor)
+	require.Equal(t, "14", btcDebt.DebtDownTor)
 	require.Equal(t, "1598919000", btcDebt.LastOpenLoanTimestamp)
-	require.Equal(t, "1598919600", btcDebt.LastRepayLoanTimestamp)
+	require.Equal(t, "1599005400", btcDebt.LastRepayLoanTimestamp)
 }

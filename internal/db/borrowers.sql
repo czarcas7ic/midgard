@@ -129,7 +129,7 @@ BEGIN
     IF NEW.change_type = 'open' THEN
         borrower.debt_up := borrower.debt_up + NEW.debt_up;
         borrower.collateral_up := borrower.collateral_up + NEW.collateral_up;
-        borrower.total_collateral_tor := borrower.total_collateral_tor + (NEW.debt_up * NEW.collateralization_ratio / 10000);
+        borrower.total_collateral_tor := borrower.total_collateral_tor + (NEW.debt_up / 10000 * NEW.collateralization_ratio);
 
         IF NOT NEW.target_asset = ANY(borrower.target_assets) THEN
             borrower.target_assets := borrower.target_assets || NEW.target_asset;
@@ -140,7 +140,7 @@ BEGIN
 
     IF NEW.change_type = 'repayment' THEN
         IF borrower.debt_up > borrower.debt_down THEN
-            borrower.total_collateral_tor := borrower.total_collateral_tor - (borrower.total_collateral_tor * NEW.debt_down / (borrower.debt_up - borrower.debt_down));
+            borrower.total_collateral_tor := borrower.total_collateral_tor - (borrower.total_collateral_tor / (borrower.debt_up - borrower.debt_down) * NEW.debt_down);
         END IF;
 
         borrower.debt_down := borrower.debt_down + NEW.debt_down;
@@ -163,19 +163,19 @@ BEGIN
             NEW.block_timestamp
         )
         ON CONFLICT (collateral_asset, block_timestamp) DO UPDATE SET count = EXCLUDED.count;
-    ELSE
-        INSERT INTO midgard_agg.borrowers VALUES (borrower.*)
-        ON CONFLICT (borrower_id, collateral_asset) DO UPDATE SET
-            -- Note, `EXCLUDED` is exactly the `borrower` variable here
-            target_assets = EXCLUDED.target_assets,
-            debt_up = EXCLUDED.debt_up,
-            debt_down = EXCLUDED.debt_down,
-            collateral_up = EXCLUDED.collateral_up,
-            collateral_down = EXCLUDED.collateral_down,
-            total_collateral_tor = EXCLUDED.total_collateral_tor,
-            last_open_loan_timestamp = EXCLUDED.last_open_loan_timestamp,
-            last_repay_loan_timestamp = EXCLUDED.last_repay_loan_timestamp;
     END IF;
+
+    INSERT INTO midgard_agg.borrowers VALUES (borrower.*)
+    ON CONFLICT (borrower_id, collateral_asset) DO UPDATE SET
+        -- Note, `EXCLUDED` is exactly the `borrower` variable here
+        target_assets = EXCLUDED.target_assets,
+        debt_up = EXCLUDED.debt_up,
+        debt_down = EXCLUDED.debt_down,
+        collateral_up = EXCLUDED.collateral_up,
+        collateral_down = EXCLUDED.collateral_down,
+        total_collateral_tor = EXCLUDED.total_collateral_tor,
+        last_open_loan_timestamp = EXCLUDED.last_open_loan_timestamp,
+        last_repay_loan_timestamp = EXCLUDED.last_repay_loan_timestamp;
 
     -- Never fails, just enriches the row to be inserted and updates the `borrowers` table.
     RETURN NEW;
