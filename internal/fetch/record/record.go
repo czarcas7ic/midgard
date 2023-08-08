@@ -42,6 +42,9 @@ func (*eventRecorder) OnActiveVault(e *ActiveVault, meta *Metadata) {
 }
 
 func (r *eventRecorder) OnAdd(e *Add, meta *Metadata) {
+	if e.Memo == nil {
+		e.Memo = empty
+	}
 	cols := []string{
 		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "rune_e8", "pool"}
 	err := InsertWithMeta("add_events", meta, cols,
