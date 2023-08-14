@@ -670,10 +670,10 @@ func (*eventRecorder) OnVersion(e *Version, meta *Metadata) {
 }
 
 func (*eventRecorder) OnLoanOpen(e *LoanOpen, meta *Metadata) {
-	cols := []string{"owner", "collateral_up", "debt_up",
+	cols := []string{"owner", "collateral_deposited", "debt_issued",
 		"collateralization_ratio", "collateral_asset", "target_asset"}
 	err := InsertWithMeta("loan_open_events", meta, cols,
-		e.Owner, e.CollateralUp, e.DebtUp, e.CollateralizationRatio, e.CollateralAsset, e.TargetAsset)
+		e.Owner, e.CollateralDeposited, e.DebtIssued, e.CollateralizationRatio, e.CollateralAsset, e.TargetAsset)
 	if err != nil {
 		miderr.LogEventParseErrorF(
 			"loan_open event from height %d lost on %s",
@@ -682,9 +682,9 @@ func (*eventRecorder) OnLoanOpen(e *LoanOpen, meta *Metadata) {
 }
 
 func (*eventRecorder) OnLoanRepayment(e *LoanRepayment, meta *Metadata) {
-	cols := []string{"owner", "collateral_down", "debt_down", "collateral_asset"}
+	cols := []string{"owner", "collateral_withdrawn", "debt_repaid", "collateral_asset"}
 	err := InsertWithMeta("loan_repayment_events", meta, cols,
-		e.Owner, e.CollateralDown, e.DebtDown, e.CollateralAsset)
+		e.Owner, e.CollateralWithdrawn, e.DebtRepaid, e.CollateralAsset)
 	if err != nil {
 		miderr.LogEventParseErrorF(
 			"loan_repayment event from height %d lost on %s",

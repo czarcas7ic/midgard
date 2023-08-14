@@ -1649,8 +1649,8 @@ func (e *Version) LoadTendermint(attrs []abci.EventAttribute) error {
 }
 
 type LoanOpen struct {
-	CollateralUp           int64
-	DebtUp                 int64
+	CollateralDeposited    int64
+	DebtIssued             int64
 	CollateralAsset        []byte
 	CollateralizationRatio int64
 	Owner                  []byte
@@ -1662,12 +1662,12 @@ func (e *LoanOpen) LoadTendermint(attrs []abci.EventAttribute) error {
 		var err error
 		switch string(attr.Key) {
 		case "collateral_up", "collateral_deposited":
-			e.CollateralUp, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			e.CollateralDeposited, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
 			}
 		case "debt_up", "debt_issued":
-			e.DebtUp, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			e.DebtIssued, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
 			}
@@ -1692,10 +1692,10 @@ func (e *LoanOpen) LoadTendermint(attrs []abci.EventAttribute) error {
 }
 
 type LoanRepayment struct {
-	CollateralDown  int64
-	DebtDown        int64
-	CollateralAsset []byte
-	Owner           []byte
+	CollateralWithdrawn int64
+	DebtRepaid          int64
+	CollateralAsset     []byte
+	Owner               []byte
 }
 
 func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
@@ -1703,12 +1703,12 @@ func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
 		var err error
 		switch string(attr.Key) {
 		case "collateral_down", "collateral_withdrawn":
-			e.CollateralDown, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			e.CollateralWithdrawn, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
 			}
 		case "debt_down", "debt_repaid":
-			e.DebtDown, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			e.DebtRepaid, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
 			}

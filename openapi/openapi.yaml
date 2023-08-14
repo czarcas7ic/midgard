@@ -2605,10 +2605,10 @@ components:
       required:
         - collateral_asset
         - target_assets
-        - debt_up_tor
-        - debt_down_tor
-        - collateral_up
-        - collateral_down
+        - debt_issued_tor
+        - debt_repaid_tor
+        - collateral_deposited
+        - collateral_withdrawn
         - last_open_loan_timestamp
         - last_repay_loan_timestamp
       properties:
@@ -2621,16 +2621,16 @@ components:
             type: string
             description: All target assets that the user used as debt target 
             example: 'ETH.ETH'
-        debt_up_tor:
+        debt_issued_tor:
           type: string
-          description: Int64(e8), The total amount of debt user is given as debt. denominated in TOR.
-        debt_down_tor:
+          description: Int64(e8), The total amount of debt issued as debt for user. denominated in TOR.
+        debt_repaid_tor:
           type: string
           description: Int64(e8), The total amount of debt that the user paid back. denominated in TOR.
-        collateral_up:
+        collateral_deposited:
           type: string
-          description: Int64(e8), The total amount of collateral that user has given
-        collateral_down:
+          description: Int64(e8), The total amount of collateral that user deposited
+        collateral_withdrawn:
           type: string
           description: Int64(e8), The total amount of collateral the system paid back to the user
         last_open_loan_timestamp:
