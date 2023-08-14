@@ -1661,12 +1661,12 @@ func (e *LoanOpen) LoadTendermint(attrs []abci.EventAttribute) error {
 	for _, attr := range attrs {
 		var err error
 		switch string(attr.Key) {
-		case "collateral_up":
+		case "collateral_up", "collateral_deposited":
 			e.CollateralUp, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
 			}
-		case "debt_up":
+		case "debt_up", "debt_issued":
 			e.DebtUp, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
@@ -1702,12 +1702,12 @@ func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
 	for _, attr := range attrs {
 		var err error
 		switch string(attr.Key) {
-		case "collateral_down":
+		case "collateral_down", "collateral_withdrawn":
 			e.CollateralDown, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
 			}
-		case "debt_down":
+		case "debt_down", "debt_repaid":
 			e.DebtDown, err = strconv.ParseInt(string(attr.Value), 10, 64)
 			if err != nil {
 				return fmt.Errorf("malformed value: %w", err)
