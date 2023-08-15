@@ -604,7 +604,10 @@ BEGIN
 
             UPDATE midgard_agg.actions SET
                 ins = streaming_swap.ins,
-                meta = streaming_swap.meta || jsonb_build_object('count', (meta->>'count')::bigint + 1)
+                meta = streaming_swap.meta || 
+                    jsonb_build_object('count', (meta->>'count')::bigint + 1) ||
+                    jsonb_build_object('liquidityFee', (meta->>'liquidityFee')::bigint + NEW.liq_fee_in_rune_e8) 
+
             WHERE main_ref = streaming_swap.main_ref;
         ELSE
             -- double swap
@@ -613,7 +616,8 @@ BEGIN
 
             UPDATE midgard_agg.actions SET
                 pools = streaming_swap.pools,
-                meta = streaming_swap.meta || jsonb_build_object('swapSingle', FALSE)
+                meta = streaming_swap.meta || jsonb_build_object('swapSingle', FALSE) ||
+                    jsonb_build_object('liquidityFee', (meta->>'liquidityFee')::bigint + NEW.liq_fee_in_rune_e8) 
             WHERE main_ref = streaming_swap.main_ref;
         END IF;
     END IF;
