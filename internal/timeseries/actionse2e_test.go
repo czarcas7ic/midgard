@@ -1513,3 +1513,111 @@ func TestMultipleActionInvalidType(t *testing.T) {
 
 	testdb.CallFail(t, "http://localhost:8080/v2/actions?type=swap,nonExisted", "bad request")
 }
+
+// A test for streaming swap actions
+func TestStreamingSwap(t *testing.T) {
+	blocks := testdb.InitTestBlocks(t)
+
+	blocks.NewBlock(t, "2020-09-01 00:00:00",
+		testdb.AddLiquidity{
+			Pool:                   "BTC.BTC",
+			LiquidityProviderUnits: 42,
+			RuneAmount:             10000000000,
+			AssetAmount:            10000000000,
+			RuneTxID:               "tx1",
+			RuneAddress:            "runeaddr",
+		},
+		testdb.AddLiquidity{
+			Pool:                   "BNB.BNB",
+			LiquidityProviderUnits: 42,
+			RuneAmount:             10000000000,
+			AssetAmount:            20000000000,
+			RuneTxID:               "tx1",
+			RuneAddress:            "runeaddr",
+		},
+		testdb.PoolActivate("BNB.BNB"),
+		testdb.PoolActivate("BTC.BTC"),
+	)
+
+	blocks.NewBlock(t, "2020-09-01 00:00:05",
+		testdb.Swap{
+			TxID:               "1234",
+			Coin:               "200000 BNB.BNB",
+			EmitAsset:          "100000 THOR.RUNE",
+			Pool:               "BNB.BNB",
+			Slip:               100,
+			LiquidityFeeInRune: 10000,
+			FromAddress:        "bnb1",
+			ToAddress:          "btc1",
+			Memo:               "=:bnb:btc1:0/10/0",
+		},
+		testdb.Outbound{
+			TxID:      "", // TXID is empty for Rune outbounds
+			InTxID:    "1234",
+			Coin:      "100000 THOR.RUNE",
+			ToAddress: "bnb1",
+		},
+		testdb.Swap{
+			TxID:               "1234",
+			Coin:               "100000 THOR.RUNE",
+			EmitAsset:          "100000 BTC.BTC",
+			Pool:               "BTC.BTC",
+			Slip:               100,
+			LiquidityFeeInRune: 20000,
+			FromAddress:        "bnb1",
+			ToAddress:          "btc1",
+			Memo:               "=:bnb:btc1:0/10/0",
+		},
+	)
+
+	blocks.NewBlock(t, "2020-09-01 00:00:10",
+		testdb.Outbound{
+			TxID:      "2345",
+			InTxID:    "1234",
+			Coin:      "99998 BTC.BTC",
+			ToAddress: "btc1",
+		},
+		testdb.Fee{
+			TxID:  "1234",
+			Coins: "2 BTC.BTC",
+		},
+	)
+
+	body := testdb.CallJSON(t, "http://localhost:8080/v2/actions?type=swap")
+
+	var v oapigen.ActionsResponse
+	testdb.MustUnmarshal(t, body, &v)
+
+	require.Equal(t, "1", *v.Count)
+	outHeight := "3"
+	require.Equal(t, []oapigen.Action{{
+		Date:   util.IntStr(db.StrToSec("2020-09-01 00:00:05").ToNano().ToI()),
+		Height: "2",
+		In: []oapigen.Transaction{{
+			Address: "bnb1",
+			Coins:   []oapigen.Coin{{Amount: "200000", Asset: "BNB.BNB"}},
+			TxID:    "1234",
+		}},
+		Metadata: oapigen.Metadata{
+			Swap: &oapigen.SwapMetadata{
+				NetworkFees:      []oapigen.Coin{{Amount: "2", Asset: "BTC.BTC"}},
+				Memo:             "=:bnb:btc1:0/10/0",
+				AffiliateAddress: "",
+				AffiliateFee:     "0",
+				SwapTarget:       "0",
+				SwapSlip:         "100",
+				LiquidityFee:     "30000",
+				IsStreamingSwap:  true,
+			},
+		},
+		Out: []oapigen.Transaction{{
+			Address: "btc1",
+			Coins:   []oapigen.Coin{{Amount: "99998", Asset: "BTC.BTC"}},
+			TxID:    "2345",
+			Height:  &outHeight,
+		}},
+		Pools:  []string{"BNB.BNB", "BTC.BTC"},
+		Status: "success",
+		Type:   "swap",
+	}}, v.Actions)
+}
