@@ -652,31 +652,29 @@ $BODY$;
 
 CREATE PROCEDURE midgard_agg.update_actions_interval(t1 bigint, t2 bigint)
 LANGUAGE plpgsql AS $BODY$
--- DECLARE
---     t1 timestamp;
---     t2 timestamp;
---     t3 timestamp;
+DECLARE
+    ts1 timestamp;
+    ts2 timestamp;
+    ts3 timestamp;
 BEGIN
 
-    -- t1 := NOW();
+    ts1 := clock_timestamp();
     RAISE WARNING 'MIDLOG: update_actions_interval start';
 
     CALL midgard_agg.insert_actions(t1, t2);
 
-    -- t2 := NOW();
+    ts2 := clock_timestamp();
     RAISE WARNING 'MIDLOG: insert_streaming_actions start';
     CALL midgard_agg.insert_streaming_actions(t1, t2);
-    -- t3 := NOW();
-    -- RAISE WARNING 'MIDLOG: insert_streaming_actions time %', t3 - t2;
-    RAISE WARNING 'MIDLOG: insert_streaming_actions end';
+    ts3 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: insert_streaming_actions time % sec', (ts3 - ts2)::INTERVAL;
 
     CALL midgard_agg.trim_pending_actions(t1, t2);
     CALL midgard_agg.actions_add_outbounds(t1, t2);
     CALL midgard_agg.actions_add_fees(t1, t2);
 
-    -- t3 := NOW()::timestamp;
-    -- RAISE WARNING 'MIDLOG: update_actions_interval time %', t3 - t1;
-    RAISE WARNING 'MIDLOG: update_actions_interval end';
+    ts3 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: update_actions_interval time % sec', (ts3 - ts1)::INTERVAL;
 END
 $BODY$;
 
