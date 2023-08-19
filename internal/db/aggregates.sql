@@ -497,7 +497,12 @@ $BODY$;
 -- TODO(huginn): Remove duplicates from these lists?
 CREATE PROCEDURE midgard_agg.actions_add_outbounds(t1 bigint, t2 bigint)
 LANGUAGE plpgsql AS $BODY$
+DECLARE
+    ts1 timestamp;
+    ts2 timestamp;
+    ts3 timestamp;
 BEGIN
+    ts1 := clock_timestamp();
     UPDATE outbound_events as o
     SET
         internal = TRUE
@@ -513,7 +518,9 @@ BEGIN
         o.asset_e8 = a.from_e8 AND
         o.asset = 'THOR.RUNE'
     ;
-
+    ts2 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: otubound internal evets time %', (ts2 - ts1)::INTERVAL;
+    -- THIS is slow
     UPDATE midgard_agg.actions AS a
     SET
         addresses = a.addresses || o.froms || o.tos,
@@ -534,9 +541,12 @@ BEGIN
         ) AS o
     WHERE
         o.in_tx = a.main_ref;
+    ts3 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: outbound add outbounds to actions time % for interval % : %', (ts3 - ts2)::INTERVAL, t1, t2;
 END
 $BODY$;
 
+-- THIS is slow
 CREATE PROCEDURE midgard_agg.actions_add_fees(t1 bigint, t2 bigint)
 LANGUAGE plpgsql AS $BODY$
 BEGIN
@@ -656,25 +666,33 @@ DECLARE
     ts1 timestamp;
     ts2 timestamp;
     ts3 timestamp;
+    ts4 timestamp;
+    ts5 timestamp;
+    ts6 timestamp;
 BEGIN
 
     ts1 := clock_timestamp();
     RAISE WARNING 'MIDLOG: update_actions_interval start';
 
     CALL midgard_agg.insert_actions(t1, t2);
-
     ts2 := clock_timestamp();
-    RAISE WARNING 'MIDLOG: insert_streaming_actions start';
+    RAISE WARNING 'MIDLOG: insert_actions time %', (ts2 - ts1)::INTERVAL;
+
     CALL midgard_agg.insert_streaming_actions(t1, t2);
     ts3 := clock_timestamp();
-    RAISE WARNING 'MIDLOG: insert_streaming_actions time % sec', (ts3 - ts2)::INTERVAL;
+    RAISE WARNING 'MIDLOG: insert_streaming_actions time %', (ts3 - ts2)::INTERVAL;
 
     CALL midgard_agg.trim_pending_actions(t1, t2);
-    CALL midgard_agg.actions_add_outbounds(t1, t2);
-    CALL midgard_agg.actions_add_fees(t1, t2);
+    ts5 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: trim_pending_actions time %', (ts5 - ts3)::INTERVAL;
 
-    ts3 := clock_timestamp();
-    RAISE WARNING 'MIDLOG: update_actions_interval time % sec', (ts3 - ts1)::INTERVAL;
+    CALL midgard_agg.actions_add_outbounds(t1, t2);
+    ts6 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: add_outbounds time %', (ts6 - ts5)::INTERVAL;
+
+    CALL midgard_agg.actions_add_fees(t1, t2);
+    ts4 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: actions_add_fees time %', (ts4 - ts6)::INTERVAL;
 END
 $BODY$;
 
