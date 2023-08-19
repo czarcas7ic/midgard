@@ -692,7 +692,7 @@ BEGIN
 
     CALL midgard_agg.actions_add_fees(t1, t2);
     ts4 := clock_timestamp();
-    RAISE WARNING 'MIDLOG: actions_add_fees time %', (ts4 - ts6)::INTERVAL;
+    RAISE WARNING 'MIDLOG: actions_add_fees time %, Interval % : %', (ts4 - ts6)::INTERVAL, t1, t2;
 END
 $BODY$;
 
