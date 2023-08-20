@@ -446,30 +446,52 @@ CREATE VIEW midgard_agg.addliquidity_actions AS
 
 CREATE PROCEDURE midgard_agg.insert_actions(t1 bigint, t2 bigint)
 LANGUAGE plpgsql AS $BODY$
+DECLARE
+    ts1 timestamp;
+    ts2 timestamp;
+    ts3 timestamp;
+    ts4 timestamp;
+    ts5 timestamp;
+    ts6 timestamp;
+    ts7 timestamp;
 BEGIN
+    ts1 := clock_timestamp();
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.switch_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
 
+    ts2 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: insert actions end of switches %s', (ts2 - ts1)::INTERVAL;
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.refund_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
 
+    ts3 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: insert actions end of refund %s', (ts3 - ts2)::INTERVAL;
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.donate_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
 
+    ts4 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: insert actions end of donate %s', (ts4 - ts3)::INTERVAL;
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.withdraw_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
 
+    ts5 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: insert actions end of withdraws %s', (ts5 - ts4)::INTERVAL;
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.swap_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
 
+    ts6 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: insert actions end of swaps %s', (ts6 - ts5)::INTERVAL;
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.addliquidity_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
+    
+    ts7 := clock_timestamp();
+    RAISE WARNING 'MIDLOG: insert actions end of add liquidity %s', (ts7 - ts6)::INTERVAL;
 END
 $BODY$;
 
