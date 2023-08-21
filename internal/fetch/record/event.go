@@ -28,7 +28,6 @@ import (
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/util"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
-	"gitlab.com/thorchain/midgard/internal/util/midlog"
 )
 
 // Asset Labels
@@ -1119,9 +1118,7 @@ func (e *Swap) LoadTendermint(attrs []abci.EventAttribute) error {
 			if err != nil {
 				return fmt.Errorf("malformed liquidity_fee_in_rune: %w", err)
 			}
-		case "streaming_swap_count":
-		case "streaming_swap_quantity":
-			midlog.Info("Streaming swap events is seen")
+		case "streaming_swap_count", "streaming_swap_quantity":
 		default:
 			miderr.LogEventParseErrorF("unknown swap event attribute %q=%q", attr.Key, attr.Value)
 		}
