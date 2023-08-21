@@ -654,6 +654,14 @@ type preparedSqlStatement struct {
 	Values []interface{}
 }
 
+func formatWhereQuery(s string) string {
+	s = (strings.TrimSpace(s))
+	if strings.HasPrefix(s, `AND`) {
+		s = strings.Replace(s, `AND`, ``, 1)
+	}
+	return s
+}
+
 // Builds SQL statements for Actions lookup. Two queries are needed, one to get the count
 // of the total entries for the query, and one to get the subset that will actually be
 // returned to the caller.
@@ -672,7 +680,8 @@ func actionsPreparedStatements(moment time.Time,
 
 	// build WHERE which is common to both queries, based on filter arguments
 	// (types, txid, address, asset)
-	whereQuery := `
+	whereQuery := ``
+	timeQuery := `
 		WHERE event_id <= nano_event_id_up(#MOMENT#)`
 
 	if len(params.types) != 0 {
@@ -743,7 +752,16 @@ func actionsPreparedStatements(moment time.Time,
 	}
 
 	// build and return final queries
-	countQuery := `SELECT count(1) FROM midgard_agg.actions` + whereQuery
+	countQuery := `SELECT count(1) FROM midgard_agg.actions` + timeQuery + whereQuery
+
+	if forceMainQuerySeparateEvaluation {
+		countQuery = `WITH relevant_actions AS (SELECT * FROM midgard_agg.actions 
+		WHERE ` + formatWhereQuery(whereQuery) + `
+			OFFSET 0
+		)
+		SELECT COUNT(1) FROM relevant_actions ` + timeQuery
+	}
+
 	countQueryValues := make([]interface{}, 0)
 	for i, queryValue := range baseValues {
 		position := i + 1
@@ -764,7 +782,7 @@ func actionsPreparedStatements(moment time.Time,
 			fees,
 			meta
 		FROM midgard_agg.actions
-	` + whereQuery
+	`
 
 	// The Postgres' query planner is kinda dumb when we have a `txid` specified.
 	// Because we also want to order by `event_id` and limit the number of results,
@@ -777,11 +795,13 @@ func actionsPreparedStatements(moment time.Time,
 	// inlining a sub-query; thus forcing it to create an independent plan for it. In which case
 	// it obviously uses the index on `transactions`.
 	if forceMainQuerySeparateEvaluation {
-		mainQuery = `WITH relevant_actions AS (` + mainQuery + `
-			OFFSET 0
-		)
-		SELECT * FROM relevant_actions
-		`
+		mainQuery = `WITH relevant_actions AS (` + mainQuery + ` WHERE ` + formatWhereQuery(whereQuery) + `
+				OFFSET 0
+			)
+			SELECT * FROM relevant_actions
+			` + timeQuery
+	} else {
+		mainQuery += timeQuery + whereQuery
 	}
 
 	orderQuery := `
