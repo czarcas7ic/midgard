@@ -513,9 +513,9 @@ LANGUAGE SQL AS $BODY$
 
     UPDATE midgard_agg.actions AS a
     SET
-        addresses = (with b as (select unnest(a.addresses || o.froms || o.tos) b) select array_agg(distinct b) from b),
-        transactions = (with b as (select unnest(a.transactions || array_remove(o.transactions, NULL)) b) select array_agg(distinct b) from b),
-        assets = (with b as (select unnest(a.assets || o.assets) b) select array_agg(distinct b) from b),
+        addresses = a.addresses || o.froms || o.tos,
+        transactions = a.transactions || array_remove(o.transactions, NULL),
+        assets = a.assets || o.assets,
         outs = a.outs || o.outs
     FROM (
         SELECT
