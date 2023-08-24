@@ -15,6 +15,7 @@ import (
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/util"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
+	"gitlab.com/thorchain/midgard/internal/util/midlog"
 	"gitlab.com/thorchain/midgard/openapi/generated/oapigen"
 )
 
@@ -654,14 +655,6 @@ type preparedSqlStatement struct {
 	Values []interface{}
 }
 
-func formatWhereQuery(s string) string {
-	s = (strings.TrimSpace(s))
-	if strings.HasPrefix(s, `AND`) {
-		s = strings.Replace(s, `AND`, ``, 1)
-	}
-	return s
-}
-
 // Builds SQL statements for Actions lookup. Two queries are needed, one to get the count
 // of the total entries for the query, and one to get the subset that will actually be
 // returned to the caller.
@@ -680,87 +673,80 @@ func actionsPreparedStatements(moment time.Time,
 
 	// build WHERE which is common to both queries, based on filter arguments
 	// (types, txid, address, asset)
-	whereQuery := ``
-	timeQuery := `
-		WHERE event_id <= nano_event_id_up(#MOMENT#)`
+	// Due to the The Timescales' query planner mistake, we force the time query to be seprate when
+	// txid is asked from Midgard.
+	var actionFilters []string
+	timeFilters := []string{`event_id <= nano_event_id_up(#MOMENT#)`}
 
 	if len(params.types) != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#TYPE#", params.types})
-		whereQuery += `
-			AND action_type = ANY(#TYPE#)`
+		actionFilters = append(actionFilters, `action_type = ANY(#TYPE#)`)
 	}
 
 	if params.txid != "" {
 		forceMainQuerySeparateEvaluation = true
 		baseValues = append(baseValues, namedSqlValue{"#TXID#", strings.ToUpper(params.txid)})
-		whereQuery += `
-			AND transactions @> ARRAY[#TXID#]`
+		actionFilters = append(actionFilters, `transactions @> ARRAY[#TXID#]`)
 	}
 
 	if len(params.addresses) != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#ADDRESSES#", params.addresses})
-		whereQuery += `
-			AND addresses && #ADDRESSES#`
+		actionFilters = append(actionFilters, `addresses && #ADDRESSES#`)
 	}
 
 	if len(params.assets) != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#ASSET#", pq.Array(params.assets)})
-		whereQuery += `
-			AND assets @> #ASSET#`
+		actionFilters = append(actionFilters, `assets @> #ASSET#`)
 	}
 
 	if len(params.affiliateAddresses) != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#AFFILIATE#", pq.Array(params.affiliateAddresses)})
-		whereQuery += `
-			AND meta->'affiliateAddress' ?| #AFFILIATE#`
+		actionFilters = append(actionFilters, `meta->'affiliateAddress' ?| #AFFILIATE#`)
 	}
 
+	// These pagination filters are also time sensetive
 	if params.nextPageToken != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#NEXTPAGETOKEN#", params.nextPageToken})
-		whereQuery += `
-			AND event_id < #NEXTPAGETOKEN#`
+		timeFilters = append(timeFilters, `event_id < #NEXTPAGETOKEN#`)
 	}
 
 	if params.timestamp != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#TIMESTAMP#", params.timestamp})
-		whereQuery += `
-			AND block_timestamp < #TIMESTAMP#`
+		timeFilters = append(timeFilters, `block_timestamp < #TIMESTAMP#`)
 	}
 
 	if params.height != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#HEIGHT#", db.HeightToEventId(params.height)})
-		whereQuery += `
-			AND event_id < #HEIGHT#`
+		timeFilters = append(timeFilters, `event_id < #HEIGHT#`)
 	}
 
 	if params.prevPageToken != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#PREVPAGETOKEN#", params.prevPageToken})
-		whereQuery += `
-			AND event_id > #PREVPAGETOKEN#`
+		timeFilters = append(timeFilters, `event_id > #PREVPAGETOKEN#`)
 	}
 
 	if params.fromTimestamp != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#FROMTIMESTAMP#", params.fromTimestamp})
-		whereQuery += `
-			AND block_timestamp > #FROMTIMESTAMP#`
+		timeFilters = append(timeFilters, `block_timestamp > #FROMTIMESTAMP#`)
 	}
 
 	if params.fromHeight != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#FROMHEIGHT#", db.HeightToEventId(params.fromHeight)})
-		whereQuery += `
-			AND event_id > #FROMHEIGHT#`
+		timeFilters = append(timeFilters, `event_id > #FROMHEIGHT#`)
 	}
 
 	// build and return final queries
-	countQuery := `SELECT count(1) FROM midgard_agg.actions` + timeQuery + whereQuery
+	countQuery := `SELECT count(1) FROM midgard_agg.actions ` + db.Where(append(timeFilters, actionFilters...)...)
 
 	if forceMainQuerySeparateEvaluation {
 		countQuery = `WITH relevant_actions AS (SELECT * FROM midgard_agg.actions 
-		WHERE ` + formatWhereQuery(whereQuery) + `
+		 ` + db.Where(actionFilters...) + `
 			OFFSET 0
 		)
-		SELECT COUNT(1) FROM relevant_actions ` + timeQuery
+		SELECT COUNT(1) FROM relevant_actions ` + db.Where(timeFilters...)
 	}
+
+	midlog.Debug(countQuery)
 
 	countQueryValues := make([]interface{}, 0)
 	for i, queryValue := range baseValues {
@@ -795,13 +781,13 @@ func actionsPreparedStatements(moment time.Time,
 	// inlining a sub-query; thus forcing it to create an independent plan for it. In which case
 	// it obviously uses the index on `transactions`.
 	if forceMainQuerySeparateEvaluation {
-		mainQuery = `WITH relevant_actions AS (` + mainQuery + ` WHERE ` + formatWhereQuery(whereQuery) + `
+		mainQuery = `WITH relevant_actions AS (` + mainQuery + db.Where(actionFilters...) + `
 				OFFSET 0
 			)
 			SELECT * FROM relevant_actions
-			` + timeQuery
+			` + db.Where(timeFilters...)
 	} else {
-		mainQuery += timeQuery + whereQuery
+		mainQuery += db.Where(append(timeFilters, actionFilters...)...)
 	}
 
 	orderQuery := `
