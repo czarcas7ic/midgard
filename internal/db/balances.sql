@@ -27,7 +27,8 @@ CREATE TABLE midgard_agg.current_balances (
 WITH (fillfactor = 90);
 
 CREATE PROCEDURE midgard_agg.update_current_balances_interval(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     INSERT INTO midgard_agg.current_balances AS cb (
         SELECT addr, asset, SUM(amount_e8) AS amount_e8
         FROM midgard_agg.balance_deltas
@@ -35,6 +36,7 @@ LANGUAGE SQL AS $BODY$
         GROUP BY addr, asset
     )
     ON CONFLICT (addr, asset) DO UPDATE SET amount_e8 = cb.amount_e8 + EXCLUDED.amount_e8;
+END
 $BODY$;
 
 CREATE PROCEDURE midgard_agg.update_running_balances_interval(t1 bigint, t2 bigint)

@@ -475,7 +475,8 @@ $BODY$;
 
 -- TODO(muninn): Check the pending logic regarding nil rune address
 CREATE PROCEDURE midgard_agg.trim_pending_actions(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     DELETE FROM midgard_agg.actions AS a
     USING stake_events AS s
     WHERE
@@ -490,6 +491,7 @@ LANGUAGE SQL AS $BODY$
         AND a.event_id <= pw.event_id
         AND pw.pending_type = 'withdraw'
         AND a.main_ref = 'PL:' || pw.rune_addr || ':' || pw.pool;
+END
 $BODY$;
 
 -- TODO(huginn): Remove duplicates from these lists?
@@ -536,7 +538,8 @@ END
 $BODY$;
 
 CREATE PROCEDURE midgard_agg.actions_add_fees(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     UPDATE midgard_agg.actions AS a
     SET
         fees = a.fees || f.fees
@@ -550,6 +553,7 @@ LANGUAGE SQL AS $BODY$
         ) AS f
     WHERE
         f.tx = a.main_ref;
+END
 $BODY$;
 
 CREATE TABLE midgard_agg.streaming_logs AS TABLE swap_events;
@@ -635,12 +639,14 @@ CREATE TRIGGER add_log_trigger
 
 
 CREATE PROCEDURE midgard_agg.insert_streaming_actions(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     INSERT INTO midgard_agg.streaming_logs (
         SELECT * FROM swap_events
         WHERE t1 <= block_timestamp AND block_timestamp < t2 AND _streaming = TRUE
         ORDER BY event_id
     );
+END
 $BODY$;
 
 CREATE PROCEDURE midgard_agg.update_actions_interval(t1 bigint, t2 bigint)

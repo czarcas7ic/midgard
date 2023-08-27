@@ -189,12 +189,14 @@ CREATE TRIGGER add_log_trigger
 
 
 CREATE PROCEDURE midgard_agg.update_borrowers_interval(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     INSERT INTO midgard_agg.borrowers_log (
         SELECT * FROM midgard_agg.borrowers_log_partial
         WHERE t1 <= block_timestamp AND block_timestamp < t2
         ORDER BY event_id
     );
+END
 $BODY$;
 
 CREATE PROCEDURE midgard_agg.update_borrowers(w_new bigint)
