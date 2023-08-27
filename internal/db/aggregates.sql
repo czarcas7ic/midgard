@@ -127,7 +127,7 @@ BEGIN
     FOREACH t IN ARRAY ta
     LOOP
         IF t ~ '/' THEN
-            RETURN TRUE; 
+            RETURN TRUE;
         END IF;
     END LOOP;
     RETURN FALSE;
@@ -142,7 +142,7 @@ BEGIN
     FOREACH t IN ARRAY ta
     LOOP
         IF t='THOR.RUNE' THEN
-            RETURN FALSE; 
+            RETURN FALSE;
         END IF;
     END LOOP;
     RETURN TRUE;
@@ -157,7 +157,7 @@ BEGIN
     FOREACH t IN ARRAY ta
     LOOP
         IF t ~ 'THOR\.(?!RUNE).+'  THEN
-            RETURN TRUE; 
+            RETURN TRUE;
         END IF;
     END LOOP;
     RETURN FALSE;
@@ -171,7 +171,7 @@ DECLARE
 BEGIN
     IF midgard_agg.check_synth(ta) THEN
         t := array_append(t, 'synth');
-    ELSE 
+    ELSE
         t := array_append(t, 'nosynth');
     END IF;
     IF midgard_agg.check_no_rune(ta) THEN
@@ -190,7 +190,7 @@ CREATE FUNCTION midgard_agg.out_tx(
     height text,
     internal boolean,
     VARIADIC coins coin_rec[]
-) RETURNS jsonb 
+) RETURNS jsonb
 LANGUAGE plpgsql AS $BODY$
 DECLARE
     ret jsonb;
@@ -245,14 +245,14 @@ CREATE VIEW midgard_agg.refund_actions AS
             'memo', memo,
             'affiliateFee', CASE
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
-                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){3}(\d{1,5}?)(?::|$)')::int
                 ELSE NULL
             END,
             'affiliateAddress', CASE
-                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN 
-                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)') 
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)')
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
                 ELSE NULL
@@ -287,8 +287,8 @@ CREATE VIEW midgard_agg.withdraw_actions AS
         ARRAY[from_addr, to_addr] :: text[] AS addresses,
         ARRAY[tx] :: text[] AS transactions,
         CASE WHEN
-            midgard_agg.check_synth(ARRAY[pool]) 
-            THEN ARRAY[pool, 'synth'] 
+            midgard_agg.check_synth(ARRAY[pool])
+            THEN ARRAY[pool, 'synth']
             ELSE ARRAY[pool, 'nosynth'] END :: text[] AS assets,
         ARRAY[pool] :: text[] AS pools,
         jsonb_build_array(mktransaction(tx, from_addr, (asset, asset_e8))) AS ins,
@@ -328,14 +328,14 @@ CREATE VIEW midgard_agg.swap_actions AS
             'memo', memo,
             'affiliateFee', CASE
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
-                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){3}(\d{1,5}?)(?::|$)')::int
                 ELSE NULL
             END,
             'affiliateAddress', CASE
-                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN 
-                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)') 
+                WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
+                    SUBSTRING(memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)')
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
                 ELSE NULL
@@ -372,14 +372,14 @@ CREATE VIEW midgard_agg.swap_actions AS
             'memo', swap_in.memo,
             'affiliateFee', CASE
                 WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
-                    SUBSTRING(swap_in.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+                    SUBSTRING(swap_in.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int
                 WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(swap_in.memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){3}(\d{1,5}?)(?::|$)')::int
                 ELSE NULL
             END,
             'affiliateAddress', CASE
-                WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN 
-                    SUBSTRING(swap_in.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)') 
+                WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{SWAP,s,=}') THEN
+                    SUBSTRING(swap_in.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)')
                 WHEN SUBSTRING(swap_in.memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(swap_in.memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
                 ELSE NULL
@@ -403,8 +403,8 @@ CREATE VIEW midgard_agg.addliquidity_actions AS
         non_null_array(rune_addr, asset_addr) AS addresses,
         non_null_array(rune_tx, asset_tx) AS transactions,
         CASE WHEN
-            midgard_agg.check_synth(ARRAY[pool]) 
-            THEN ARRAY[pool, 'synth'] 
+            midgard_agg.check_synth(ARRAY[pool])
+            THEN ARRAY[pool, 'synth']
             ELSE ARRAY[pool, 'THOR.RUNE', 'nosynth'] END :: text[] AS assets,
         ARRAY[pool] :: text[] AS pools,
         transaction_list(
@@ -466,7 +466,7 @@ BEGIN
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.swap_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
-    
+
     EXECUTE $$ INSERT INTO midgard_agg.actions
     SELECT * FROM midgard_agg.addliquidity_actions
         WHERE $1 <= block_timestamp AND block_timestamp < $2 $$ USING t1, t2;
@@ -494,19 +494,20 @@ $BODY$;
 
 -- TODO(huginn): Remove duplicates from these lists?
 CREATE PROCEDURE midgard_agg.actions_add_outbounds(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     UPDATE outbound_events as o
     SET
         internal = TRUE
     FROM (
         SELECT *
         FROM swap_events
-        WHERE t1 <= block_timestamp AND block_timestamp < t2 
+        WHERE t1 <= block_timestamp AND block_timestamp < t2
         ) as a
-    WHERE 
-        o.in_tx = a.tx AND 
+    WHERE
+        o.in_tx = a.tx AND
         o.block_timestamp = a.block_timestamp AND
-        a.from_asset = 'THOR.RUNE' AND 
+        a.from_asset = 'THOR.RUNE' AND
         o.asset_e8 = a.from_e8 AND
         o.asset = 'THOR.RUNE'
     ;
@@ -531,6 +532,7 @@ LANGUAGE SQL AS $BODY$
         ) AS o
     WHERE
         o.in_tx = a.main_ref;
+END
 $BODY$;
 
 CREATE PROCEDURE midgard_agg.actions_add_fees(t1 bigint, t2 bigint)
@@ -584,7 +586,7 @@ BEGIN
             'swapSlip', NEW.swap_slip_bp,
             'memo', NEW.memo,
             'affiliateFee',
-                SUBSTRING(NEW.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int 
+                SUBSTRING(NEW.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){4}(\d{1,5}?)(?::|$)')::int
             ,
             'affiliateAddress',
                 SUBSTRING(NEW.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)')
@@ -606,7 +608,7 @@ BEGIN
             WHERE main_ref = streaming_swap.main_ref;
         ELSE
             -- double swap
-            streaming_swap.pools := streaming_swap.pools || 
+            streaming_swap.pools := streaming_swap.pools ||
                 (CASE WHEN NOT streaming_swap.pools @> ARRAY[NEW.pool] THEN ARRAY[NEW.pool] ELSE NULL END);
 
             UPDATE midgard_agg.actions SET
@@ -638,12 +640,14 @@ LANGUAGE SQL AS $BODY$
 $BODY$;
 
 CREATE PROCEDURE midgard_agg.update_actions_interval(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     CALL midgard_agg.insert_actions(t1, t2);
-    CALL midgard_agg.insert_streaming_actions(t1, t2); 
+    CALL midgard_agg.insert_streaming_actions(t1, t2);
     CALL midgard_agg.trim_pending_actions(t1, t2);
     CALL midgard_agg.actions_add_outbounds(t1, t2);
     CALL midgard_agg.actions_add_fees(t1, t2);
+END
 $BODY$;
 
 INSERT INTO midgard_agg.watermarks (materialized_table, watermark)
