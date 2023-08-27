@@ -9,7 +9,8 @@ CREATE TABLE midgard_agg.rune_price (
 
 -- TODO(hooriRN): fill with actual price instead of a constant
 CREATE PROCEDURE midgard_agg.update_rune_price_interval(t1 bigint, t2 bigint)
-LANGUAGE SQL AS $BODY$
+LANGUAGE plpgsql AS $BODY$
+BEGIN
     INSERT INTO midgard_agg.rune_price AS cb (
         SELECT 
             1 AS rune_price_usd,
@@ -18,6 +19,7 @@ LANGUAGE SQL AS $BODY$
         WHERE t1 <= timestamp AND timestamp < t2
     )
     ON CONFLICT (block_timestamp) DO UPDATE SET rune_price_usd = cb.rune_price_usd;
+END
 $BODY$;
 
 CREATE PROCEDURE midgard_agg.update_rune_price(w_new bigint)
