@@ -17,7 +17,7 @@ services:
       - blockstore:/blockstore
 
   pg:
-    image: timescale/timescaledb:2.2.0-pg13
+    image: timescale/timescaledb:2.11.2-pg13
     shm_size: 512m
     command: postgres -c plan_cache_mode=force_custom_plan
     environment:
@@ -30,7 +30,7 @@ services:
       - pg:/var/lib/postgresql/data
 
   pg2:
-    image: timescale/timescaledb:2.2.0-pg13
+    image: timescale/timescaledb:2.11.2-pg13
     shm_size: 512m
     command: postgres -c plan_cache_mode=force_custom_plan
     environment:
@@ -43,7 +43,7 @@ services:
       - pg2:/var/lib/postgresql/data
 
   pg3:
-    image: timescale/timescaledb:2.2.0-pg13
+    image: timescale/timescaledb:2.11.2-pg13
     shm_size: 512m
     command: postgres -c plan_cache_mode=force_custom_plan
     environment:
@@ -56,7 +56,7 @@ services:
       - pg3:/var/lib/postgresql/data
 
   pgtest:
-    image: timescale/timescaledb:2.2.0-pg13
+    image: timescale/timescaledb:2.11.2-pg13
     command: postgres -c plan_cache_mode=force_custom_plan
     environment:
       - POSTGRES_DB=midgard
