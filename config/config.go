@@ -87,6 +87,12 @@ type ThorChain struct {
 	//
 	// Parent chains should come before their children.
 	ForkInfos []ForkInfo `yaml:"fork_infos" split_words:"true"`
+
+	// MaxStatusRetries is the number of times to fetch Thornode status before fatal.
+	MaxStatusRetries int `yaml:"max_status_retries" split_words:"true"`
+
+	// StatusRetryBackoff is the time to wait between Thornode status retries.
+	StatusRetryBackoff Duration `yaml:"status_retry_backoff" split_words:"true"`
 }
 
 // Both `EarliestBlockHash` and `EarliestBlockHeight` are optional and mostly just used for sanity
@@ -159,6 +165,9 @@ var defaultConfig = Config{
 		// See `docs/parallel_batch_bench.md` for measurments to guide selection of these parameters.
 		FetchBatchSize: 100, // must be divisible by BlockFetchParallelism
 		Parallelism:    4,
+
+		MaxStatusRetries:   10,
+		StatusRetryBackoff: Duration(5 * time.Second),
 	},
 	BlockStore: BlockStore{
 		BlocksPerChunk:   10000,

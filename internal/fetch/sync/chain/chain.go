@@ -106,8 +106,17 @@ func (c *Client) FirstBlockHash() (hash string, err error) {
 }
 
 // Fetch the summary of the chain: latest height, node address, ...
-func (c *Client) RefreshStatus() (*coretypes.ResultStatus, error) {
-	return c.client.Status(c.ctx)
+func (c *Client) RefreshStatus() (rs *coretypes.ResultStatus, err error) {
+	cfg := &config.Global
+	for i := 0; i < cfg.ThorChain.MaxStatusRetries; i++ {
+		rs, err = c.client.Status(c.ctx)
+		if err == nil {
+			return rs, nil
+		}
+		logger.ErrorE(err, "tendermint RPC status")
+		time.Sleep(time.Duration(cfg.ThorChain.StatusRetryBackoff))
+	}
+	return nil, fmt.Errorf("tendermint RPC status: %w", err)
 }
 
 var (
