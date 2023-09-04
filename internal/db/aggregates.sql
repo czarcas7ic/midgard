@@ -103,7 +103,8 @@ CREATE TABLE midgard_agg.actions (
     fees                jsonb NOT NULL,
     meta                jsonb
 );
--- TODO(huginn): should it be a hypertable? Measure both ways and decide!
+-- Due to time restriction seems it's better to do hypertable
+CALL setup_hypertable('midgard_agg.actions');
 
 CREATE INDEX ON midgard_agg.actions (event_id DESC);
 CREATE INDEX ON midgard_agg.actions (action_type, event_id DESC);
