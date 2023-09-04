@@ -585,7 +585,7 @@ BEGIN
         GROUP BY tx
         ) AS f
     WHERE
-        f.tx = a.main_ref;
+        f.tx = a.main_ref AND t1 - 864000000000000 <= a.block_timestamp AND a.block_timestamp < t2;
 END
 $BODY$;
 
