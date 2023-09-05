@@ -3,6 +3,7 @@ package timer
 import (
 	"time"
 
+	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
 )
 
@@ -28,4 +29,13 @@ func Console(name string) func() {
 			midlog.Float32("duration", start.SecondsElapsed()),
 		), "Timer end")
 	}
+}
+
+func DebugConsole(name string) func() {
+	ShowLogs := config.Global.Debug.EnableAggregationTimer
+	if !ShowLogs {
+		return func() {}
+	}
+
+	return Console(name)
 }

@@ -450,7 +450,7 @@ func DropAggregates() (err error) {
 }
 
 func updateAggregateSingle(ctx context.Context, refreshEnd Nano, sqlFuncName string) {
-	defer timer.Console("aggregate_update_" + sqlFuncName)()
+	defer timer.DebugConsole("aggregate_update_" + sqlFuncName)()
 
 	if ctx.Err() != nil {
 		log.Error().Err(ctx.Err()).Msg("Error in aggregate sql funciton: " + sqlFuncName)
@@ -530,7 +530,7 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 	}
 
 	for name := range aggregates {
-		consoleF := timer.Console("aggregate_continuous_" + name)
+		debugF := timer.DebugConsole("aggregate_continuous_" + name)
 		for _, bucket := range intervals {
 			if !bucket.exact {
 				continue
@@ -550,10 +550,10 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 				log.Error().Err(err).Msgf("Refreshing %s_%s", name, bucket.name)
 			}
 		}
-		consoleF()
+		debugF()
 	}
 
-	consoleF := timer.Console("aggregate_watermarks")
+	debugF := timer.DebugConsole("aggregate_watermarks")
 	for name := range watermarkedMaterializedViews {
 		if ctx.Err() != nil {
 			return
@@ -565,7 +565,7 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 			log.Error().Err(err).Msgf("Refreshing %s", name)
 		}
 	}
-	consoleF()
+	debugF()
 
 	updateAggregateSingle(ctx, refreshEnd, "update_balances")
 	updateAggregateSingle(ctx, refreshEnd, "update_members")
