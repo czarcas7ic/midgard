@@ -30,8 +30,8 @@ var aggRunePrice string
 var aggBorrowers string
 
 const (
-	aggregatesRefreshInterval = 1 * time.Minute
-	aggregatesMaxStepNano     = Nano(20 * 24 * 60 * 60 * 1e9)
+	aggregatesRefreshInterval = 2 * time.Second
+	aggregatesMaxStepNano     = Nano(24 * 60 * 60 * 1e9)
 )
 
 var WebsocketNotify *chan struct{}

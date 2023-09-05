@@ -543,7 +543,6 @@ BEGIN
     ;
     ts2 := clock_timestamp();
     RAISE WARNING 'MIDLOG: otubound internal evets time %', (ts2 - ts1)::INTERVAL;
-    -- THIS is slow
     UPDATE midgard_agg.actions AS a
     SET
         addresses = a.addresses || o.froms || o.tos,
@@ -563,13 +562,12 @@ BEGIN
         GROUP BY in_tx
         ) AS o
     WHERE
-        o.in_tx = a.main_ref;
+        o.in_tx = a.main_ref AND t1 - 864000000000000 <= a.block_timestamp AND a.block_timestamp <= t2;
     ts3 := clock_timestamp();
     RAISE WARNING 'MIDLOG: outbound add outbounds to actions time % for interval % : %', (ts3 - ts2)::INTERVAL, t1, t2;
 END
 $BODY$;
 
--- THIS is slow
 CREATE PROCEDURE midgard_agg.actions_add_fees(t1 bigint, t2 bigint)
 LANGUAGE plpgsql AS $BODY$
 BEGIN
@@ -585,7 +583,7 @@ BEGIN
         GROUP BY tx
         ) AS f
     WHERE
-        f.tx = a.main_ref AND t1 - 864000000000000 <= a.block_timestamp AND a.block_timestamp < t2;
+        f.tx = a.main_ref AND t1 - 864000000000000 <= a.block_timestamp AND a.block_timestamp <= t2;
 END
 $BODY$;
 
