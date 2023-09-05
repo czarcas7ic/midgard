@@ -45,17 +45,6 @@ func (r *eventRecorder) OnAdd(e *Add, meta *Metadata) {
 	if e.Memo == nil {
 		e.Memo = empty
 	}
-	cols := []string{
-		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "rune_e8", "pool"}
-	err := InsertWithMeta("add_events", meta, cols,
-		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.RuneE8, e.Pool)
-	if err != nil {
-		miderr.LogEventParseErrorF("add event from height %d lost on %s", meta.BlockHeight, err)
-		return
-	}
-
-	r.AddPoolAssetE8Depth(e.Pool, e.AssetE8)
-	r.AddPoolRuneE8Depth(e.Pool, e.RuneE8)
 
 	// donate events for saver yield mint synths
 	if GetCoinType(e.Pool) == AssetSynth && string(e.Memo) == "THOR-SAVERS-YIELD" {
@@ -74,7 +63,19 @@ func (r *eventRecorder) OnAdd(e *Add, meta *Metadata) {
 				meta.BlockHeight, err)
 			return
 		}
+	} else {
+		cols := []string{
+			"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "rune_e8", "pool"}
+		err := InsertWithMeta("add_events", meta, cols,
+			e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.RuneE8, e.Pool)
+		if err != nil {
+			miderr.LogEventParseErrorF("add event from height %d lost on %s", meta.BlockHeight, err)
+			return
+		}
 	}
+
+	r.AddPoolAssetE8Depth(e.Pool, e.AssetE8)
+	r.AddPoolRuneE8Depth(e.Pool, e.RuneE8)
 }
 
 func (r *eventRecorder) OnAsgardFundYggdrasil(e *AsgardFundYggdrasil, meta *Metadata) {
