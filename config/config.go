@@ -53,6 +53,8 @@ type Config struct {
 	TmpActionsCountTimeout Duration `yaml:"tmp_actions_count_timeout" split_words:"true"`
 
 	Endpoints Endpoints `yaml:"endpoints" split_words:"true"`
+
+	Debug Debug `yaml:"debug" split_words:"true"`
 }
 
 type BlockStore struct {
@@ -151,6 +153,10 @@ type ActionParams struct {
 	MaxAssets    int    `yaml:"max_assets" split_words:"true"`
 }
 
+type Debug struct {
+	EnableAggregationTimer bool `yaml:"enable_aggregation_timer" split_words:"true"`
+}
+
 var defaultConfig = Config{
 	ListenPort: 8080,
 	ThorChain: ThorChain{
@@ -200,6 +206,9 @@ var defaultConfig = Config{
 			MaxAddresses: 50,
 			MaxAssets:    4,
 		},
+	},
+	Debug: Debug{
+		EnableAggregationTimer: false,
 	},
 }
 

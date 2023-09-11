@@ -449,6 +449,19 @@ func DropAggregates() (err error) {
 	return
 }
 
+func updateAggregateSingle(ctx context.Context, refreshEnd Nano, sqlFuncName string) {
+	defer timer.DebugConsole("aggregate_update_" + sqlFuncName)()
+
+	if ctx.Err() != nil {
+		log.Error().Err(ctx.Err()).Msg("Error in aggregate sql funciton: " + sqlFuncName)
+	}
+	q := fmt.Sprintf("CALL midgard_agg."+sqlFuncName+"('%d')", refreshEnd)
+	_, err := TheDB.ExecContext(ctx, q)
+	if err != nil {
+		log.Error().Err(err).Msg("Error in aggregate sql funciton: " + sqlFuncName)
+	}
+}
+
 var aggregatesRefreshBulkTimer = timer.NewTimer("aggregates_refresh_bulk")
 var aggregatesRefreshSingleTimer = timer.NewTimer("aggregates_refresh_single")
 var nextAggregateRefreshLog time.Time
@@ -517,6 +530,7 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 	}
 
 	for name := range aggregates {
+		debugF := timer.DebugConsole("aggregate_continuous_" + name)
 		for _, bucket := range intervals {
 			if !bucket.exact {
 				continue
@@ -536,8 +550,10 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 				log.Error().Err(err).Msgf("Refreshing %s_%s", name, bucket.name)
 			}
 		}
+		debugF()
 	}
 
+	debugF := timer.DebugConsole("aggregate_watermarks")
 	for name := range watermarkedMaterializedViews {
 		if ctx.Err() != nil {
 			return
@@ -549,66 +565,13 @@ func refreshAggregates(ctx context.Context, bulk bool, fullTimescaleRefreshForTe
 			log.Error().Err(err).Msgf("Refreshing %s", name)
 		}
 	}
+	debugF()
 
-	{
-		// Refresh balances
-		if ctx.Err() != nil {
-			return
-		}
-		q := fmt.Sprintf("CALL midgard_agg.update_balances('%d')", refreshEnd)
-		_, err := TheDB.ExecContext(ctx, q)
-		if err != nil {
-			log.Error().Err(err).Msg("Refreshing balances")
-		}
-	}
-
-	{
-		// Refresh members
-		if ctx.Err() != nil {
-			return
-		}
-		q := fmt.Sprintf("CALL midgard_agg.update_members('%d')", refreshEnd)
-		_, err := TheDB.ExecContext(ctx, q)
-		if err != nil {
-			log.Error().Err(err).Msg("Refreshing members")
-		}
-	}
-
-	{
-		// Refresh actions
-		if ctx.Err() != nil {
-			return
-		}
-		q := fmt.Sprintf("CALL midgard_agg.update_actions('%d')", refreshEnd)
-		_, err := TheDB.ExecContext(ctx, q)
-		if err != nil {
-			log.Error().Err(err).Msg("Refreshing actions")
-		}
-	}
-
-	{
-		// Refresh rune price
-		if ctx.Err() != nil {
-			return
-		}
-		q := fmt.Sprintf("CALL midgard_agg.update_rune_price('%d')", refreshEnd)
-		_, err := TheDB.ExecContext(ctx, q)
-		if err != nil {
-			log.Error().Err(err).Msg("Refreshing rune price")
-		}
-	}
-
-	{
-		// Refresh borrowers (lending feature)
-		if ctx.Err() != nil {
-			return
-		}
-		q := fmt.Sprintf("CALL midgard_agg.update_borrowers('%d')", refreshEnd)
-		_, err := TheDB.ExecContext(ctx, q)
-		if err != nil {
-			log.Error().Err(err).Msg("Refreshing borrowers")
-		}
-	}
+	updateAggregateSingle(ctx, refreshEnd, "update_balances")
+	updateAggregateSingle(ctx, refreshEnd, "update_members")
+	updateAggregateSingle(ctx, refreshEnd, "update_actions")
+	updateAggregateSingle(ctx, refreshEnd, "update_rune_price")
+	updateAggregateSingle(ctx, refreshEnd, "update_borrowers")
 
 	LastAggregatedBlock.Set(lastAggregated.Height, lastAggregated.Timestamp)
 
