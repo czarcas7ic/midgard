@@ -105,6 +105,8 @@ type Swap struct {
 	TxID               string
 	PriceTarget        int64
 	Memo               string
+	StreamingCount     int64
+	StreamingQuantity  int64
 }
 
 func (x Swap) ToTendermint() abci.Event {
@@ -115,18 +117,20 @@ func (x Swap) ToTendermint() abci.Event {
 	}
 
 	return abci.Event{Type: "swap", Attributes: toAttributes(map[string]string{
-		"pool":                  x.Pool,
-		"memo":                  memo,
-		"coin":                  x.Coin,
-		"emit_asset":            x.EmitAsset,
-		"from":                  withDefaultStr(x.FromAddress, "addressfrom"),
-		"to":                    withDefaultStr(x.ToAddress, "addressto"),
-		"chain":                 "chain",
-		"id":                    withDefaultStr(x.TxID, "txid"),
-		"swap_target":           util.IntStr(x.PriceTarget),
-		"swap_slip":             util.IntStr(x.Slip),
-		"liquidity_fee":         util.IntStr(x.LiquidityFee),
-		"liquidity_fee_in_rune": util.IntStr(x.LiquidityFeeInRune),
+		"pool":                    x.Pool,
+		"memo":                    memo,
+		"coin":                    x.Coin,
+		"emit_asset":              x.EmitAsset,
+		"from":                    withDefaultStr(x.FromAddress, "addressfrom"),
+		"to":                      withDefaultStr(x.ToAddress, "addressto"),
+		"chain":                   "chain",
+		"id":                      withDefaultStr(x.TxID, "txid"),
+		"swap_target":             util.IntStr(x.PriceTarget),
+		"swap_slip":               util.IntStr(x.Slip),
+		"liquidity_fee":           util.IntStr(x.LiquidityFee),
+		"liquidity_fee_in_rune":   util.IntStr(x.LiquidityFeeInRune),
+		"streaming_swap_count":    util.IntStr(x.StreamingCount),
+		"streaming_swap_quantity": util.IntStr(x.StreamingQuantity),
 	})}
 }
 
@@ -511,5 +515,29 @@ func (x LoanRepaymentV118) ToTendermint() abci.Event {
 		"collateral_withdrawn": util.IntStr(x.CollateralWithdrawn),
 		"debt_repaid":          util.IntStr(x.DebtRepaidTor),
 		"collateral_asset":     x.CollateralAsset,
+	})}
+}
+
+type StreamingSwapDetails struct {
+	TxID       string
+	Interval   int64
+	Quantity   int64
+	Count      int64
+	LastHeight int64
+	Deposit    string
+	In         string
+	Out        string
+}
+
+func (x StreamingSwapDetails) ToTendermint() abci.Event {
+	return abci.Event{Type: "streaming_swap", Attributes: toAttributes(map[string]string{
+		"tx_id":       withDefaultStr(x.TxID, "txid"),
+		"interval":    util.IntStr(x.Interval),
+		"quantity":    util.IntStr(x.Quantity),
+		"count":       util.IntStr(x.Count),
+		"last_height": util.IntStr(x.LastHeight),
+		"deposit":     withDefaultStr(x.Deposit, "10 BNB.BUSD"),
+		"in":          withDefaultStr(x.In, "10 BNB.BUSD"),
+		"out":         withDefaultStr(x.Out, "1 THOR.RUNE"),
 	})}
 }

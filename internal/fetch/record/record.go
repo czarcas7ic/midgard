@@ -418,12 +418,12 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 	cols := []string{"tx", "chain", "from_addr", "to_addr",
 		"from_asset", "from_e8", "to_asset", "to_e8",
 		"memo", "pool", "to_e8_min", "swap_slip_bp", "liq_fee_e8", "liq_fee_in_rune_e8",
-		"_direction", "_streaming"}
+		"_direction", "_streaming", "streaming_quantity", "streaming_count"}
 	err := InsertWithMeta("swap_events", meta, cols,
 		e.Tx, e.Chain, e.FromAddr, e.ToAddr,
 		e.FromAsset, e.FromE8, e.ToAsset, e.ToE8,
 		e.Memo, e.Pool, e.ToE8Min, e.SwapSlipBP, e.LiqFeeE8, e.LiqFeeInRuneE8,
-		direction, isStreaming)
+		direction, isStreaming, e.StreamingQuantity, e.StreamingCount)
 	if err != nil {
 		miderr.LogEventParseErrorF("swap event from height %d lost on %s", meta.BlockHeight, err)
 		return
@@ -689,6 +689,20 @@ func (*eventRecorder) OnLoanRepayment(e *LoanRepayment, meta *Metadata) {
 	if err != nil {
 		miderr.LogEventParseErrorF(
 			"loan_repayment event from height %d lost on %s",
+			meta.BlockHeight, err)
+	}
+}
+
+func (r *eventRecorder) OnStreamingSwapDetails(e *StreamingSwapDetails, meta *Metadata) {
+	cols := []string{"tx_id", "interval", "quantity", "count", "last_height",
+		"deposit_asset", "deposit_e8", "in_asset", "in_e8",
+		"out_asset", "out_e8"}
+	err := InsertWithMeta("streaming_swap_details_events", meta, cols,
+		e.TxID, e.Interval, e.Quantity, e.Count, e.LastHeight,
+		e.DepositAsset, e.DepoitE8, e.InAsset, e.InE8, e.OutAsset, e.OutE8)
+	if err != nil {
+		miderr.LogEventParseErrorF(
+			"streaming_swap_details event from height %d lost on %s",
 			meta.BlockHeight, err)
 	}
 }

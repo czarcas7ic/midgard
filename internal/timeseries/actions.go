@@ -165,6 +165,46 @@ func (a *actionMeta) Scan(value interface{}) error {
 	return errors.New("unsupported scan type for actionMeta")
 }
 
+type streamingMetaType struct {
+	Count       int64  `json:"count"`
+	Quantity    int64  `json:"quantity"`
+	Interval    int64  `json:"interval"`
+	LastHeight  int64  `json:"lastHeight"`
+	InAsset     string `json:"in_asset"`
+	InE8        int64  `json:"in_e8"`
+	OutAsset    string `json:"out_asset"`
+	OutE8       int64  `json:"out_e8"`
+	DepoitAsset string `json:"deposit_asset"`
+	DepositE8   int64  `json:"deposit_e8"`
+}
+
+func (a *streamingMetaType) Scan(value interface{}) error {
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, &a)
+	case nil:
+		*a = streamingMetaType{}
+		return nil
+	}
+
+	return errors.New("unsupported scan type for actionMeta")
+}
+
+func (s streamingMetaType) toOapigen() *oapigen.StreamingSwapMeta {
+	if s.Quantity <= 0 {
+		return nil
+	}
+	return &oapigen.StreamingSwapMeta{
+		Count:         util.IntStr(s.Count),
+		Quantity:      util.IntStr(s.Quantity),
+		Interval:      util.IntStr(s.Interval),
+		LastHeight:    util.IntStr(s.LastHeight),
+		InCoin:        oapigen.Coin{Amount: util.IntStr(s.InE8), Asset: s.InAsset},
+		OutCoin:       oapigen.Coin{Amount: util.IntStr(s.OutE8), Asset: s.OutAsset},
+		DepositedCoin: oapigen.Coin{Amount: util.IntStr(s.DepositE8), Asset: s.DepoitAsset},
+	}
+}
+
 type ActionsParams struct {
 	Limit         string
 	NextPageToken string
@@ -409,6 +449,7 @@ func runActionsQuery(ctx context.Context, q preparedSqlStatement) ([]action, err
 		var outs transactionList
 		var fees coinList
 		var meta actionMeta
+		var stremingMeta streamingMetaType
 		err := rows.Scan(
 			&result.eventId,
 			&result.date,
@@ -418,6 +459,7 @@ func runActionsQuery(ctx context.Context, q preparedSqlStatement) ([]action, err
 			&outs,
 			&fees,
 			&meta,
+			&stremingMeta,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("actions read: %w", err)
@@ -426,7 +468,7 @@ func runActionsQuery(ctx context.Context, q preparedSqlStatement) ([]action, err
 		result.height = db.HeightFromEventId(result.eventId)
 		result.in = ins
 		result.out = outs
-		result.completeFromDBRead(&meta, fees)
+		result.completeFromDBRead(&meta, fees, stremingMeta)
 
 		actions = append(actions, result)
 	}
@@ -434,7 +476,7 @@ func runActionsQuery(ctx context.Context, q preparedSqlStatement) ([]action, err
 	return actions, nil
 }
 
-func (a *action) completeFromDBRead(meta *actionMeta, fees coinList) {
+func (a *action) completeFromDBRead(meta *actionMeta, fees coinList, streamingMeta streamingMetaType) {
 	if a.pools == nil {
 		a.pools = []string{}
 	}
@@ -526,14 +568,15 @@ func (a *action) completeFromDBRead(meta *actionMeta, fees coinList) {
 	switch a.actionType {
 	case "swap":
 		a.metadata.Swap = &oapigen.SwapMetadata{
-			LiquidityFee:     util.IntStr(meta.LiquidityFee),
-			SwapSlip:         util.IntStr(meta.SwapSlip),
-			SwapTarget:       util.IntStr(meta.SwapTarget),
-			NetworkFees:      fees.toOapigen(),
-			AffiliateFee:     util.IntStr(meta.AffiliateFee),
-			AffiliateAddress: meta.AffiliateAddress,
-			Memo:             meta.Memo,
-			IsStreamingSwap:  meta.SwapStreaming,
+			LiquidityFee:      util.IntStr(meta.LiquidityFee),
+			SwapSlip:          util.IntStr(meta.SwapSlip),
+			SwapTarget:        util.IntStr(meta.SwapTarget),
+			NetworkFees:       fees.toOapigen(),
+			AffiliateFee:      util.IntStr(meta.AffiliateFee),
+			AffiliateAddress:  meta.AffiliateAddress,
+			Memo:              meta.Memo,
+			IsStreamingSwap:   meta.SwapStreaming,
+			StreamingSwapMeta: streamingMeta.toOapigen(),
 		}
 	case "addLiquidity":
 		if meta.LiquidityUnits != 0 {
@@ -766,7 +809,8 @@ func actionsPreparedStatements(moment time.Time,
 			ins,
 			outs,
 			fees,
-			meta
+			meta,
+			streaming_meta
 		FROM midgard_agg.actions
 	`
 

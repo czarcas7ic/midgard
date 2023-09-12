@@ -101,7 +101,8 @@ CREATE TABLE midgard_agg.actions (
     ins                 jsonb NOT NULL,
     outs                jsonb NOT NULL,
     fees                jsonb NOT NULL,
-    meta                jsonb
+    meta                jsonb,
+    streaming_meta      jsonb
 );
 -- TODO(huginn): should it be a hypertable? Measure both ways and decide!
 
@@ -537,6 +538,36 @@ BEGIN
 END
 $BODY$;
 
+-- Add streaming details to swap action delete tx_id and event_id from event
+CREATE PROCEDURE midgard_agg.streaming_details(t1 bigint, t2 bigint)
+LANGUAGE plpgsql AS $BODY$
+BEGIN
+    UPDATE midgard_agg.actions AS a
+    SET
+        streaming_meta = a.streaming_meta || out
+    FROM (
+        SELECT DISTINCT ON (tx_id)
+            tx_id,
+            jsonb_build_object(
+                'interval', interval,
+                'quantity', quantity,
+                'count', count,
+                'last_height', last_height,
+                'deposit_asset', deposit_asset,
+                'deposit_e8', deposit_e8,
+                'in_asset', in_asset,
+                'in_e8', in_e8,
+                'out_asset', out_asset,
+                'out_e8', out_e8
+            ) as out
+        FROM streaming_swap_details_events
+        WHERE t1 <= block_timestamp AND block_timestamp < t2
+        ) AS s
+    WHERE
+        s.tx_id = a.main_ref;
+END
+$BODY$;
+
 CREATE PROCEDURE midgard_agg.actions_add_fees(t1 bigint, t2 bigint)
 LANGUAGE plpgsql AS $BODY$
 BEGIN
@@ -583,7 +614,6 @@ BEGIN
         streaming_swap.fees = jsonb_build_array();
         streaming_swap.meta = jsonb_build_object(
             'swapStreaming', TRUE,
-            'count', 1,
             'swapSingle', TRUE,
             'liquidityFee', NEW.liq_fee_in_rune_e8,
             'swapTarget', NEW.to_e8_min,
@@ -597,6 +627,10 @@ BEGIN
             ,
             'initialFromAsset', NEW.from_asset
         );
+        streaming_swap.streaming_meta = jsonb_build_object(
+            'quantity', NEW.streaming_quantity,
+            'count', NEW.streaming_count
+        );
 
         INSERT INTO midgard_agg.actions VALUES (streaming_swap.*);
     -- adding other in from partial
@@ -609,8 +643,8 @@ BEGIN
             UPDATE midgard_agg.actions SET
                 ins = streaming_swap.ins,
                 meta = streaming_swap.meta || 
-                    jsonb_build_object('count', (meta->>'count')::bigint + 1) ||
-                    jsonb_build_object('liquidityFee', (meta->>'liquidityFee')::bigint + NEW.liq_fee_in_rune_e8) 
+                    jsonb_build_object('liquidityFee', (meta->>'liquidityFee')::bigint + NEW.liq_fee_in_rune_e8),
+                streaming_meta = streaming_swap.streaming_meta || jsonb_build_object('count', NEW.streaming_count)
 
             WHERE main_ref = streaming_swap.main_ref;
         ELSE
@@ -656,6 +690,7 @@ BEGIN
     CALL midgard_agg.insert_streaming_actions(t1, t2);
     CALL midgard_agg.trim_pending_actions(t1, t2);
     CALL midgard_agg.actions_add_outbounds(t1, t2);
+    CALL midgard_agg.streaming_details(t1,t2);
     CALL midgard_agg.actions_add_fees(t1, t2);
 END
 $BODY$;

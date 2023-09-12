@@ -479,6 +479,8 @@ CREATE TABLE swap_events (
     liq_fee_in_rune_e8  BIGINT NOT NULL,
     _direction          SMALLINT NOT NULL,  -- 0=RuneToAsset 1=AssetToRune 2=RuneToSynth 3=SynthToRune
     _streaming          BOOLEAN DEFAULT FALSE,
+    streaming_count     BIGINT DEFAULT 1, -- Number of swaps events which already happened
+    streaming_quantity  BIGINT DEFAULT 1, -- Number of swaps which thorchain is planning to execute
     event_id            BIGINT NOT NULL,
     block_timestamp     BIGINT NOT NULL
 );
@@ -648,3 +650,25 @@ CREATE TABLE loan_repayment_events (
 );
 
 CALL setup_hypertable('loan_repayment_events');
+
+CREATE TABLE streaming_swap_details_events (
+    tx_id                   TEXT NOT NULL,
+    interval                BIGINT NOT NULL,
+    quantity                BIGINT NOT NULL,
+    count                   BIGINT NOT NULL,
+    last_height             BIGINT NOT NULL,
+    -- Assets
+    deposit_asset           TEXT NOT NULL,
+    deposit_e8              BIGINT NOT NULL,
+    in_asset                TEXT NOT NULL,
+    in_e8                   BIGINT NOT NULL,
+    out_asset               TEXT NOT NULL,
+    out_e8                  BIGINT NOT NULL,
+    -- Failed swaps
+    failed_swaps            BIGINT [],
+    failed_swaps_reasons    TEXT [],
+    event_id                BIGINT NOT NULL,
+    block_timestamp         BIGINT NOT NULL
+);
+
+CALL setup_hypertable('streaming_swap_details_events');

@@ -342,6 +342,12 @@ func processEvent(event abci.Event, meta *Metadata) error {
 			return err
 		}
 		Recorder.OnLoanRepayment(&x, meta)
+	case "streaming_swap":
+		var x StreamingSwapDetails
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnStreamingSwapDetails(&x, meta)
 	case "tx":
 	case "coin_spent", "coin_received":
 	case "coinbase":
@@ -351,7 +357,6 @@ func processEvent(event abci.Event, meta *Metadata) error {
 	case "connection_open_init":
 	case "security":
 	case "scheduled_outbound":
-	case "streaming_swap":
 	default:
 		miderr.LogEventParseErrorF("Unknown event type: %s, attributes: %s",
 			event.Type, FormatAttributes(attrs))

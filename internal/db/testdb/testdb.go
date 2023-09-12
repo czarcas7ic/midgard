@@ -85,6 +85,7 @@ func DeleteTables(t *testing.T) {
 	MustExec(t, "DELETE FROM network_version_events")
 	MustExec(t, "DELETE FROM loan_open_events")
 	MustExec(t, "DELETE FROM loan_repayment_events")
+	MustExec(t, "DELETE FROM streaming_swap_details_events")
 
 	clearAggregates(t)
 }

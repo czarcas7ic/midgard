@@ -1050,20 +1050,22 @@ func (e *Slash) LoadTendermint(attrs []abci.EventAttribute) error {
 // The liquidity fee is included. Network fees are recorded as
 // separate Fee events (with a matching .Tx value).
 type Swap struct {
-	Tx             []byte // THOR transaction identifier
-	Chain          []byte // backend identifier
-	FromAddr       []byte // input address on Chain
-	ToAddr         []byte // output address on Chain
-	FromAsset      []byte // input unit
-	FromE8         int64  // FromAsset quantity times 100 M
-	ToAsset        []byte // output unit
-	ToE8           int64  // ToAsset quantity times 100 M
-	Memo           []byte // encoded parameters
-	Pool           []byte // asset identifier
-	ToE8Min        int64  // output quantity constraint
-	SwapSlipBP     int64  // ‱ the trader experienced
-	LiqFeeE8       int64  // Pool asset quantity times 100 M
-	LiqFeeInRuneE8 int64  // equivalent in RUNE times 100 M
+	Tx                []byte // THOR transaction identifier
+	Chain             []byte // backend identifier
+	FromAddr          []byte // input address on Chain
+	ToAddr            []byte // output address on Chain
+	FromAsset         []byte // input unit
+	FromE8            int64  // FromAsset quantity times 100 M
+	ToAsset           []byte // output unit
+	ToE8              int64  // ToAsset quantity times 100 M
+	Memo              []byte // encoded parameters
+	Pool              []byte // asset identifier
+	ToE8Min           int64  // output quantity constraint
+	SwapSlipBP        int64  // ‱ the trader experienced
+	LiqFeeE8          int64  // Pool asset quantity times 100 M
+	LiqFeeInRuneE8    int64  // equivalent in RUNE times 100 M
+	StreamingQuantity int64  // Streaming: Number of swaps events which already happened
+	StreamingCount    int64  // Streaming: Number of swaps which thorchain is planning to execute
 }
 
 func (e *Swap) LoadTendermint(attrs []abci.EventAttribute) error {
@@ -1118,7 +1120,16 @@ func (e *Swap) LoadTendermint(attrs []abci.EventAttribute) error {
 			if err != nil {
 				return fmt.Errorf("malformed liquidity_fee_in_rune: %w", err)
 			}
-		case "streaming_swap_count", "streaming_swap_quantity":
+		case "streaming_swap_count":
+			e.StreamingCount, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed streaming_swap_count: %w", err)
+			}
+		case "streaming_swap_quantity":
+			e.StreamingQuantity, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed streaming_swap_quantity: %w", err)
+			}
 		default:
 			miderr.LogEventParseErrorF("unknown swap event attribute %q=%q", attr.Key, attr.Value)
 		}
@@ -1716,6 +1727,70 @@ func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
 		default:
 			miderr.LogEventParseErrorF(
 				"unknown loan_repayment event attribute %q=%q",
+				attr.Key, attr.Value)
+		}
+	}
+	return nil
+}
+
+type StreamingSwapDetails struct {
+	TxID         []byte
+	Interval     int64
+	Quantity     int64
+	Count        int64
+	LastHeight   int64
+	DepositAsset []byte
+	DepoitE8     int64
+	InAsset      []byte
+	InE8         int64
+	OutAsset     []byte
+	OutE8        int64
+}
+
+func (e *StreamingSwapDetails) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		switch string(attr.Key) {
+		case "tx_id":
+			e.TxID = attr.Value
+		case "last_height":
+			e.LastHeight, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed last height value: %w", err)
+			}
+		case "count":
+			e.Count, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed count value: %w", err)
+			}
+		case "quantity":
+			e.Quantity, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed quantity value: %w", err)
+			}
+		case "interval":
+			e.Interval, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed interval value: %w", err)
+			}
+		case "in":
+			e.InAsset, e.InE8, err = parseCoin(attr.Value)
+			if err != nil {
+				return fmt.Errorf("malformed in value: %w", err)
+			}
+		case "out":
+			e.OutAsset, e.OutE8, err = parseCoin(attr.Value)
+			if err != nil {
+				return fmt.Errorf("malformed out value: %w", err)
+			}
+		case "deposit":
+			e.DepositAsset, e.DepoitE8, err = parseCoin(attr.Value)
+			if err != nil {
+				return fmt.Errorf("malformed deposit value: %w", err)
+			}
+		default:
+			miderr.LogEventParseErrorF(
+				"unknown streaming_swap event attribute %q=%q",
 				attr.Key, attr.Value)
 		}
 	}

@@ -2367,6 +2367,9 @@ components:
         - memo
         - isStreamingSwap
       properties:
+        streamingSwapMeta:
+          description: Streaming Metadata associated with the action if it was streaming swap
+          $ref: '#/components/schemas/StreamingSwapMeta'
         networkFees:
           $ref: '#/components/schemas/NetworkFees'
         liquidityFee:
@@ -2463,6 +2466,46 @@ components:
         outbound transaction
       items:
         $ref: '#/components/schemas/Coin'
+    StreamingSwapMeta:
+      type: object
+      required:
+        - count
+        - quantity
+        - interval
+        - lastHeight
+        - inCoin
+        - outCoin
+        - depositedCoin
+      properties:
+        count:
+          type: string
+          description: Int64, Number of swaps events which already happened.
+        quantity:
+          type: string
+          description: |
+            Int64,  Number of swaps which thorchain is planning to execute. Total count at the end might be less.
+        interval:
+          type: string
+          description: Int64, Number of blocks between swpas. (Blocks/Swap) E.g. 1 means every block.
+        lastHeight:
+          type: string
+          description: |
+            Int64, The last blockheight the final swap happend (not outbound). This field will be missing until the final swap happens.
+        inCoin:
+          description: |
+            The total asset that is used for swap in THORChain vault. 
+            This field will be missing until the final swap happens.
+          $ref: '#/components/schemas/Coin'
+        outCoin:
+          description: |
+            The total amount of asset that got swapped. 
+            This field will be missing until the final swap happens.
+          $ref: '#/components/schemas/Coin'
+        depositedCoin:
+          description: |
+            The total amount of asset that got deposited into THORChain vault. 
+            This field will be missing until the final swap happens.
+          $ref: '#/components/schemas/Coin'
     ReverseTHORNames:
       type: array
       items:
