@@ -169,7 +169,7 @@ type streamingMetaType struct {
 	Count       int64  `json:"count"`
 	Quantity    int64  `json:"quantity"`
 	Interval    int64  `json:"interval"`
-	LastHeight  int64  `json:"lastHeight"`
+	LastHeight  int64  `json:"last_height"`
 	InAsset     string `json:"in_asset"`
 	InE8        int64  `json:"in_e8"`
 	OutAsset    string `json:"out_asset"`
