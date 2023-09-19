@@ -634,6 +634,7 @@ CREATE TABLE loan_open_events (
     collateralization_ratio BIGINT NOT NULL,
     collateral_asset        TEXT NOT NULL,
     target_asset            TEXT NOT NULL,
+    tx_id                   TEXT,
     event_id                BIGINT NOT NULL,
     block_timestamp         BIGINT NOT NULL
 );
@@ -645,6 +646,7 @@ CREATE TABLE loan_repayment_events (
     collateral_withdrawn    BIGINT NOT NULL,
     debt_repaid             BIGINT NOT NULL,
     collateral_asset        TEXT NOT NULL,
+    tx_id                   TEXT,
     event_id                BIGINT NOT NULL,
     block_timestamp         BIGINT NOT NULL
 );

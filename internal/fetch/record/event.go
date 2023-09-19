@@ -1663,6 +1663,7 @@ type LoanOpen struct {
 	CollateralizationRatio int64
 	Owner                  []byte
 	TargetAsset            []byte
+	TxID                   []byte
 }
 
 func (e *LoanOpen) LoadTendermint(attrs []abci.EventAttribute) error {
@@ -1690,6 +1691,8 @@ func (e *LoanOpen) LoadTendermint(attrs []abci.EventAttribute) error {
 			e.TargetAsset = attr.Value
 		case "owner":
 			e.Owner = attr.Value
+		case "tx_id":
+			e.TxID = attr.Value
 		default:
 			miderr.LogEventParseErrorF(
 				"unknown loan_open event attribute %q=%q",
@@ -1704,6 +1707,7 @@ type LoanRepayment struct {
 	DebtRepaid          int64
 	CollateralAsset     []byte
 	Owner               []byte
+	TxID                []byte
 }
 
 func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
@@ -1724,6 +1728,8 @@ func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
 			e.CollateralAsset = attr.Value
 		case "owner":
 			e.Owner = attr.Value
+		case "tx_id":
+			e.TxID = attr.Value
 		default:
 			miderr.LogEventParseErrorF(
 				"unknown loan_repayment event attribute %q=%q",
