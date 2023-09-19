@@ -1794,6 +1794,8 @@ func (e *StreamingSwapDetails) LoadTendermint(attrs []abci.EventAttribute) error
 			if err != nil {
 				return fmt.Errorf("malformed deposit value: %w", err)
 			}
+		case "failed_swaps":
+		case "failed_swap_reasons":
 		default:
 			miderr.LogEventParseErrorF(
 				"unknown streaming_swap event attribute %q=%q",

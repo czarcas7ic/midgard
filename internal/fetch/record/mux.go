@@ -357,6 +357,8 @@ func processEvent(event abci.Event, meta *Metadata) error {
 	case "connection_open_init":
 	case "security":
 	case "scheduled_outbound":
+	case "tss_keygen_success":
+	case "tss_keygen_failure":
 	default:
 		miderr.LogEventParseErrorF("Unknown event type: %s, attributes: %s",
 			event.Type, FormatAttributes(attrs))
