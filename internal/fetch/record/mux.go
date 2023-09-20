@@ -348,6 +348,18 @@ func processEvent(event abci.Event, meta *Metadata) error {
 			return err
 		}
 		Recorder.OnStreamingSwapDetails(&x, meta)
+	case "tss_keygen_success":
+		var x TSSKeygenSuccess
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnTSSKeygenSuccess(&x, meta)
+	case "tss_keygen_failure":
+		var x TSSKeygenFailure
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnTSSKeygenFailure(&x, meta)
 	case "tx":
 	case "coin_spent", "coin_received":
 	case "coinbase":
@@ -357,8 +369,6 @@ func processEvent(event abci.Event, meta *Metadata) error {
 	case "connection_open_init":
 	case "security":
 	case "scheduled_outbound":
-	case "tss_keygen_success":
-	case "tss_keygen_failure":
 	default:
 		miderr.LogEventParseErrorF("Unknown event type: %s, attributes: %s",
 			event.Type, FormatAttributes(attrs))

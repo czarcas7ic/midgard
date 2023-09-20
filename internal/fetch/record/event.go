@@ -1804,3 +1804,71 @@ func (e *StreamingSwapDetails) LoadTendermint(attrs []abci.EventAttribute) error
 	}
 	return nil
 }
+
+type TSSKeygenFailure struct {
+	Reason     []byte
+	IsUniCast  bool
+	BlameNodes []string
+	Round      []byte
+	Height     int64
+}
+
+func (e *TSSKeygenFailure) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		key := string(attr.Key)
+		value := string(attr.Value)
+		switch key {
+		case "blame":
+			e.BlameNodes = strings.Split(value, ", ")
+		case "height":
+			e.Height, err = ParseInt(value)
+		case "round":
+			e.Round = attr.Value
+		case "is_unicast":
+			e.IsUniCast, err = ParseBool(value)
+		case "reason":
+			e.Reason = attr.Value
+		default:
+			miderr.LogEventParseErrorF("unknown tss_keygen_failure event attribute %q=%q",
+				attr.Key, attr.Value)
+		}
+
+		if err != nil {
+			return fmt.Errorf("malformed key: %v (%w)", value, err)
+		}
+	}
+
+	return nil
+}
+
+type TSSKeygenSuccess struct {
+	PubKey  []byte
+	Members []string
+	Height  int64
+}
+
+func (e *TSSKeygenSuccess) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		key := string(attr.Key)
+		value := string(attr.Value)
+		switch key {
+		case "pubkey":
+			e.PubKey = attr.Value
+		case "height":
+			e.Height, err = ParseInt(value)
+		case "members":
+			e.Members = strings.Split(value, ", ")
+		default:
+			miderr.LogEventParseErrorF("unknown tss_keygen_success event attribute %q=%q",
+				attr.Key, attr.Value)
+		}
+
+		if err != nil {
+			return fmt.Errorf("malformed key: %v (%w)", value, err)
+		}
+	}
+
+	return nil
+}

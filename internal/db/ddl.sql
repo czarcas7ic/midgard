@@ -674,3 +674,25 @@ CREATE TABLE streaming_swap_details_events (
 );
 
 CALL setup_hypertable('streaming_swap_details_events');
+
+CREATE TABLE tss_keygen_success_events (
+    pub_key                 TEXT,
+    members                 TEXT [],
+    height                  BIGINT,
+    event_id                BIGINT NOT NULL,
+    block_timestamp         BIGINT NOT NULL
+);
+
+CALL setup_hypertable('tss_keygen_success_events');
+
+CREATE TABLE tss_keygen_failure_events (
+    fail_reason             TEXT,
+    is_unicast              BOOLEAN,
+    blame_nodes             TEXT [],
+    round                   TEXT,
+    height                  BIGINT,  
+    event_id                BIGINT NOT NULL,
+    block_timestamp         BIGINT NOT NULL
+);
+
+CALL setup_hypertable('tss_keygen_failure_events');

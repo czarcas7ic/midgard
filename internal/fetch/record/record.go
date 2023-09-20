@@ -3,6 +3,7 @@ package record
 import (
 	"strings"
 
+	"github.com/lib/pq"
 	"gitlab.com/thorchain/midgard/config"
 	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/util"
@@ -703,6 +704,28 @@ func (r *eventRecorder) OnStreamingSwapDetails(e *StreamingSwapDetails, meta *Me
 	if err != nil {
 		miderr.LogEventParseErrorF(
 			"streaming_swap_details event from height %d lost on %s",
+			meta.BlockHeight, err)
+	}
+}
+
+func (r *eventRecorder) OnTSSKeygenSuccess(e *TSSKeygenSuccess, meta *Metadata) {
+	cols := []string{"pub_key", "members", "height"}
+	err := InsertWithMeta("tss_keygen_success_events", meta, cols,
+		e.PubKey, pq.Array(e.Members), e.Height)
+	if err != nil {
+		miderr.LogEventParseErrorF(
+			"tss_keygen_success_events event from height %d lost on %s",
+			meta.BlockHeight, err)
+	}
+}
+
+func (r *eventRecorder) OnTSSKeygenFailure(e *TSSKeygenFailure, meta *Metadata) {
+	cols := []string{"fail_reason", "is_unicast", "blame_nodes", "round", "height"}
+	err := InsertWithMeta("tss_keygen_failure_events", meta, cols,
+		e.Reason, e.IsUniCast, pq.Array(e.BlameNodes), e.Round, e.Height)
+	if err != nil {
+		miderr.LogEventParseErrorF(
+			"tss_keygen_failure_events event from height %d lost on %s",
 			meta.BlockHeight, err)
 	}
 }
