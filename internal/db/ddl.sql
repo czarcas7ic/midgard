@@ -684,6 +684,7 @@ CREATE TABLE tss_keygen_success_events (
 );
 
 CALL setup_hypertable('tss_keygen_success_events');
+CREATE INDEX ON tss_keygen_success_events (height);
 
 CREATE TABLE tss_keygen_failure_events (
     fail_reason             TEXT,
@@ -696,3 +697,4 @@ CREATE TABLE tss_keygen_failure_events (
 );
 
 CALL setup_hypertable('tss_keygen_failure_events');
+CREATE INDEX ON tss_keygen_failure_events (height);
