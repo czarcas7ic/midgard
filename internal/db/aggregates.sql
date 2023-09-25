@@ -596,7 +596,7 @@ DECLARE
 BEGIN
     -- Look up the current state of the streaming_swap
     SELECT * FROM midgard_agg.actions
-        WHERE main_ref = NEW.tx
+        WHERE main_ref = NEW.tx AND action_type = 'swap'
         FOR UPDATE INTO streaming_swap;
 
     -- Convert sawp_events to actions
