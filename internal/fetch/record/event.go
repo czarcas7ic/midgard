@@ -220,7 +220,7 @@ func (e *Add) LoadTendermint(attrs []abci.EventAttribute) error {
 				}
 			}
 		case "memo":
-			e.Memo = attr.Value
+			e.Memo = sanitizeBytes(attr.Value)
 
 		case "pool":
 			e.Pool = attr.Value
