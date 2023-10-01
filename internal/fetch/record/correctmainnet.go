@@ -31,6 +31,7 @@ func loadMainnet202104Corrections(chainID string) {
 		loadMainnetBalanceCorrections()
 		loadMainnetMissingRefund()
 		loadMainnetPreregisterThornames()
+		loadMainnetTHORNodeInvariats()
 		registerArtificialPoolBallanceChanges(
 			mainnetArtificialDepthChanges, "Midgard fix on mainnet")
 		// Actually block 2104917 (2021-09-15) upon the switch from v0.64.0 to v0.67.0,
@@ -783,6 +784,88 @@ func loadMainnetPreregisterThornames() {
 				ExpireHeight: 10787995,
 			}
 			Recorder.OnTHORNameChange(&thorNameChange, meta)
+		})
+	}
+}
+
+//////////////////////// THORNode invariants
+
+// see here: https://gitlab.com/thorchain/thornode/-/merge_requests/2814#e751f3a359cd1a5d6a635a4f468271d2b6fe57bf
+// fix for synth supply missmatch that happened in v116
+
+func loadMainnetTHORNodeInvariats() {
+	burnedSynths := []Burn{
+		{
+			Asset:   []byte("AVAX/AVAX"),
+			AssetE8: 1000001,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("AVAX/USDC-0XB97EF9EF8734C71904D8002F8B6BC66DD9C48A6E"),
+			AssetE8: 4581,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("BNB/BNB"),
+			AssetE8: 99999,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("DOGE/DOGE"),
+			AssetE8: 4400752724,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("ETH/ETH"),
+			AssetE8: 4455527,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("ETH/FOX-0XC770EEFAD204B5180DF6A14EE197D99D808EE52D"),
+			AssetE8: 215666666666,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("ETH/USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"),
+			AssetE8: 21884753549,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("ETH/USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7"),
+			AssetE8: 281542,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("GAIA/ATOM"),
+			AssetE8: 1039626,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("TERRA/LUNA"),
+			AssetE8: 2527,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("TERRA/UST"),
+			AssetE8: 29955102645,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("BCH/BCH"),
+			AssetE8: 20529,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+		{
+			Asset:   []byte("BTC/BTC"),
+			AssetE8: 942067,
+			Burner:  []byte("thor1v8ppstuf6e3x0r4glqc68d5jqcs2tf38cg2q6y"),
+		},
+	}
+
+	for _, burnEvent := range burnedSynths {
+		bn := burnEvent
+		AdditionalEvents.Add(11782453, func(meta *Metadata) {
+			Recorder.OnBurn(&bn, meta)
 		})
 	}
 }

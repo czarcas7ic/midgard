@@ -1872,3 +1872,15 @@ func (e *TSSKeygenSuccess) LoadTendermint(attrs []abci.EventAttribute) error {
 
 	return nil
 }
+
+type Coinbase struct {
+	Asset    []byte
+	AssetE8  int64
+	Receiver []byte
+}
+
+type Burn struct {
+	Asset   []byte
+	AssetE8 int64
+	Burner  []byte
+}

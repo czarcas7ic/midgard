@@ -729,3 +729,15 @@ func (r *eventRecorder) OnTSSKeygenFailure(e *TSSKeygenFailure, meta *Metadata) 
 			meta.BlockHeight, err)
 	}
 }
+
+// TODO: add these events to Midgard records and deprecate other synth Burn/Mint
+
+// Mint synthetic assets from cosmos native messages
+func (r *eventRecorder) OnCoinbase(e *Coinbase, meta *Metadata) {
+	r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Asset))), e.AssetE8)
+}
+
+// Burn synthetic assets from cosmos native messages
+func (r *eventRecorder) OnBurn(e *Burn, meta *Metadata) {
+	r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Asset))), -e.AssetE8)
+}
