@@ -465,7 +465,6 @@ func midgardPoolAtHeight(ctx context.Context, pool string, height int64) Pool {
 	if err != nil {
 		midlog.FatalE(err, "Query error")
 	}
-	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&ret.Timestamp)
@@ -473,6 +472,7 @@ func midgardPoolAtHeight(ctx context.Context, pool string, height int64) Pool {
 			midlog.FatalE(err, "Query error")
 		}
 	}
+	rows.Close()
 
 	q = `
 		SELECT block_timestamp, asset_e8, rune_e8, synth_e8
@@ -493,6 +493,7 @@ func midgardPoolAtHeight(ctx context.Context, pool string, height int64) Pool {
 			midlog.FatalE(err, "Query error")
 		}
 	}
+	rows.Close()
 
 	until := ret.Timestamp + 1
 	unitsMap, err := stat.PoolsLiquidityUnitsBefore(ctx, []string{pool}, &until)
