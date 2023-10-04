@@ -108,3 +108,67 @@ func MustParseInt64(v string) int64 {
 	}
 	return res
 }
+
+// From THORNode
+// MEMO: TXTYPE:STATE1:STATE2:STATE3:FINALMEMO
+type TxType string
+
+const (
+	TxUnknown         TxType = "unknown"
+	TxAdd             TxType = "add"
+	TxWithdraw        TxType = "withdraw"
+	TxSwap            TxType = "swap"
+	TxLimitOrder      TxType = "limitOrder"
+	TxOutbound        TxType = "outbound"
+	TxDonate          TxType = "donate"
+	TxBond            TxType = "bond"
+	TxUnbond          TxType = "unbond"
+	TxLeave           TxType = "leave"
+	TxYggdrasilFund   TxType = "yggdrasilFund"
+	TxYggdrasilReturn TxType = "yggdrasilReturn"
+	TxReserve         TxType = "reserve"
+	TxRefund          TxType = "refund"
+	TxMigrate         TxType = "migrate"
+	TxRagnarok        TxType = "ragnarok"
+	TxSwitch          TxType = "switch"
+	TxNoOp            TxType = "noOp"
+	TxConsolidate     TxType = "consolidate"
+	TxTHORName        TxType = "thorname"
+	TxLoanOpen        TxType = "loanOpen"
+	TxLoanRepayment   TxType = "loanRepayment"
+)
+
+var StringToTxTypeMap = map[string]TxType{
+	"add":         TxAdd,
+	"+":           TxAdd,
+	"withdraw":    TxWithdraw,
+	"wd":          TxWithdraw,
+	"-":           TxWithdraw,
+	"swap":        TxSwap,
+	"s":           TxSwap,
+	"=":           TxSwap,
+	"limito":      TxLimitOrder,
+	"lo":          TxLimitOrder,
+	"out":         TxOutbound,
+	"donate":      TxDonate,
+	"d":           TxDonate,
+	"bond":        TxBond,
+	"unbond":      TxUnbond,
+	"leave":       TxLeave,
+	"yggdrasil+":  TxYggdrasilFund,
+	"yggdrasil-":  TxYggdrasilReturn,
+	"reserve":     TxReserve,
+	"refund":      TxRefund,
+	"migrate":     TxMigrate,
+	"ragnarok":    TxRagnarok,
+	"switch":      TxSwitch,
+	"noop":        TxNoOp,
+	"consolidate": TxConsolidate,
+	"name":        TxTHORName,
+	"n":           TxTHORName,
+	"~":           TxTHORName,
+	"$+":          TxLoanOpen,
+	"loan+":       TxLoanOpen,
+	"$-":          TxLoanRepayment,
+	"loan-":       TxLoanRepayment,
+}

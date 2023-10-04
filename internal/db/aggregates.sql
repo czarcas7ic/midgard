@@ -115,6 +115,7 @@ CREATE INDEX ON midgard_agg.actions USING gin (addresses);
 CREATE INDEX ON midgard_agg.actions USING gin (transactions);
 CREATE INDEX ON midgard_agg.actions USING gin (assets);
 CREATE INDEX ON midgard_agg.actions USING gin ((meta -> 'affiliateAddress'));
+CREATE INDEX ON midgard_agg.actions USING gin ((meta -> 'label'));
 
 --
 -- Functions for actions aggregates
@@ -257,7 +258,8 @@ CREATE VIEW midgard_agg.refund_actions AS
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
                 ELSE NULL
-            END
+            END,
+            'label', _label
             ) AS meta
     FROM refund_events;
 
@@ -340,7 +342,8 @@ CREATE VIEW midgard_agg.swap_actions AS
                 WHEN SUBSTRING(memo FROM '^(.*?):')::text = ANY('{ADD,a,+}') THEN
                     SUBSTRING(memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
                 ELSE NULL
-            END
+            END,
+            'label', _label
             ) AS meta
     FROM swap_events AS single_swaps
     WHERE NOT EXISTS (
@@ -385,7 +388,8 @@ CREATE VIEW midgard_agg.swap_actions AS
                     SUBSTRING(swap_in.memo FROM '^(?:ADD|[+]|a):(?:[^:]*:){2}([^:]+)')
                 ELSE NULL
             END,
-            'outRuneE8', swap_in.to_e8
+            'outRuneE8', swap_in.to_e8,
+            'label', swap_in._label
             ) AS meta
     FROM swap_events AS swap_in
     INNER JOIN swap_events AS swap_out
@@ -627,7 +631,8 @@ BEGIN
             'affiliateAddress',
                 SUBSTRING(NEW.memo FROM '^(?:=|SWAP|[s]):(?:[^:]*:){3}([^:]+)')
             ,
-            'initialFromAsset', NEW.from_asset
+            'initialFromAsset', NEW.from_asset,
+            'label', NEW._label
         );
         streaming_swap.streaming_meta = jsonb_build_object(
             'quantity', NEW.streaming_quantity,

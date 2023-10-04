@@ -216,12 +216,20 @@ func (r *eventRecorder) OnPool(e *Pool, meta *Metadata) {
 }
 
 func (*eventRecorder) OnRefund(e *Refund, meta *Metadata) {
+	act := strings.SplitN(string(e.Memo), ":", 2)
+	var label util.TxType
+	if t, ok := util.StringToTxTypeMap[act[0]]; ok {
+		label = t
+	} else {
+		label = util.TxUnknown
+	}
+
 	cols := []string{
 		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "asset_2nd", "asset_2nd_e8",
-		"memo", "code", "reason"}
+		"memo", "code", "reason", "_label"}
 	err := InsertWithMeta("refund_events", meta, cols,
 		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Asset2nd, e.Asset2ndE8, e.Memo,
-		e.Code, e.Reason)
+		e.Code, e.Reason, label)
 
 	if err != nil {
 		miderr.LogEventParseErrorF("refund event from height %d lost on %s", meta.BlockHeight, err)
@@ -396,6 +404,13 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 	if e.StreamingQuantity > 1 || (len(mem) == 3 && strings.Contains(mem[2], "/")) {
 		isStreaming = true
 	}
+	act := strings.SplitN(string(e.Memo), ":", 2)
+	var label util.TxType
+	if t, ok := util.StringToTxTypeMap[act[0]]; ok {
+		label = t
+	} else {
+		label = util.TxUnknown
+	}
 	var direction db.SwapDirection
 	switch {
 	case fromCoin == Rune && toCoin == AssetNative:
@@ -419,12 +434,12 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 	cols := []string{"tx", "chain", "from_addr", "to_addr",
 		"from_asset", "from_e8", "to_asset", "to_e8",
 		"memo", "pool", "to_e8_min", "swap_slip_bp", "liq_fee_e8", "liq_fee_in_rune_e8",
-		"_direction", "_streaming", "streaming_quantity", "streaming_count"}
+		"_direction", "_streaming", "_label", "streaming_quantity", "streaming_count"}
 	err := InsertWithMeta("swap_events", meta, cols,
 		e.Tx, e.Chain, e.FromAddr, e.ToAddr,
 		e.FromAsset, e.FromE8, e.ToAsset, e.ToE8,
 		e.Memo, e.Pool, e.ToE8Min, e.SwapSlipBP, e.LiqFeeE8, e.LiqFeeInRuneE8,
-		direction, isStreaming, e.StreamingQuantity, e.StreamingCount)
+		direction, isStreaming, label, e.StreamingQuantity, e.StreamingCount)
 	if err != nil {
 		miderr.LogEventParseErrorF("swap event from height %d lost on %s", meta.BlockHeight, err)
 		return

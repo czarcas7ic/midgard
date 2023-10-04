@@ -339,6 +339,7 @@ CREATE TABLE refund_events (
     memo            TEXT,
     code            BIGINT NOT NULL,
     reason          TEXT NOT NULL,
+    _label          TEXT,
     event_id        BIGINT NOT NULL,
     block_timestamp BIGINT NOT NULL
 );
@@ -479,6 +480,7 @@ CREATE TABLE swap_events (
     liq_fee_in_rune_e8  BIGINT NOT NULL,
     _direction          SMALLINT NOT NULL,  -- 0=RuneToAsset 1=AssetToRune 2=RuneToSynth 3=SynthToRune
     _streaming          BOOLEAN DEFAULT FALSE,
+    _label              TEXT, 
     streaming_count     BIGINT DEFAULT 1, -- Number of swaps events which already happened
     streaming_quantity  BIGINT DEFAULT 1, -- Number of swaps which thorchain is planning to execute
     event_id            BIGINT NOT NULL,

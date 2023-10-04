@@ -2383,6 +2383,7 @@ components:
         - affiliateAddress
         - memo
         - isStreamingSwap
+        - label
       properties:
         streamingSwapMeta:
           $ref: '#/components/schemas/StreamingSwapMeta'
@@ -2410,6 +2411,16 @@ components:
             type: boolean
             description: indicate whether this action was streaming
             example: true
+        label:
+            type: string
+            description: |
+              The type of the transaction given from its Memo. 
+              Type of labels: 
+              "unknown", "add", "withdraw", "swap", "limitOrder", "outbound", "donate",
+              "bond", "unbond", "leave", "yggdrasilFund", "yggdrasilReturn", "reserve",
+              "refund", "migrate", "ragnarok", "switch", "noOp", "consolidate", "thorname",
+              "loanOpen", "loanRepayment"
+            example: loan open
     AddLiquidityMetadata:
       type: object
       required:
@@ -2460,6 +2471,7 @@ components:
         - memo
         - affiliateFee
         - affiliateAddress
+        - label
       properties:
         networkFees:
           $ref: '#/components/schemas/NetworkFees'
@@ -2475,6 +2487,16 @@ components:
         affiliateAddress:
           type: string
           description: Affiliate fee address of the swap, empty if fee swap
+        label:
+          type: string
+          description: | 
+            The type of the transaction given from its Memo
+            Type of labels: 
+            "unknown", "add", "withdraw", "swap", "limitOrder", "outbound", "donate",
+            "bond", "unbond", "leave", "yggdrasilFund", "yggdrasilReturn", "reserve",
+            "refund", "migrate", "ragnarok", "switch", "noOp", "consolidate", "thorname",
+            "loanOpen", "loanRepayment"
+          example: loan open 
     NetworkFees:
       type: array
       description: |

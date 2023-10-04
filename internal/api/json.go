@@ -1216,6 +1216,7 @@ func jsonActions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		Address:       util.ConsumeUrlParam(&urlParams, "address"),
 		TXId:          util.ConsumeUrlParam(&urlParams, "txid"),
 		Asset:         util.ConsumeUrlParam(&urlParams, "asset"),
+		Label:         util.ConsumeUrlParam(&urlParams, "label"),
 		Affiliate:     util.ConsumeUrlParam(&urlParams, "affiliate"),
 	}
 

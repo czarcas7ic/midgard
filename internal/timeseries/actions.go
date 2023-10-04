@@ -145,6 +145,7 @@ type actionMeta struct {
 	AffiliateAddress string `json:"affiliateAddress"`
 	Memo             string `json:"memo"`
 	SwapStreaming    bool   `json:"swapStreaming"`
+	Label            string `json:"label"`
 	// addLiquidity:
 	Status string `json:"status"`
 	// also LiquidityUnits
@@ -234,6 +235,7 @@ type ActionsParams struct {
 	Address       string
 	TXId          string
 	Asset         string
+	Label         string
 	Affiliate     string
 }
 
@@ -250,6 +252,7 @@ type parsedActionsParams struct {
 	addresses          []string
 	txid               string
 	assets             []string
+	labels             []string
 	affiliateAddresses []string
 	oldAction          bool
 }
@@ -278,6 +281,7 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 	MaxLimit := config.Global.Endpoints.ActionParams.MaxLimit
 	MaxAddresses := config.Global.Endpoints.ActionParams.MaxAddresses
 	MaxAssets := config.Global.Endpoints.ActionParams.MaxAssets
+	MaxLabels := config.Global.Endpoints.ActionParams.MaxLabels
 
 	var limit uint64
 	if p.Limit != "" {
@@ -422,6 +426,16 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 		}
 	}
 
+	var labels []string
+	if p.Label != "" {
+		labels = strings.Split(p.Label, ",")
+		if MaxLabels < len(labels) {
+			return parsedActionsParams{}, miderr.BadRequestF(
+				"too many labels: %d provided, maximum is %d",
+				len(assets), MaxLabels)
+		}
+	}
+
 	var affiliateAddresses []string
 	if p.Affiliate != "" {
 		affiliateAddresses = strings.Split(p.Affiliate, ",")
@@ -445,6 +459,7 @@ func (p ActionsParams) parse() (parsedActionsParams, error) {
 		addresses:          addresses,
 		txid:               p.TXId,
 		assets:             assets,
+		labels:             labels,
 		affiliateAddresses: affiliateAddresses,
 		oldAction:          oldAction,
 	}, nil
@@ -593,6 +608,7 @@ func (a *action) completeFromDBRead(meta *actionMeta, fees coinList, streamingMe
 			Memo:              meta.Memo,
 			IsStreamingSwap:   meta.SwapStreaming,
 			StreamingSwapMeta: streamingMeta.toOapigen(),
+			Label:             meta.Label,
 		}
 	case "addLiquidity":
 		if meta.LiquidityUnits != 0 {
@@ -616,6 +632,7 @@ func (a *action) completeFromDBRead(meta *actionMeta, fees coinList, streamingMe
 			Memo:             meta.Memo,
 			AffiliateFee:     util.IntStr(meta.AffiliateFee),
 			AffiliateAddress: meta.AffiliateAddress,
+			Label:            meta.Label,
 		}
 	}
 }
@@ -756,6 +773,11 @@ func actionsPreparedStatements(moment time.Time,
 	if len(params.assets) != 0 {
 		baseValues = append(baseValues, namedSqlValue{"#ASSET#", pq.Array(params.assets)})
 		actionFilters = append(actionFilters, `assets @> #ASSET#`)
+	}
+
+	if len(params.labels) != 0 {
+		baseValues = append(baseValues, namedSqlValue{"#LABEL#", pq.Array(params.labels)})
+		actionFilters = append(actionFilters, `meta->'label' ?| #LABEL#`)
 	}
 
 	if len(params.affiliateAddresses) != 0 {

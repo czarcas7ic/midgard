@@ -159,6 +159,7 @@ type ActionParams struct {
 	MaxLimit     uint64 `yaml:"max_limit" split_words:"true"`
 	MaxAddresses int    `yaml:"max_addresses" split_words:"true"`
 	MaxAssets    int    `yaml:"max_assets" split_words:"true"`
+	MaxLabels    int    `yaml:"max_labels" split_words:"true"`
 }
 
 type Debug struct {
@@ -213,6 +214,7 @@ var defaultConfig = Config{
 			MaxLimit:     50,
 			MaxAddresses: 50,
 			MaxAssets:    4,
+			MaxLabels:    4,
 		},
 	},
 	Debug: Debug{
