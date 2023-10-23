@@ -104,6 +104,44 @@ func (s *Sync) reportDetailed(offset int64, force bool, fetchingFrom string) {
 	}
 }
 
+func SetFirstBlock(height int64, timestmap db.Nano, hash string) {
+	// Check if height and hash is the same
+	g := db.GenesisInfo
+	if g.Height != height || g.Hash != hash {
+		midlog.Fatal("The genesis config for height and hash aren't the same as THORNode")
+	}
+	db.FirstBlock.Set(height, timestmap)
+}
+
+func (s *Sync) CheckGenesisStatus() {
+	if !db.ConfigHasGenesis() {
+		return
+	}
+
+	genesisHeight := db.GenesisInfo.Get().Height
+	if db.LastCommittedBlock.Get().Height != 0 && db.LastCommittedBlock.Get().Height < genesisHeight {
+		midlog.Fatal("Midgard commited blocks before genesis file! Please nuke the database first.")
+		return
+	}
+
+	if s.blockStore != nil && s.blockStore.HasHeight(genesisHeight) {
+		block, err := s.blockStore.SingleBlock(genesisHeight)
+		if err != nil {
+			midlog.Error("Can't get genesis height from Blockstore")
+		}
+		SetFirstBlock(block.Height, db.TimeToNano(block.Time), db.PrintableHash(string(block.Hash)))
+		return
+	}
+
+	block, err := s.chainClient.GetBlock(&genesisHeight)
+	if err != nil {
+		midlog.Error(
+			"Can't get the genesis height from Thornode, Maybe your genesis state is before hardfork")
+	}
+	SetFirstBlock(block.Block.Height,
+		db.TimeToNano(block.Block.Time), db.PrintableHash(string(block.Block.Hash())))
+}
+
 func (s *Sync) refreshStatus() (finalBlockHeight int64, err error) {
 	status, err := s.chainClient.RefreshStatus()
 	if err != nil {
@@ -290,9 +328,12 @@ func InitGlobalSync(ctx context.Context) {
 		logger.FatalE(err, "Error fetching ThorNode status")
 	}
 	db.InitializeChainVarsFromThorNodeStatus(GlobalSync.status)
+	db.InitGenesis()
 
 	GlobalSync.blockStore = blockstore.NewBlockStore(
 		ctx, config.Global.BlockStore, db.RootChain.Get().Name)
+
+	GlobalSync.CheckGenesisStatus()
 }
 
 func InitBlockFetch(ctx context.Context) (<-chan chain.Block, jobs.NamedFunction) {

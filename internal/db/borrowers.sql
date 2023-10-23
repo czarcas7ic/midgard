@@ -59,7 +59,6 @@ CREATE TABLE midgard_agg.borrowers (
     debt_repaid bigint NOT NULL,
     collateral_deposited bigint NOT NULL,
     collateral_withdrawn bigint NOT NULL,
-    total_collateral_tor bigint NOT NULL,
     --
     last_open_loan_timestamp bigint,
     last_repay_loan_timestamp bigint,
@@ -106,7 +105,6 @@ BEGIN
         borrower.collateral_withdrawn = 0;
         borrower.last_open_loan_timestamp = 0;
         borrower.last_repay_loan_timestamp = 0;
-        borrower.total_collateral_tor = 0;
 
         -- Add to borrowers count table
         INSERT INTO midgard_agg.borrowers_count VALUES
@@ -129,7 +127,6 @@ BEGIN
     IF NEW.change_type = 'open' THEN
         borrower.debt_issued := borrower.debt_issued + NEW.debt_issued;
         borrower.collateral_deposited := borrower.collateral_deposited + NEW.collateral_deposited;
-        borrower.total_collateral_tor := borrower.total_collateral_tor + (NEW.debt_issued / 10000 * NEW.collateralization_ratio);
 
         IF NOT NEW.target_asset = ANY(borrower.target_assets) THEN
             borrower.target_assets := borrower.target_assets || NEW.target_asset;
@@ -139,10 +136,6 @@ BEGIN
     END IF;
 
     IF NEW.change_type = 'repayment' THEN
-        IF borrower.debt_issued > borrower.debt_repaid THEN
-            borrower.total_collateral_tor := borrower.total_collateral_tor - (borrower.total_collateral_tor / (borrower.debt_issued - borrower.debt_repaid) * NEW.debt_repaid);
-        END IF;
-
         borrower.debt_repaid := borrower.debt_repaid + NEW.debt_repaid;
         borrower.collateral_withdrawn := borrower.collateral_withdrawn + NEW.collateral_withdrawn;
 
@@ -173,7 +166,6 @@ BEGIN
         debt_repaid = EXCLUDED.debt_repaid,
         collateral_deposited = EXCLUDED.collateral_deposited,
         collateral_withdrawn = EXCLUDED.collateral_withdrawn,
-        total_collateral_tor = EXCLUDED.total_collateral_tor,
         last_open_loan_timestamp = EXCLUDED.last_open_loan_timestamp,
         last_repay_loan_timestamp = EXCLUDED.last_repay_loan_timestamp;
 

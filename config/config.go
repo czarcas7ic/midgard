@@ -29,6 +29,8 @@ type Config struct {
 
 	BlockStore BlockStore
 
+	Genesis Genesis
+
 	// TODO(muninn): Renaming this to DB whenever config values are renamed in coordination with SREs.
 	TimeScale TimeScale `yaml:"timescale"`
 
@@ -55,6 +57,12 @@ type Config struct {
 	Endpoints Endpoints `yaml:"endpoints" split_words:"true"`
 
 	Debug Debug `yaml:"debug" split_words:"true"`
+}
+
+type Genesis struct {
+	Local              string `yaml:"local" split_words:"true"`
+	InitialBlockHash   string `yaml:"initial_block_hash" split_words:"true"`
+	InitialBlockHeight int64  `yaml:"initial_block_height" split_words:"true"`
 }
 
 type BlockStore struct {

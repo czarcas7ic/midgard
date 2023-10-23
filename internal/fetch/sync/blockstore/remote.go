@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 	"io"
 	"net/http"
+	"strconv"
 
+	"gitlab.com/thorchain/midgard/internal/db"
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
 )
 
@@ -30,6 +32,14 @@ func (b *BlockStore) updateFromRemote(ctx context.Context) {
 		if ctx.Err() != nil {
 			logger.Warn("Fetch interrupted")
 			break
+		}
+		//
+		chunkBlockHeight, err := strconv.ParseInt(string(chunkHash.name), 10, 64)
+		if err != nil {
+			logger.ErrorF("Can't parse blockstore height")
+		}
+		if db.ConfigHasGenesis() && chunkBlockHeight < db.GenesisData.GetGenesisHeight() {
+			continue
 		}
 		if localChunks[chunkHash.name] {
 			continue

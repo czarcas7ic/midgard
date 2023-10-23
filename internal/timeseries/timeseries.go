@@ -130,9 +130,10 @@ func ProcessBlock(block *chain.Block, commit bool) (err error) {
 	// - db.FirstBlock was not set yet
 	// - it was set and this block is it
 	thisIsTheFirstBlock := firstBlockHeight == 0 || block.Height <= firstBlockHeight
+	firstBlockGenesis := db.ConfigHasGenesis() && db.GenesisInfo.Get().Height == block.Height
 
 	var aggSerial bytes.Buffer
-	if commit || thisIsTheFirstBlock {
+	if commit || thisIsTheFirstBlock || firstBlockGenesis {
 		// Persist the current state to the DB on "commit" blocks.
 		// This way we can continue after being interrupted, but not waste space on intermediary
 		// blocks in the batch.
@@ -160,7 +161,7 @@ func ProcessBlock(block *chain.Block, commit bool) (err error) {
 		return
 	}
 
-	if commit || thisIsTheFirstBlock {
+	if commit || thisIsTheFirstBlock || firstBlockGenesis {
 		defer blockFlushTimer.One()()
 
 		err = db.Inserter.Flush()

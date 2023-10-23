@@ -106,7 +106,7 @@ func UpdateDDLsIfNeeded(dbObj *sql.DB, cfg config.TimeScale) {
 
 func UpdateDDLIfNeeded(dbObj *sql.DB, tag string, ddl []string, hashKey string, noauto bool) {
 	fileDdlHash := md5.Sum([]byte(strings.Join(ddl, "")))
-	currentDdlHash := liveDDLHash(dbObj, hashKey)
+	currentDdlHash := liveDDLHash(hashKey)
 
 	if fileDdlHash != currentDdlHash {
 		log.Info().Msgf(
@@ -133,29 +133,35 @@ func UpdateDDLIfNeeded(dbObj *sql.DB, tag string, ddl []string, hashKey string, 
 	}
 }
 
-// Returns current file md5 hash stored in table or an empty hash if either constants table
-// does not exist or the requested hash key is not found. Will panic on other errors
-// (Don't want to reconstruct the whole database if some other random error ocurs)
-func liveDDLHash(dbObj *sql.DB, hashKey string) (ret md5Hash) {
+func readDbConstant(key string) []byte {
 	tableExists := true
-	err := dbObj.QueryRow(`SELECT EXISTS (
+	err := TheDB.QueryRow(`SELECT EXISTS (
 		SELECT * FROM pg_tables WHERE tablename = 'constants' AND schemaname = 'midgard'
 	)`).Scan(&tableExists)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to look up 'constants' table")
 	}
 	if !tableExists {
-		return
+		return nil
 	}
 
 	value := []byte{}
-	err = dbObj.QueryRow(`SELECT value FROM midgard.constants WHERE key = $1`, hashKey).Scan(&value)
+	err = TheDB.QueryRow(`SELECT value FROM midgard.constants WHERE key = $1`, key).Scan(&value)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			log.Fatal().Err(err).Msg("Querying 'constants' table failed")
 		}
-		return
+		return nil
 	}
+
+	return value
+}
+
+// Returns current file md5 hash stored in table or an empty hash if either constants table
+// does not exist or the requested hash key is not found. Will panic on other errors
+// (Don't want to reconstruct the whole database if some other random error ocurs)
+func liveDDLHash(hashKey string) (ret md5Hash) {
+	value := readDbConstant(hashKey)
 	if len(ret) != len(value) {
 		log.Warn().Msgf(
 			"Warning: %s in constants table has wrong format, recreating database anyway",

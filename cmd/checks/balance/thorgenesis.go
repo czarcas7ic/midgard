@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"strconv"
 	"strings"
 
 	"gitlab.com/thorchain/midgard/internal/db"
+	"gitlab.com/thorchain/midgard/internal/util"
 	"gitlab.com/thorchain/midgard/internal/util/midlog"
 )
 
@@ -41,7 +41,7 @@ func readThorBalances(thorGenesisPath string) (balances map[string]Balance, heig
 		midlog.FatalE(err, "Error parsing genesis json")
 	}
 	balances = g.getBalances()
-	height = mustParseInt64(g.InitialHeight) - 1
+	height = util.MustParseInt64(g.InitialHeight) - 1
 	timestamp = queryTimestampAtHeight(height)
 	return
 }
@@ -65,7 +65,7 @@ func (g Genesis) getBalances() map[string]Balance {
 			b := Balance{
 				addr:     bal.Address,
 				asset:    normalizeAsset(coin.Denom),
-				amountE8: mustParseInt64(coin.Amount),
+				amountE8: util.MustParseInt64(coin.Amount),
 			}
 			balances[b.key()] = b
 		}
@@ -79,12 +79,4 @@ func normalizeAsset(asset string) string {
 		return "THOR.RUNE"
 	}
 	return strings.ToUpper(asset)
-}
-
-func mustParseInt64(v string) int64 {
-	res, err := strconv.ParseInt(v, 10, 64)
-	if err != nil {
-		midlog.ErrorE(err, "Cannot parse int64")
-	}
-	return res
 }

@@ -88,9 +88,8 @@ func GetBorrower(ctx context.Context, address []string) (Borrowers, error) {
 }
 
 type LendingInfo struct {
-	TotalCollateral    int64
-	TotalDebtTor       int64
-	TotalCollateralTor int64
+	TotalCollateral int64
+	TotalDebtTor    int64
 }
 
 func GetLendingData(ctx context.Context) (map[string]LendingInfo, error) {
@@ -98,8 +97,7 @@ func GetLendingData(ctx context.Context) (map[string]LendingInfo, error) {
 		SELECT
 			collateral_asset,
 			SUM(collateral_deposited) - SUM(collateral_withdrawn) AS total_collateral, 
-			SUM(debt_issued) - SUM(debt_repaid) as total_debt_tor,
-			SUM(total_collateral_tor) AS total_collateral_tor
+			SUM(debt_issued) - SUM(debt_repaid) as total_debt_tor
 		FROM midgard_agg.borrowers
 		GROUP BY collateral_asset
 	`
@@ -118,7 +116,6 @@ func GetLendingData(ctx context.Context) (map[string]LendingInfo, error) {
 			&asset,
 			&lendingInfo.TotalCollateral,
 			&lendingInfo.TotalDebtTor,
-			&lendingInfo.TotalCollateralTor,
 		)
 		if err != nil {
 			return nil, err

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"gitlab.com/thorchain/midgard/internal/util/miderr"
+	"gitlab.com/thorchain/midgard/internal/util/midlog"
 )
 
 // Chains work with integers which represent fixed point decimals.
@@ -98,4 +99,12 @@ func Max[T Number](x, y T) T {
 	} else {
 		return y
 	}
+}
+
+func MustParseInt64(v string) int64 {
+	res, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		midlog.ErrorE(err, "Cannot parse int64")
+	}
+	return res
 }

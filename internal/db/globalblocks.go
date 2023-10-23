@@ -203,9 +203,19 @@ const chainIdKey = "chain_id"
 
 // Checks that values provided are consistent with global variables already initialized.
 func SetAndCheckFirstBlock(hash string, height int64, timestamp Nano) {
-	if RootChain.Get().StartHeight != height {
+	startHeight := RootChain.Get().StartHeight
+	if genesisHeight := config.Global.Genesis.InitialBlockHeight; genesisHeight > 0 {
+		if dbGenesisHeight := ReadDBGenesisHeight(); dbGenesisHeight != genesisHeight {
+			log.Fatal().Msgf("Genesis DB height mismatch, config: %d, DB: %d",
+				genesisHeight, dbGenesisHeight)
+		}
+
+		startHeight = genesisHeight
+	}
+
+	if startHeight != height {
 		log.Fatal().Msgf("Start height mismatch, ThorNode/config: %d, DB: %d",
-			RootChain.Get().StartHeight, height)
+			startHeight, height)
 	}
 
 	firstBlock := FirstBlock.Get()
@@ -241,11 +251,19 @@ func EnsureDBMatchesChain() {
 	}
 
 	hash, height, timestamp := firstBlockInDB()
+
+	genesisHash := config.Global.Genesis.InitialBlockHash
+	startHash := rootChain.StartHash
+	if genesisHash != "" {
+		log.Debug().Msg("The config is based on genesis load.")
+		startHash = genesisHash
+	}
+
 	if hash != "" {
-		if rootChain.StartHash != "" && rootChain.StartHash != hash {
-			log.Fatal().Msgf("First hash mismatch, ThorNode: %s, DB: %s", rootChain.StartHash, hash)
+		if startHash != "" && startHash != hash {
+			log.Fatal().Msgf("First hash mismatch, ThorNode: %s, DB: %s", startHash, hash)
 		}
-		if rootChain.StartHash == "" {
+		if startHash == "" {
 			rootChain.StartHash = hash
 			RootChain.set(rootChain)
 		}

@@ -105,6 +105,11 @@ func (c *Client) FirstBlockHash() (hash string, err error) {
 	return db.PrintableHash(string(block.Hash)), nil
 }
 
+// Fetch Single block details
+func (c *Client) GetBlock(height *int64) (*coretypes.ResultBlock, error) {
+	return c.client.Block(c.ctx, height)
+}
+
 // Fetch the summary of the chain: latest height, node address, ...
 func (c *Client) RefreshStatus() (rs *coretypes.ResultStatus, err error) {
 	cfg := &config.Global

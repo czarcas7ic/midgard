@@ -118,6 +118,18 @@ func mergeAdditionalInfo(chainId *FullyQualifiedChainId, info config.ForkInfo) {
 	}
 }
 
+func recursiveFindRoot(target config.ForkInfo) config.ForkInfo {
+	m := *CombinedForkInfoMap()
+	for {
+		parent, ok := m[target.ParentChainId]
+		if !ok {
+			break
+		}
+		target = parent
+	}
+	return target
+}
+
 func EnrichAndGetRoot(chainId *FullyQualifiedChainId) FullyQualifiedChainId {
 	m := *CombinedForkInfoMap()
 	target, ok := m[chainId.Name]
@@ -138,13 +150,7 @@ func EnrichAndGetRoot(chainId *FullyQualifiedChainId) FullyQualifiedChainId {
 			chainId.Name, chainId.HardForkHeight, chainId.StartHeight)
 	}
 
-	for {
-		parent, ok := m[target.ParentChainId]
-		if !ok {
-			break
-		}
-		target = parent
-	}
+	target = recursiveFindRoot(target)
 
 	if target.ChainId == chainId.Name {
 		return *chainId
@@ -155,4 +161,17 @@ func EnrichAndGetRoot(chainId *FullyQualifiedChainId) FullyQualifiedChainId {
 		StartHeight:    target.EarliestBlockHeight,
 		HardForkHeight: target.HardForkHeight,
 	}
+}
+
+func GetRootFromChainIdName(chainIdName string) string {
+	m := *CombinedForkInfoMap()
+	target, ok := m[chainIdName]
+	if !ok {
+		log.Warn().Msg("There is no chain for this chainId. Might be the root chain itself.")
+		return chainIdName
+	}
+
+	target = recursiveFindRoot(target)
+
+	return target.ChainId
 }

@@ -102,6 +102,10 @@ func main() {
 	db.InitializeChainVarsFromThorNode()
 	db.EnsureDBMatchesChain()
 
+	if config.Global.Genesis.Local != "" {
+		*BinarySearchMin = config.Global.Genesis.InitialBlockHeight
+	}
+
 	lastHeight, lastTimestamp := getLastBlockFromDB(ctx)
 	midlog.InfoF("Latest height: %d, timestamp: %d", lastHeight, lastTimestamp)
 

@@ -114,6 +114,8 @@ func initBlockWrite(ctx context.Context, blocks <-chan chain.Block) jobs.NamedFu
 	db.EnsureDBMatchesChain()
 	record.LoadCorrections(db.RootChain.Get().Name)
 
+	record.LoadGenesis()
+
 	err := notinchain.LoadConstants()
 	if err != nil {
 		midlog.FatalE(err, "Failed to read constants")
