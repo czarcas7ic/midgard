@@ -1,4 +1,4 @@
--- version 32
+-- version 33
 
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
@@ -668,7 +668,7 @@ CREATE TABLE streaming_swap_details_events (
     out_e8                  BIGINT NOT NULL,
     -- Failed swaps
     failed_swaps            BIGINT [],
-    failed_swaps_reasons    TEXT [],
+    failed_swap_reasons    TEXT [],
     event_id                BIGINT NOT NULL,
     block_timestamp         BIGINT NOT NULL
 );

@@ -2368,7 +2368,6 @@ components:
         - isStreamingSwap
       properties:
         streamingSwapMeta:
-          description: Streaming Metadata associated with the action if it was streaming swap
           $ref: '#/components/schemas/StreamingSwapMeta'
         networkFees:
           $ref: '#/components/schemas/NetworkFees'
@@ -2468,6 +2467,7 @@ components:
         $ref: '#/components/schemas/Coin'
     StreamingSwapMeta:
       type: object
+      description: Streaming Metadata associated with the action if it was streaming swap
       required:
         - count
         - quantity
@@ -2506,6 +2506,18 @@ components:
             The total amount of asset that got deposited into THORChain vault. 
             This field will be missing until the final swap happens.
           $ref: '#/components/schemas/Coin'
+        failedSwaps:
+          type: array
+          items:
+            type: string
+            description: Int64, Failed Swap number
+          description: Array of failed swaps index in streaming swap.
+        failedSwapReasons:
+          type: array
+          items:
+            type: string
+            description: The reason why swap got failed
+          description: Array of failed swaps reasons in streaming swap.
     ReverseTHORNames:
       type: array
       items:

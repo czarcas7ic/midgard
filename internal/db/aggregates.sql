@@ -558,7 +558,9 @@ BEGIN
                 'in_asset', in_asset,
                 'in_e8', in_e8,
                 'out_asset', out_asset,
-                'out_e8', out_e8
+                'out_e8', out_e8,
+                'failed_swaps', failed_swaps,
+                'failed_swap_reasons', failed_swap_reasons
             ) as out
         FROM streaming_swap_details_events
         WHERE t1 <= block_timestamp AND block_timestamp < t2

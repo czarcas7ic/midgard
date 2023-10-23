@@ -1740,17 +1740,31 @@ func (e *LoanRepayment) LoadTendermint(attrs []abci.EventAttribute) error {
 }
 
 type StreamingSwapDetails struct {
-	TxID         []byte
-	Interval     int64
-	Quantity     int64
-	Count        int64
-	LastHeight   int64
-	DepositAsset []byte
-	DepoitE8     int64
-	InAsset      []byte
-	InE8         int64
-	OutAsset     []byte
-	OutE8        int64
+	TxID          []byte
+	Interval      int64
+	Quantity      int64
+	Count         int64
+	LastHeight    int64
+	DepositAsset  []byte
+	DepoitE8      int64
+	InAsset       []byte
+	InE8          int64
+	OutAsset      []byte
+	OutE8         int64
+	FailedSwaps   []int64
+	FailedReasons []string
+}
+
+func ParseArrayInt(s []string) ([]int64, error) {
+	ret := []int64{}
+	for _, si := range s {
+		r, err := ParseInt(si)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, r)
+	}
+	return ret, nil
 }
 
 func (e *StreamingSwapDetails) LoadTendermint(attrs []abci.EventAttribute) error {
@@ -1795,7 +1809,16 @@ func (e *StreamingSwapDetails) LoadTendermint(attrs []abci.EventAttribute) error
 				return fmt.Errorf("malformed deposit value: %w", err)
 			}
 		case "failed_swaps":
+			if attr.Value != nil {
+				e.FailedSwaps, err = ParseArrayInt(strings.Split(string(attr.Value), ", "))
+				if err != nil {
+					return fmt.Errorf("malformed streaming failed swaps: %w", err)
+				}
+			}
 		case "failed_swap_reasons":
+			if attr.Value != nil {
+				e.FailedReasons = strings.Split(string(attr.Value), "\n ")
+			}
 		default:
 			miderr.LogEventParseErrorF(
 				"unknown streaming_swap event attribute %q=%q",

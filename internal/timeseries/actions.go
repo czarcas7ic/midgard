@@ -166,16 +166,18 @@ func (a *actionMeta) Scan(value interface{}) error {
 }
 
 type streamingMetaType struct {
-	Count       int64  `json:"count"`
-	Quantity    int64  `json:"quantity"`
-	Interval    int64  `json:"interval"`
-	LastHeight  int64  `json:"last_height"`
-	InAsset     string `json:"in_asset"`
-	InE8        int64  `json:"in_e8"`
-	OutAsset    string `json:"out_asset"`
-	OutE8       int64  `json:"out_e8"`
-	DepoitAsset string `json:"deposit_asset"`
-	DepositE8   int64  `json:"deposit_e8"`
+	Count             int64     `json:"count"`
+	Quantity          int64     `json:"quantity"`
+	Interval          int64     `json:"interval"`
+	LastHeight        int64     `json:"last_height"`
+	InAsset           string    `json:"in_asset"`
+	InE8              int64     `json:"in_e8"`
+	OutAsset          string    `json:"out_asset"`
+	OutE8             int64     `json:"out_e8"`
+	DepoitAsset       string    `json:"deposit_asset"`
+	DepositE8         int64     `json:"deposit_e8"`
+	FailedSwaps       *[]int64  `json:"failed_swaps"`
+	FailedSwapReasons *[]string `json:"failed_swap_reasons"`
 }
 
 func (a *streamingMetaType) Scan(value interface{}) error {
@@ -194,14 +196,28 @@ func (s streamingMetaType) toOapigen() *oapigen.StreamingSwapMeta {
 	if s.Quantity <= 0 {
 		return nil
 	}
+
+	showFailedSwaps := func(value *[]int64) *[]string {
+		if s.FailedSwaps != nil {
+			failedSwaps := []string{}
+			for _, s := range *(s.FailedSwaps) {
+				failedSwaps = append(failedSwaps, util.IntStr(s))
+			}
+			return &failedSwaps
+		}
+		return nil
+	}
+
 	return &oapigen.StreamingSwapMeta{
-		Count:         util.IntStr(s.Count),
-		Quantity:      util.IntStr(s.Quantity),
-		Interval:      util.IntStr(s.Interval),
-		LastHeight:    util.IntStr(s.LastHeight),
-		InCoin:        oapigen.Coin{Amount: util.IntStr(s.InE8), Asset: s.InAsset},
-		OutCoin:       oapigen.Coin{Amount: util.IntStr(s.OutE8), Asset: s.OutAsset},
-		DepositedCoin: oapigen.Coin{Amount: util.IntStr(s.DepositE8), Asset: s.DepoitAsset},
+		Count:             util.IntStr(s.Count),
+		Quantity:          util.IntStr(s.Quantity),
+		Interval:          util.IntStr(s.Interval),
+		LastHeight:        util.IntStr(s.LastHeight),
+		InCoin:            oapigen.Coin{Amount: util.IntStr(s.InE8), Asset: s.InAsset},
+		OutCoin:           oapigen.Coin{Amount: util.IntStr(s.OutE8), Asset: s.OutAsset},
+		DepositedCoin:     oapigen.Coin{Amount: util.IntStr(s.DepositE8), Asset: s.DepoitAsset},
+		FailedSwaps:       showFailedSwaps(s.FailedSwaps),
+		FailedSwapReasons: s.FailedSwapReasons,
 	}
 }
 

@@ -697,10 +697,11 @@ func (*eventRecorder) OnLoanRepayment(e *LoanRepayment, meta *Metadata) {
 func (r *eventRecorder) OnStreamingSwapDetails(e *StreamingSwapDetails, meta *Metadata) {
 	cols := []string{"tx_id", "interval", "quantity", "count", "last_height",
 		"deposit_asset", "deposit_e8", "in_asset", "in_e8",
-		"out_asset", "out_e8"}
+		"out_asset", "out_e8", "failed_swaps", "failed_swap_reasons"}
 	err := InsertWithMeta("streaming_swap_details_events", meta, cols,
 		e.TxID, e.Interval, e.Quantity, e.Count, e.LastHeight,
-		e.DepositAsset, e.DepoitE8, e.InAsset, e.InE8, e.OutAsset, e.OutE8)
+		e.DepositAsset, e.DepoitE8, e.InAsset, e.InE8, e.OutAsset,
+		e.OutE8, pq.Array(e.FailedSwaps), pq.Array(e.FailedReasons))
 	if err != nil {
 		miderr.LogEventParseErrorF(
 			"streaming_swap_details event from height %d lost on %s",
