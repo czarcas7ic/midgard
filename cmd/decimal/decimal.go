@@ -86,7 +86,7 @@ func readFromThorNodePools() ResultMap {
 func readFromMidgardPools() ResultMap {
 	urls := []UrlEndpoint{
 		{
-			url:     "https://midgard.thorchain.info",
+			url:     "https://midgard.ninerealms.com",
 			network: "midgard-mainnet",
 		},
 		{
