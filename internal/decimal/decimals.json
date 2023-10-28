@@ -34,6 +34,20 @@
    "constants"
   ]
  },
+ "AVAX/AVAX": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
+ },
+ "AVAX/USDC-0XB97EF9EF8734C71904D8002F8B6BC66DD9C48A6E": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
+ },
  "BCH.BCH": {
   "decimals": 8,
   "asset_seen": [
@@ -46,6 +60,13 @@
   "decimal_source": [
    "constants"
   ]
+ },
+ "BCH/BCH": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
  },
  "BNB.ADA-9F4": {
   "decimals": 8,
@@ -87,6 +108,7 @@
   "decimals": 8,
   "asset_seen": [
    "thornode-mainnet",
+   "thornode-stagenet",
    "midgard-mainnet",
    "midgard-stagenet",
    "constants"
@@ -239,6 +261,58 @@
   ],
   "decimal_source": []
  },
+ "BNB/BNB": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "BNB/BUSD-BD1": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
+ },
+ "BSC.BNB": {
+  "decimals": 18,
+  "asset_seen": [
+   "thornode-mainnet",
+   "thornode-stagenet",
+   "midgard-mainnet",
+   "midgard-stagenet",
+   "constants"
+  ],
+  "decimal_source": [
+   "constants"
+  ]
+ },
+ "BSC.BUSD-0XE9E7CEA3DEDCA5984780BAFC599BD69ADD087D56": {
+  "decimals": -1,
+  "asset_seen": [
+   "thornode-stagenet",
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "BSC.USDC-0X8AC76A51CC950D9822D68B83FE1AD97B32CD580D": {
+  "decimals": -1,
+  "asset_seen": [
+   "thornode-mainnet",
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
+ },
+ "BSC/BNB": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
+ },
  "BTC.BTC": {
   "decimals": 8,
   "asset_seen": [
@@ -252,6 +326,14 @@
    "constants"
   ]
  },
+ "BTC/BTC": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
  "DOGE.DOGE": {
   "decimals": 8,
   "asset_seen": [
@@ -264,6 +346,13 @@
   "decimal_source": [
    "constants"
   ]
+ },
+ "DOGE/DOGE": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
  },
  "ETH.AAVE-0X7FC66500C84A76AD7E9C93437BFC5AC33E2DDAE9": {
   "decimals": 18,
@@ -288,7 +377,6 @@
  "ETH.ALPHA-0XA1FAA113CBE53436DF28FF0AEE54275C13B40975": {
   "decimals": 18,
   "asset_seen": [
-   "thornode-mainnet",
    "midgard-mainnet"
   ],
   "decimal_source": [
@@ -298,7 +386,6 @@
  "ETH.CREAM-0X2BA592F78DB6436527729929AAF6C908497CB200": {
   "decimals": 18,
   "asset_seen": [
-   "thornode-mainnet",
    "midgard-mainnet"
   ],
   "decimal_source": [
@@ -342,6 +429,16 @@
    "ERC20"
   ]
  },
+ "ETH.DPI-0X1494CA1F11D487C2BBE4543E90080AEBA4BA3C2B": {
+  "decimals": 18,
+  "asset_seen": [
+   "thornode-mainnet",
+   "midgard-mainnet"
+  ],
+  "decimal_source": [
+   "ERC20"
+  ]
+ },
  "ETH.ETH": {
   "decimals": 18,
   "asset_seen": [
@@ -368,15 +465,18 @@
  "ETH.GUSD-0X056FD409E1D7A124BD7017459DFEA2F387B6D5CD": {
   "decimals": 2,
   "asset_seen": [
+   "thornode-mainnet",
    "midgard-mainnet"
   ],
   "decimal_source": [
+   "thornode-mainnet",
    "ERC20"
   ]
  },
  "ETH.HEGIC-0X584BC13C7D411C00C01A62E8019472DE68768430": {
   "decimals": 18,
   "asset_seen": [
+   "thornode-mainnet",
    "midgard-mainnet"
   ],
   "decimal_source": [
@@ -412,10 +512,19 @@
    "ERC20"
   ]
  },
- "ETH.PERP-0XBC396689893D065F41BC2C6ECBEE5E0085233447": {
+ "ETH.LUSD-0X5F98805A4E8BE255A32880FDEC7F6728C6568BA0": {
   "decimals": 18,
   "asset_seen": [
    "thornode-mainnet",
+   "midgard-mainnet"
+  ],
+  "decimal_source": [
+   "ERC20"
+  ]
+ },
+ "ETH.PERP-0XBC396689893D065F41BC2C6ECBEE5E0085233447": {
+  "decimals": 18,
+  "asset_seen": [
    "midgard-mainnet"
   ],
   "decimal_source": [
@@ -445,7 +554,6 @@
  "ETH.SUSHI-0X6B3595068778DD592E39A122F4F5A5CF09C90FE2": {
   "decimals": 18,
   "asset_seen": [
-   "thornode-mainnet",
    "midgard-mainnet"
   ],
   "decimal_source": [
@@ -500,6 +608,16 @@
   ],
   "decimal_source": [
    "thornode-mainnet",
+   "ERC20"
+  ]
+ },
+ "ETH.USDP-0X8E870D67F660D95D5BE530380D0EC0BD388289E1": {
+  "decimals": 18,
+  "asset_seen": [
+   "thornode-mainnet",
+   "midgard-mainnet"
+  ],
+  "decimal_source": [
    "ERC20"
   ]
  },
@@ -569,9 +687,28 @@
  "ETH/ETH": {
   "decimals": -1,
   "asset_seen": [
+   "midgard-mainnet",
    "midgard-stagenet"
   ],
   "decimal_source": []
+ },
+ "ETH/USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48": {
+  "decimals": 6,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": [
+   "ERC20"
+  ]
+ },
+ "ETH/USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7": {
+  "decimals": 6,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": [
+   "ERC20"
+  ]
  },
  "GAIA.ATOM": {
   "decimals": 6,
@@ -586,6 +723,14 @@
    "thornode-stagenet"
   ]
  },
+ "GAIA/ATOM": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
  "LTC.LTC": {
   "decimals": 8,
   "asset_seen": [
@@ -597,6 +742,13 @@
   "decimal_source": [
    "constants"
   ]
+ },
+ "LTC/LTC": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet"
+  ],
+  "decimal_source": []
  },
  "TERRA.LUNA": {
   "decimals": -1,
@@ -614,6 +766,78 @@
   "decimal_source": []
  },
  "TERRA.UST": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.ATOM": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.AVAX": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.BCH": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.BNB": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.BTC": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.DOGE": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.ETH": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.LTC": {
+  "decimals": -1,
+  "asset_seen": [
+   "midgard-mainnet",
+   "midgard-stagenet"
+  ],
+  "decimal_source": []
+ },
+ "THOR.TOR": {
   "decimals": -1,
   "asset_seen": [
    "midgard-mainnet",
