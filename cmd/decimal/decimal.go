@@ -234,8 +234,8 @@ func getERC20decimal(pools ResultMap) ResultMap {
 	for k := range pools {
 		if strings.HasPrefix(k, "ETH") && k != "ETH.ETH" {
 			r := strings.Split(k, "-")
-			// There is rare case that pool `ETH/ETH` (suspended) in stagnet `knownpools` endpoint,
-			// is malformatted and can't be parsed
+			// There is rare case that pool `ETH/ETH` (suspended) in stagenet `knownpools` endpoint,
+			// is malformed and can't be parsed
 			if len(r) < 2 {
 				continue
 			}
@@ -248,9 +248,9 @@ func getERC20decimal(pools ResultMap) ResultMap {
 				}
 			}
 			cnt++
-			// sleeps for 1 seconds to aviod Freekey limit
+			// sleeps for 1 seconds to avoid Freekey limit
 			if cnt%2 == 0 {
-				time.Sleep(1 * time.Second)
+				time.Sleep(5 * time.Second)
 			}
 		}
 	}
