@@ -647,8 +647,7 @@ BEGIN
                 meta = streaming_swap.meta || 
                     jsonb_build_object('liquidityFee', (meta->>'liquidityFee')::bigint + NEW.liq_fee_in_rune_e8),
                 streaming_meta = streaming_swap.streaming_meta || jsonb_build_object('count', NEW.streaming_count)
-
-            WHERE main_ref = streaming_swap.main_ref;
+            WHERE main_ref = streaming_swap.main_ref AND action_type = 'swap';
         ELSE
             -- double swap
             streaming_swap.pools := streaming_swap.pools ||
@@ -658,7 +657,7 @@ BEGIN
                 pools = streaming_swap.pools,
                 meta = streaming_swap.meta || jsonb_build_object('swapSingle', FALSE) ||
                     jsonb_build_object('liquidityFee', (meta->>'liquidityFee')::bigint + NEW.liq_fee_in_rune_e8) 
-            WHERE main_ref = streaming_swap.main_ref;
+            WHERE main_ref = streaming_swap.main_ref AND action_type = 'swap';
         END IF;
     END IF;
 
