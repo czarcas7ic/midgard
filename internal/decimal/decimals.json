@@ -299,12 +299,15 @@
   "decimal_source": []
  },
  "BSC.USDC-0X8AC76A51CC950D9822D68B83FE1AD97B32CD580D": {
-  "decimals": -1,
+  "decimals": 18,
   "asset_seen": [
    "thornode-mainnet",
-   "midgard-mainnet"
+   "midgard-mainnet",
+   "constants"
   ],
-  "decimal_source": []
+  "decimal_source": [
+   "constants"
+  ]
  },
  "BSC/BNB": {
   "decimals": -1,
