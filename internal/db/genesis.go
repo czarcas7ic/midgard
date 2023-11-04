@@ -30,6 +30,9 @@ func (s GenesisInfoType) set(height int64, hash string) {
 }
 
 func (s GenesisInfoType) Get() GenesisInfoType {
+	if !ConfigHasGenesis() {
+		return GenesisInfoType{}
+	}
 	return GenesisInfo
 }
 

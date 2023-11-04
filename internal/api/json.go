@@ -43,6 +43,7 @@ func jsonHealth(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	height, _, _ := timeseries.LastBlock()
 	synced := db.FullyCaughtUp()
+	genInfo := db.GenesisInfo.Get()
 
 	respJSON(w, oapigen.HealthResponse{
 		InSync:         synced,
@@ -52,6 +53,10 @@ func jsonHealth(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		LastFetched:    db.LastFetchedBlock.AsHeightTS(),
 		LastCommitted:  db.LastCommittedBlock.AsHeightTS(),
 		LastAggregated: db.LastAggregatedBlock.AsHeightTS(),
+		GenesisInfo: &oapigen.GenesisInf{
+			Hash:   genInfo.Hash,
+			Height: int(genInfo.Height),
+		},
 	})
 }
 

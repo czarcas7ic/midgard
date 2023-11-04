@@ -51,9 +51,11 @@ paths:
 
         lastFetched - Latest block fetched from ThorNode.
 
-        lastCommitted - Latest block commited to the DB but not fully processed yet.
+        lastCommitted - Latest block committed to the DB but not fully processed yet.
 
         lastAggregated - Latest block fully processed and aggregated.
+
+        genesisInfo - The genesis height Midgard bootstrapped with.
       responses:
         "200":
           $ref: '#/components/responses/HealthResponse'
@@ -1179,6 +1181,19 @@ components:
           type: integer
           description: Block timestamp (seconds since epoch)
 
+    GenesisInf:
+      type: object
+      required:
+        - height
+        - hash
+      properties:
+        height:
+          type: integer
+          description: Genesis Block height
+        hash:
+          type: string
+          description: Genesis Block hash
+
     Health:
       type: object
       required:
@@ -1209,6 +1224,8 @@ components:
           $ref: '#/components/schemas/HeightTS'
         lastAggregated:
           $ref: '#/components/schemas/HeightTS'
+        genesisInfo:
+          $ref: '#/components/schemas/GenesisInf'
 
     KnownPools:
       type: object
