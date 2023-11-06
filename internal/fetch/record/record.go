@@ -216,13 +216,7 @@ func (r *eventRecorder) OnPool(e *Pool, meta *Metadata) {
 }
 
 func (*eventRecorder) OnRefund(e *Refund, meta *Metadata) {
-	act := strings.SplitN(string(e.Memo), ":", 2)
-	var txType util.TxType
-	if t, ok := util.StringToTxTypeMap[act[0]]; ok {
-		txType = t
-	} else {
-		txType = util.TxUnknown
-	}
+	txType := util.TxTypeFromMemo(string(e.Memo))
 
 	cols := []string{
 		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "asset_2nd", "asset_2nd_e8",
@@ -404,13 +398,7 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 	if e.StreamingQuantity > 1 || (len(mem) == 3 && strings.Contains(mem[2], "/")) {
 		isStreaming = true
 	}
-	act := strings.SplitN(string(e.Memo), ":", 2)
-	var txType util.TxType
-	if t, ok := util.StringToTxTypeMap[act[0]]; ok {
-		txType = t
-	} else {
-		txType = util.TxUnknown
-	}
+	txType := util.TxTypeFromMemo(string(e.Memo))
 	var direction db.SwapDirection
 	switch {
 	case fromCoin == Rune && toCoin == AssetNative:

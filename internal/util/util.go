@@ -172,3 +172,13 @@ var StringToTxTypeMap = map[string]TxType{
 	"$-":          TxLoanRepayment,
 	"loan-":       TxLoanRepayment,
 }
+
+func TxTypeFromMemo(memo string) (txType TxType) {
+	act := strings.SplitN(string(memo), ":", 2)
+	if t, ok := StringToTxTypeMap[act[0]]; ok {
+		txType = t
+	} else {
+		txType = TxUnknown
+	}
+	return
+}
