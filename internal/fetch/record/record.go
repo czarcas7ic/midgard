@@ -391,9 +391,8 @@ func (r *eventRecorder) OnSwap(e *Swap, meta *Metadata) {
 			meta.BlockHeight, e.ToAsset)
 		return
 	}
-	mem := strings.SplitN(string(e.Memo), ":", 3)
 	isStreaming := false
-	if e.StreamingQuantity > 1 || (len(mem) == 3 && strings.Contains(mem[2], "/")) {
+	if e.StreamingQuantity > 1 || util.CheckMemoIsStreamingSwap(string(e.Memo)) {
 		isStreaming = true
 	}
 	var direction db.SwapDirection

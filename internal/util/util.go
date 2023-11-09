@@ -108,3 +108,13 @@ func MustParseInt64(v string) int64 {
 	}
 	return res
 }
+
+// This function is used for identifying the old swap events without streaming_quantity attribute
+// as streaming swap
+func CheckMemoIsStreamingSwap(memo string) bool {
+	mem := strings.Split(memo, ":")
+	if len(mem) > 3 && strings.Contains(mem[3], "/") {
+		return true
+	}
+	return false
+}
