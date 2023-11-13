@@ -189,6 +189,7 @@ CREATE TABLE add_events (
     memo            TEXT NOT NULL,
     rune_e8         BIGINT NOT NULL,
     pool            TEXT NOT NULL,
+    _tx_type        TEXT,
     event_id        BIGINT NOT NULL,
     block_timestamp BIGINT NOT NULL
 );
@@ -218,6 +219,7 @@ CREATE TABLE bond_events (
     memo            TEXT,
     bond_type       TEXT NOT NULL,
     e8              BIGINT NOT NULL,
+    _tx_type        TEXT,
     event_id        BIGINT NOT NULL,
     block_timestamp BIGINT NOT NULL
 );
@@ -310,6 +312,7 @@ CREATE TABLE outbound_events (
     memo            TEXT NOT NULL,
     in_tx           TEXT NOT NULL,
     internal        BOOLEAN,
+    _tx_type        TEXT,
     event_id        BIGINT NOT NULL,
     block_timestamp BIGINT NOT NULL
 );
@@ -357,6 +360,7 @@ CREATE TABLE reserve_events (
     memo            TEXT NOT NULL,
     addr            TEXT NOT NULL,
     e8              BIGINT NOT NULL,
+    _tx_type        TEXT,
     event_id        BIGINT NOT NULL,
     block_timestamp BIGINT NOT NULL
 );
@@ -532,6 +536,7 @@ CREATE TABLE withdraw_events (
     asymmetry               DOUBLE PRECISION NOT NULL,
     imp_loss_protection_e8  BIGINT NOT NULL,
     _emit_asset_in_rune_e8  BIGINT NOT NULL,
+    _tx_type                TEXT,
     event_id                BIGINT NOT NULL,
     block_timestamp         BIGINT NOT NULL
 );

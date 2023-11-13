@@ -47,6 +47,7 @@ func (r *eventRecorder) OnAdd(e *Add, meta *Metadata) {
 		e.Memo = empty
 	}
 
+	txType := util.TxTypeFromMemo(string(e.Memo))
 	// donate events for saver yield mint synths
 	if GetCoinType(e.Pool) == AssetSynth && string(e.Memo) == "THOR-SAVERS-YIELD" {
 		r.AddPoolSynthE8Depth([]byte(util.ConvertSynthPoolToNative(string(e.Pool))), e.AssetE8)
@@ -66,9 +67,11 @@ func (r *eventRecorder) OnAdd(e *Add, meta *Metadata) {
 		}
 	} else {
 		cols := []string{
-			"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "rune_e8", "pool"}
+			"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "rune_e8", "pool",
+			"_tx_type"}
 		err := InsertWithMeta("add_events", meta, cols,
-			e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.RuneE8, e.Pool)
+			e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.RuneE8, e.Pool,
+			txType)
 		if err != nil {
 			miderr.LogEventParseErrorF("add event from height %d lost on %s", meta.BlockHeight, err)
 			return
@@ -91,10 +94,15 @@ func (r *eventRecorder) OnAsgardFundYggdrasil(e *AsgardFundYggdrasil, meta *Meta
 }
 
 func (*eventRecorder) OnBond(e *Bond, meta *Metadata) {
+	if e.Memo == nil {
+		e.Memo = empty
+	}
+	txType := util.TxTypeFromMemo(string(e.Memo))
 	cols := []string{
-		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "bond_type", "e8"}
+		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "bond_type", "e8",
+		"_tx_type"}
 	err := InsertWithMeta("bond_events", meta, cols,
-		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.BondType, e.E8)
+		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.BondType, e.E8, txType)
 	if err != nil {
 		miderr.LogEventParseErrorF("bond event from height %d lost on %s", meta.BlockHeight, err)
 	}
@@ -193,9 +201,11 @@ func (*eventRecorder) OnOutbound(e *Outbound, meta *Metadata) {
 		internal = new(bool)
 		*internal = true
 	}
-	cols := []string{"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "in_tx", "internal"}
+	txType := util.TxTypeFromMemo(string(e.Memo))
+	cols := []string{"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "in_tx",
+		"internal", "_tx_type"}
 	err := InsertWithMeta("outbound_events", meta, cols,
-		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.InTx, internal)
+		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.InTx, internal, txType)
 	if err != nil {
 		miderr.LogEventParseErrorF("outbound event from height %d lost on %s", meta.BlockHeight, err)
 	}
@@ -216,6 +226,9 @@ func (r *eventRecorder) OnPool(e *Pool, meta *Metadata) {
 }
 
 func (*eventRecorder) OnRefund(e *Refund, meta *Metadata) {
+	if e.Memo == nil {
+		e.Memo = empty
+	}
 	txType := util.TxTypeFromMemo(string(e.Memo))
 
 	cols := []string{
@@ -231,10 +244,15 @@ func (*eventRecorder) OnRefund(e *Refund, meta *Metadata) {
 }
 
 func (*eventRecorder) OnReserve(e *Reserve, meta *Metadata) {
+	if e.Memo == nil {
+		e.Memo = empty
+	}
+	txType := util.TxTypeFromMemo(string(e.Memo))
+
 	cols := []string{
-		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "addr", "e8"}
+		"tx", "chain", "from_addr", "to_addr", "asset", "asset_e8", "memo", "addr", "e8", "_tx_type"}
 	err := InsertWithMeta("reserve_events", meta, cols,
-		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.Addr, e.E8)
+		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset, e.AssetE8, e.Memo, e.Addr, e.E8, txType)
 
 	if err != nil {
 		miderr.LogEventParseErrorF("reserve event from height %d lost on %s", meta.BlockHeight, err)
@@ -487,17 +505,19 @@ func (r *eventRecorder) OnWithdraw(e *Withdraw, meta *Metadata) {
 		e.ToAddr = []byte("")
 	}
 
+	txType := util.TxTypeFromMemo(string(e.Memo))
+
 	cols := []string{
 		"tx", "chain", "from_addr", "to_addr", "asset",
 		"asset_e8", "emit_asset_e8", "emit_rune_e8",
 		"memo", "pool", "stake_units", "basis_points", "asymmetry", "imp_loss_protection_e8",
-		"_emit_asset_in_rune_e8"}
+		"_emit_asset_in_rune_e8", "_tx_type"}
 	err := InsertWithMeta(
 		"withdraw_events", meta, cols,
 		e.Tx, e.Chain, e.FromAddr, e.ToAddr, e.Asset,
 		e.AssetE8, e.EmitAssetE8, e.EmitRuneE8,
 		e.Memo, e.Pool, e.StakeUnits, e.BasisPoints, e.Asymmetry, e.ImpLossProtectionE8,
-		emitAssetInRune)
+		emitAssetInRune, txType)
 
 	if err != nil {
 		miderr.LogEventParseErrorF("withdraw event from height %d lost on %s", meta.BlockHeight, err)
