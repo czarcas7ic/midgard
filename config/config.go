@@ -173,12 +173,14 @@ var defaultConfig = Config{
 		ReadTimeout:      Duration(8 * time.Second),
 		LastChainBackoff: Duration(7 * time.Second),
 
-		// NOTE(huginn): numbers are chosen to give a good performance on an "average" desktop
-		// machine with a 4 core CPU. With more cores it might make sense to increase the
-		// parallelism, though care should be taken to not overload the Thornode.
-		// See `docs/parallel_batch_bench.md` for measurments to guide selection of these parameters.
-		FetchBatchSize: 100, // must be divisible by BlockFetchParallelism
-		Parallelism:    4,
+		// We occasionally observe issues where it is necessary to remove parallelism
+		// entirely to get past a block range containing large blocks, which cause a
+		// timeout on the range request. Future work may include more complex logic to
+		// remove parallelism dynamically when a block range request is in retry
+		// backoff, but in the interim we just disable parallelism by default to make
+		// config as touch free as possible.
+		FetchBatchSize: 1,
+		Parallelism:    1,
 
 		MaxStatusRetries:   10,
 		StatusRetryBackoff: Duration(5 * time.Second),
