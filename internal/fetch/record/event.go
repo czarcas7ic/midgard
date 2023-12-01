@@ -600,6 +600,95 @@ func (e *Outbound) LoadTendermint(attrs []abci.EventAttribute) error {
 	return nil
 }
 
+type ScheduledOutbound struct {
+	Chain         []byte // transfer backend ID
+	ToAddr        []byte // transfer contender address
+	Asset         []byte // transfer unit ID
+	AssetE8       int64  // transfer quantity times 100 M
+	AssetDecimals int64
+	Memo          []byte // transfer description
+	InHash        []byte // THORChain transaction ID reference
+	OutHash       []byte // THORChain transaction ID reference
+	MaxGas        []int64
+	MaxGasAsset   [][]byte
+	MaxGasDecimal []int64
+	GasRate       int64
+	ModuleName    []byte
+	VaultPubKey   []byte
+}
+
+func (e *ScheduledOutbound) LoadTendermint(attrs []abci.EventAttribute) error {
+	for _, attr := range attrs {
+		var err error
+		switch string(attr.Key) {
+		case "chain":
+			e.Chain = attr.Value
+		case "coin_amount":
+			e.AssetE8, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed coin amount: %w", err)
+			}
+		case "coin_asset":
+			e.Asset = attr.Value
+		case "coin_decimals":
+			e.AssetDecimals, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed coin decimals: %w", err)
+			}
+		case "gas_rate":
+			e.GasRate, err = strconv.ParseInt(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("malformed coin decimals: %w", err)
+			}
+		case "module_name":
+			e.ModuleName = attr.Value
+		case "in_hash":
+			e.InHash = attr.Value
+		case "to_address":
+			e.ToAddr = attr.Value
+		case "memo":
+			e.Memo = attr.Value
+		case "out_hash":
+			e.OutHash = attr.Value
+		case "vault_pub_key":
+			e.VaultPubKey = attr.Value
+
+		default:
+			miderr.LogEventParseErrorF(
+				"unknown outbound event attribute %q=%q",
+				attr.Key, attr.Value)
+		}
+
+		// Seems the max_gas_(amount/decimals/asset) can be multiple so:
+		if strings.HasPrefix(string(attr.Key), "max_gas") &&
+			len(strings.Split(string(attr.Key), "_")) == 4 {
+			s := strings.Split(string(attr.Key), "_")[2]
+			switch s {
+			case "amount":
+				gas, err := strconv.ParseInt(string(attr.Value), 10, 64)
+				if err != nil {
+					return fmt.Errorf("malformed max gas amount: %w", err)
+				}
+				e.MaxGas = append(e.MaxGas, gas)
+			case "asset":
+				e.MaxGasAsset = append(e.MaxGasAsset, attr.Value)
+			case "decimals":
+				decimals, err := strconv.ParseInt(string(attr.Value), 10, 64)
+				if err != nil {
+					return fmt.Errorf("malformed max gas decimals: %w", err)
+				}
+				e.MaxGas = append(e.MaxGas, decimals)
+			}
+		}
+	}
+
+	if config.Global.CaseInsensitiveChains[string(e.Chain)] {
+		e.ToAddr = util.ToLowerBytes(e.ToAddr)
+	}
+
+	return nil
+}
+
 // Pool defines the "pool" event type.
 type Pool struct {
 	Asset  []byte

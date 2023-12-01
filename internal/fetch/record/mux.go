@@ -360,6 +360,12 @@ func processEvent(event abci.Event, meta *Metadata) error {
 			return err
 		}
 		Recorder.OnTSSKeygenFailure(&x, meta)
+	case "scheduled_outbound":
+		var x ScheduledOutbound
+		if err := x.LoadTendermint(attrs); err != nil {
+			return err
+		}
+		Recorder.OnScheduledOutbound(&x, meta)
 	case "tx":
 	case "coin_spent", "coin_received":
 	case "coinbase":
@@ -368,7 +374,6 @@ func processEvent(event abci.Event, meta *Metadata) error {
 	case "create_client", "update_client":
 	case "connection_open_init":
 	case "security":
-	case "scheduled_outbound":
 	default:
 		miderr.LogEventParseErrorF("Unknown event type: %s, attributes: %s",
 			event.Type, FormatAttributes(attrs))

@@ -201,6 +201,20 @@ func (*eventRecorder) OnOutbound(e *Outbound, meta *Metadata) {
 	}
 }
 
+// TODO: add tx_type to the table
+func (*eventRecorder) OnScheduledOutbound(e *ScheduledOutbound, meta *Metadata) {
+	cols := []string{"chain", "to_addr", "asset", "asset_e8", "asset_decimals", "gas_rate", "memo",
+		"in_hash", "out_hash", "max_gas_amount", "max_gas_decimals", "max_gas_asset",
+		"module_name", "vault_pub_key"}
+	err := InsertWithMeta("scheduled_outbound", meta, cols,
+		e.Chain, e.ToAddr, e.Asset, e.AssetE8, e.AssetDecimals, e.GasRate, e.Memo, e.InHash,
+		e.OutHash, pq.Array(e.MaxGas), pq.Array(e.MaxGasDecimal), pq.Array(e.MaxGasAsset), e.ModuleName, e.VaultPubKey)
+	if err != nil {
+		miderr.LogEventParseErrorF("scheduled outbound event from height %d lost on %s",
+			meta.BlockHeight, err)
+	}
+}
+
 func (r *eventRecorder) OnPool(e *Pool, meta *Metadata) {
 	cols := []string{"asset", "status"}
 	err := InsertWithMeta("pool_events", meta, cols, e.Asset, e.Status)

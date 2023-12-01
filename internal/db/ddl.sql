@@ -317,6 +317,30 @@ CREATE TABLE outbound_events (
 CALL setup_hypertable('outbound_events');
 CREATE INDEX outbound_events_in_tx_idx ON outbound_events (in_tx);
 
+
+CREATE TABLE scheduled_outbound_events (
+    chain            TEXT NOT NULL,
+    to_addr          TEXT NOT NULL,
+    asset            TEXT NOT NULL,
+    asset_e8         BIGINT NOT NULL,
+    asset_decimals   BIGINT NOT NULL,
+    gas_rate         BIGINT,
+    memo             TEXT,
+    in_hash          TEXT NOT NULL,
+    out_hash         TEXT,
+    max_gas_amount   BIGINT [],
+    max_gas_decimals BIGINT [],
+    max_gas_asset    BIGINT [],
+    module_name      TEXT,
+    vault_pub_key    TEXT,
+    event_id         BIGINT NOT NULL,
+    block_timestamp  BIGINT NOT NULL
+);
+
+CALL setup_hypertable('scheduled_outbound_events');
+CREATE INDEX scheduled_outbound_events_in_tx_idx ON scheduled_outbound_events (in_hash);
+
+
 CREATE TABLE pool_events (
     asset           TEXT NOT NULL,
     status          TEXT NOT NULL,
@@ -668,7 +692,7 @@ CREATE TABLE streaming_swap_details_events (
     out_e8                  BIGINT NOT NULL,
     -- Failed swaps
     failed_swaps            BIGINT [],
-    failed_swap_reasons    TEXT [],
+    failed_swap_reasons     TEXT [],
     event_id                BIGINT NOT NULL,
     block_timestamp         BIGINT NOT NULL
 );
