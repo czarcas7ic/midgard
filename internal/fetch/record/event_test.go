@@ -82,6 +82,27 @@ func TestOutbound(t *testing.T) {
 	}
 }
 
+func TestScheduledOutbound(t *testing.T) {
+	var event ScheduledOutbound
+	err := event.LoadTendermint(toAttrs(map[string]string{
+		"chain":              "BTC",
+		"coin_amount":        "3137611526",
+		"coin_asset":         "BTC.BTC",
+		"coin_decimals":      "0",
+		"gas_rate":           "22",
+		"in_hash":            "40A3D546F349F9CF8E907B6676E6187AD01F24C76AD9D0B9D2958E8C9E059E2C",
+		"max_gas_amount_0":   "22500",
+		"max_gas_asset_0":    "BTC.BTC",
+		"max_gas_decimals_0": "8",
+		"memo":               "OUT:40A3D546F349F9CF8E907B6676E6187AD01F24C76AD9D0B9D2958E8C9E059E2C",
+		"to_address":         "bc1qwxwl5l209je4c2ycr8hc7dq7jqfptk23esmn5s",
+		"vault_pub_key":      "thorpub1addwnpepqg2qqe0fc9h09q2hy3lkmyprkfe2r4ycymxxdlguzae52z7k9wk9yvmh8eu",
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // DoubleAsset returns the follow-up pool or nil. Follow-ups occur in so-called
 // double-swaps, whereby the trader sells .Pool asset with this event, and then
 // consecutively buys DoubleAsset in another event (with the same .Tx).
