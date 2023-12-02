@@ -156,6 +156,47 @@ func (x Outbound) ToTendermint() abci.Event {
 	})}
 }
 
+type ScheduledOutbound struct {
+	Chain         string
+	CoinAmount    string
+	CoinAsset     string
+	CoinDecimals  string
+	GasRate       string
+	MaxGasAmount  []string
+	MaxGasAsset   []string
+	MaxGasDecimal []string
+	ModuleName    string
+	OutHash       string
+	ToAddress     string
+	InHash        string
+	Memo          string
+	VaultPubKey   string
+}
+
+func (x ScheduledOutbound) ToTendermint() abci.Event {
+	attr := map[string]string{
+		"chain":         "chain",
+		"coin_asset":    x.CoinAsset,
+		"coin_amount":   x.CoinAmount,
+		"coin_decimals": x.CoinDecimals,
+		"gas_rate":      x.GasRate,
+		"in_hash":       withDefaultStr(x.InHash, "txid"),
+		"memo":          withDefaultStr(x.Memo, "memo"),
+		"module_name":   x.ModuleName,
+		"out_hash":      x.OutHash,
+		"to_address":    withDefaultStr(x.ToAddress, "addressto"),
+		"vault_pub_key": withDefaultStr(x.VaultPubKey, "thorpub"),
+	}
+
+	for i := range x.MaxGasAsset {
+		attr[fmt.Sprintf("max_gas_asset_%d", i)] = x.MaxGasAsset[i]
+		attr[fmt.Sprintf("max_gas_amount_%d", i)] = x.MaxGasAmount[i]
+		attr[fmt.Sprintf("max_gas_decimals_%d", i)] = x.MaxGasDecimal[i]
+	}
+
+	return abci.Event{Type: "scheduled_outbound", Attributes: toAttributes(attr)}
+}
+
 type AddLiquidity struct {
 	Pool                   string
 	AssetAmount            int64
@@ -247,7 +288,7 @@ type Withdraw struct {
 	ToAddress              string
 	FromAddress            string
 	ID                     string
-	Assymetry              string
+	Asymmetry              string
 	BasisPoints            int64
 }
 
@@ -263,7 +304,7 @@ func (x Withdraw) ToTendermint() abci.Event {
 		"coin":                     withDefaultStr(x.Coin, "0 THOR.RUNE"),
 		"liquidity_provider_units": util.IntStr(x.LiquidityProviderUnits),
 		"basis_points":             util.IntStr(x.BasisPoints),
-		"asymmetry":                withDefaultStr(x.Assymetry, "0.000000000000000000"),
+		"asymmetry":                withDefaultStr(x.Asymmetry, "0.000000000000000000"),
 		"emit_rune":                util.IntStr(x.EmitRune),
 		"emit_asset":               util.IntStr(x.EmitAsset),
 		"imp_loss_protection":      util.IntStr(x.ImpLossProtection),

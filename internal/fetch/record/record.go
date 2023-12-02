@@ -206,7 +206,7 @@ func (*eventRecorder) OnScheduledOutbound(e *ScheduledOutbound, meta *Metadata) 
 	cols := []string{"chain", "to_addr", "asset", "asset_e8", "asset_decimals", "gas_rate", "memo",
 		"in_hash", "out_hash", "max_gas_amount", "max_gas_decimals", "max_gas_asset",
 		"module_name", "vault_pub_key"}
-	err := InsertWithMeta("scheduled_outbound", meta, cols,
+	err := InsertWithMeta("scheduled_outbound_events", meta, cols,
 		e.Chain, e.ToAddr, e.Asset, e.AssetE8, e.AssetDecimals, e.GasRate, e.Memo, e.InHash,
 		e.OutHash, pq.Array(e.MaxGas), pq.Array(e.MaxGasDecimal), pq.Array(e.MaxGasAsset), e.ModuleName, e.VaultPubKey)
 	if err != nil {

@@ -929,7 +929,7 @@ func TestWithdrawFields(t *testing.T) {
 			ImpLossProtection:      3,
 			FromAddress:            "runeaddr",
 			ToAddress:              "oficialaddr",
-			Assymetry:              "0.042",
+			Asymmetry:              "0.042",
 			BasisPoints:            1000,
 		},
 		testdb.Fee{

@@ -610,7 +610,7 @@ type ScheduledOutbound struct {
 	InHash        []byte // THORChain transaction ID reference
 	OutHash       []byte // THORChain transaction ID reference
 	MaxGas        []int64
-	MaxGasAsset   [][]byte
+	MaxGasAsset   []string
 	MaxGasDecimal []int64
 	GasRate       int64
 	ModuleName    []byte
@@ -671,13 +671,13 @@ func (e *ScheduledOutbound) LoadTendermint(attrs []abci.EventAttribute) error {
 				}
 				e.MaxGas = append(e.MaxGas, gas)
 			case "asset":
-				e.MaxGasAsset = append(e.MaxGasAsset, attr.Value)
+				e.MaxGasAsset = append(e.MaxGasAsset, string(attr.Value))
 			case "decimals":
 				decimals, err := strconv.ParseInt(string(attr.Value), 10, 64)
 				if err != nil {
 					return fmt.Errorf("malformed max gas decimals: %w", err)
 				}
-				e.MaxGas = append(e.MaxGas, decimals)
+				e.MaxGasDecimal = append(e.MaxGasDecimal, decimals)
 			}
 		}
 	}

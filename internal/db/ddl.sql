@@ -330,7 +330,7 @@ CREATE TABLE scheduled_outbound_events (
     out_hash         TEXT,
     max_gas_amount   BIGINT [],
     max_gas_decimals BIGINT [],
-    max_gas_asset    BIGINT [],
+    max_gas_asset    TEXT [],
     module_name      TEXT,
     vault_pub_key    TEXT,
     event_id         BIGINT NOT NULL,
